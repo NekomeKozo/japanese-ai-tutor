@@ -1,0 +1,80 @@
+:root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #25332f; background: #f4f5f0; font-synthesis: none; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+main { max-width: 880px; padding: 32px 24px; margin: auto; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+h1 { font-size: clamp(1.5rem, 4vw, 2rem); margin: 0; letter-spacing: -.04em; }
+header p { color: #59665f; }
+.eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .13em; }
+button, select, textarea { font: inherit; }
+button { border: 0; border-radius: 7px; padding: 12px 18px; color: white; background: #285d4e; cursor: pointer; }
+button.secondary { background: white; color: #285d4e; border: 1px solid #cbd4cb; white-space: nowrap; }
+button:disabled { opacity: .55; cursor: wait; }
+:focus-visible { outline: 3px solid #a26b2e; outline-offset: 3px; }
+#status { padding: 12px 14px; background: #e8eee4; border-radius: 7px; font-size: .9rem; margin: 12px 0; }
+.settings { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; margin: 18px 0; }
+.settings span { font-size: .8rem; color: #59665f; }
+select { border: 1px solid #bfcac2; border-radius: 5px; padding: 8px; background: white; color: inherit; max-width: 100%; }
+#conversation { background: #fafbf8; border: 1px solid #dce2d9; border-radius: 10px; padding: 20px; height: 380px; overflow-y: auto; }
+.message { background: white; border: 1px solid #e0e5de; padding: 16px 20px; border-radius: 9px; margin: 0 28px 16px 0; overflow-wrap: anywhere; }
+.message.learner { background: #e9f0eb; margin-left: 40px; margin-right: 0; }
+.message p { white-space: pre-wrap; margin: 8px 0; line-height: 1.65; }
+.message .speaker { font-size: .68rem; letter-spacing: .12em; color: #5d7065; font-weight: 750; }
+.message h2 { font-size: .8rem; margin: 18px 0 4px; color: #456354; }
+.message ul { padding-left: 20px; line-height: 1.7; white-space: pre-wrap; }
+.evaluation { display: inline-block; background: #e8eee4; padding: 3px 8px; border-radius: 5px; font-size: .8rem; }
+details { margin-top: 12px; }
+summary { cursor: pointer; }
+form { display: grid; gap: 9px; padding-top: 18px; }
+form label { font-size: .85rem; font-weight: 650; }
+#mode { justify-self: start; margin-bottom: 7px; }
+textarea { resize: vertical; min-height: 90px; border: 1px solid #bfcac2; border-radius: 7px; padding: 12px; width: 100%; color: inherit; background: white; }
+.composer-footer { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+#count, footer { font-size: .75rem; color: #627066; }
+footer { margin-top: 24px; text-align: center; }
+nav { display: flex; gap: 10px; margin: 18px 0; }
+nav { flex-wrap: wrap; }
+#study-panel .placement-card { margin-bottom: 18px; }
+#study-controls { margin-bottom: 18px; }
+#study-minutes { max-width: 140px; padding: 10px; border: 1px solid #bfcac2; border-radius: 6px; }
+#study-error { color: #8c3523; }
+#study-content .message { margin: 0; }
+#study-preview li { margin-bottom: 14px; }
+nav [aria-current="page"] { border-color: #285d4e; font-weight: 700; }
+.placement-card { padding: 24px; border: 1px solid #dce2d9; border-radius: 10px; background: #fafbf8; }
+.placement-card h2 { margin-top: 0; font-size: 1.4rem; }
+.placement-card p { line-height: 1.65; }
+.placement-card label { display: block; margin-bottom: 10px; }
+.small { font-size: .85rem; color: #59665f; }
+.japanese-prompt { white-space: pre-wrap; font-size: 1.2rem; line-height: 1.8; }
+progress { width: 100%; height: 10px; accent-color: #285d4e; }
+fieldset { border: 0; padding: 0; margin: 0; }
+legend { font-size: .85rem; font-weight: 650; margin-bottom: 12px; }
+.choice { padding: 12px; border: 1px solid #cbd4cb; border-radius: 6px; cursor: pointer; font-size: 1.1rem; }
+.choice input { margin-right: 12px; accent-color: #285d4e; }
+.assessment-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 20px 0; }
+caption { text-align: left; font-weight: 700; margin-bottom: 12px; }
+th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #dce2d9; }
+tbody th { text-transform: capitalize; font-weight: 500; }
+#assessment-error { background: #fff0e9; color: #8c3523; padding: 12px; border-radius: 6px; }
+#assessment-notice, #placement-context { background: #e8eee4; padding: 12px; border-radius: 6px; font-size: .9rem; }
+#retake-assessment, #retry-assessment { margin-top: 16px; }
+#error { background: #fff0e9; color: #8c3523; padding: 12px; border-radius: 6px; }
+#profile-panel .placement-card { margin-bottom: 18px; }
+#profile-error { color: #8c3523; }
+#learner-identity { overflow-wrap: anywhere; }
+#learner-id { width: 100%; padding: 10px; border: 1px solid #bfcac2; border-radius: 6px; }
+#temporary-chat { margin-top: 16px; }
+#preferences-form input[type="checkbox"] { width: auto; }
+@media (max-width: 540px) { main { padding: 20px 14px; } header { align-items: flex-start; gap: 12px; } header button { padding: 9px; } #conversation { padding: 12px; height: 360px; } .message { margin-right: 8px; padding: 12px; } .message.learner { margin-left: 18px; } .composer-footer { align-items: flex-start; } }
+/* Phase 5 knowledge details reuse the existing cards and controls. */
+.mastery-filters, .mastery-pagination { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+.mastery-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: .65rem 0; border-bottom: 1px solid #dce4dc; }
+.mastery-row button { min-width: 9rem; text-align: left; }
+.mastery-row span { font-size: .9rem; }
+.mastery-dimensions { display: grid; grid-template-columns: minmax(7rem, 1fr) 2fr; gap: .65rem; }
+.mastery-dimensions dt { text-transform: capitalize; }
+.mastery-dimensions dd { margin: 0; }
