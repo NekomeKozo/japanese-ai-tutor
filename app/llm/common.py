@@ -8,7 +8,9 @@ import time
 
 from app.errors import TutorError
 
-logger = logging.getLogger('app.llm')
+# Inherit Uvicorn's configured INFO handler so safe provider diagnostics are
+# visible under the documented deployment command, without enabling HTTP bodies.
+logger = logging.getLogger('uvicorn.error.llm')
 request_path = ContextVar('llm_request_path', default='direct')
 DEFAULT_MODELS = {'gemini': 'gemini-3.1-flash-lite', 'openai': 'gpt-4.1-mini'}
 

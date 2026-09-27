@@ -114,7 +114,7 @@ def check_scope(text, *, study_answer=False):
     if re.search(attacks, text):
         raise TutorError('scope_rejected', REDIRECT, 422)
     # A Japanese keyword appended to an unrelated command is not an allowance.
-    unrelated = r'\b(?:write|create|debug|fix|build)\b.{0,45}\b(?:python (?:code|program)|(?:windows )?driver|history essay|business plan|javascript app)|\b(?:do|solve)\b.{0,30}\b(?:calculus|math)\b|stock picks|general therapist|explain quantum physics'
+    unrelated = r'\b(?:write|create|debug|fix|build)\b.{0,45}\b(?:python (?:code|program|script)|(?:windows )?driver|history essay|business plan|javascript app)|\b(?:do|solve)\b.{0,30}\b(?:calculus|math)\b|stock picks|general therapist|explain quantum physics'
     language_goal = r'(?:in|into) japanese|japanese (?:for|vocabulary|language)|(?:translate|how (?:do|would) i (?:say|discuss|talk))'
     if re.search(unrelated, text) and not re.search(language_goal, text):
         raise TutorError('scope_rejected', REDIRECT, 422)

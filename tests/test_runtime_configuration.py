@@ -1,5 +1,7 @@
 import asyncio
 import json
+import subprocess
+import sys
 
 import httpx
 import pytest
@@ -12,6 +14,23 @@ from app.llm.factory import provider_metadata
 from app.llm.gemini import GeminiProvider
 from app.main import create_app
 from fastapi.testclient import TestClient
+
+
+def test_provider_success_is_visible_with_default_uvicorn_logging():
+    result = subprocess.run([sys.executable, '-c', '''
+import asyncio
+import logging.config
+from uvicorn.config import LOGGING_CONFIG
+from app.llm.common import checked_generation
+logging.config.dictConfig(LOGGING_CONFIG)
+class OfflineProvider:
+    @checked_generation('gemini')
+    async def generate(self, **kwargs):
+        return '{"message":"private-response"}'
+asyncio.run(OfflineProvider().generate(instructions='private-prompt', messages=[]))
+'''], cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=15, check=True)
+    assert 'LLM success provider=gemini path=direct latency_ms=' in result.stderr
+    assert 'private-' not in result.stdout + result.stderr
 
 
 def test_env_file_is_application_relative_and_environment_wins(tmp_path, monkeypatch):

@@ -1,8 +1,9 @@
-# Phase 6.5 progress report — 2026-09-27
+# Phase 6.5 progress report — 2026-09-28
 
-**Status: local implementation and clean-package verification complete; live rollout
-is blocked on owner-managed Render environment configuration. Phase 6.5 is not
-complete. No Phase 7 or RAG work has begun.**
+**Status: implementation deployed; GitHub CI passed all 418 tests and the public
+health endpoint and access gate are verified live. Authenticated learning acceptance
+is in progress. Phase 6.5 is not complete. No Phase 7
+or RAG work has begun.**
 
 ## Initial audit
 
@@ -102,21 +103,40 @@ adapter, `frontend/app.js`, and two persistence descriptions in `frontend/index.
 ## Live status and manual handoff
 
 Frontend/backend host: existing Render Free Web Service.
-Database host: existing Supabase Free PostgreSQL, integration pending.
+Database host: existing Supabase Free PostgreSQL; authenticated persistence verification pending.
 Site: https://japanese-ai-tutor.onrender.com
 Health target: https://japanese-ai-tutor.onrender.com/health
 
-The local changes have not been pushed or deployed. Current cloud PostgreSQL,
-Gemini/Groq behavior, health success, cloud restart persistence, CI completion and
-actual phone access are **not verified**. The existing live application should not
-be shared with testers before the access gate is deployed.
+Commit `8c01edf` was pushed to `main`. GitHub Actions run
+[36320329369](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36320329369)
+passed all 418 tests, the source/history privacy audit, and JavaScript syntax checks.
+The owner saved Render configuration, reported Groq configured, corrected startup
+validation errors for the HTTPS origin and access secrets, and confirmed setting
+Render's health-check path to `/health` after deployment.
 
-Next owner action: follow [the environment table and menus](docs/deployment.md)
-in Render's existing service. Enter all secrets privately, preserve the selected
-Free tier, and report only that settings are saved and whether Groq is ready.
-After that: push the reviewed checkpoint, verify CI/deployment, check `/health`,
-then stop for the owner to change Render's health-check path to `/health` as requested.
-Continue with real staging acceptance and restart tests after that manual step.
+Live HTTPS verification returned `200 {"status":"ok"}` from `/health`. Reloading
+the browser redirected the unauthenticated root to `/access`, displaying the private
+access form. Unauthenticated `/ready` and API requests returned safe 401 responses.
+Responses include no-store, nosniff, and Content-Security-Policy headers.
+
+The owner signed in privately. A 30-item test placement completed, created its
+profile, and remained available after the owner redeployed to correct `GROQ_MODEL`.
+The owner supplied the safe startup log confirming staging, PostgreSQL, and Gemini
+primary (`gemini-3.5-flash-lite`). Live tutor requests returned structured Japanese
+explanation and exercise feedback. Profile history showed the saved conversation,
+concept explanation, and one correct vocabulary performance observation. A five-minute
+vocabulary study plan was created and opened; the due queue showed seven grammar items.
+
+Live verification found two small repair needs: “Python script” was missing from
+the pre-inference scope pattern during a pending exercise, and provider INFO logs
+were not routed through Uvicorn's standard handler. Both are repaired locally.
+The scope regression failed before the fix and passed afterward; 113 focused
+staging/provider/runtime tests pass. Diagnostics remain metadata-only.
+
+Actual provider selection per request, final study/review persistence across another
+redeploy, and physical phone access still need verification. Controlled Groq failover
+is covered by offline tests; no deliberate quota exhaustion was performed.
+No dashboard secret values were retrieved.
 
 ## Limits, costs, and rollback
 

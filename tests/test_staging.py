@@ -164,3 +164,6 @@ def test_short_english_exercise_answer_is_allowed(gated, provider):
     assert gated.post('/api/chat', json={'session_id': session, 'message': 'Japanese vocabulary quiz'}).status_code == 200
     assert gated.post('/api/chat', json={'session_id': session, 'message': 'head'}).status_code == 200
     assert gated.post('/api/chat', json={'session_id': session, 'message': 'Write Python code for me.'}).status_code == 422
+    calls_before = len(provider.calls)
+    assert gated.post('/api/chat', json={'session_id': session, 'message': 'Write a Python script to sort a list of numbers.'}).status_code == 422
+    assert len(provider.calls) == calls_before

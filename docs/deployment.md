@@ -1,7 +1,9 @@
 # Phase 6.5 private staging
 
-Status: implementation prepared locally; dashboard configuration, push, and live
-acceptance tests are still pending. This is not a production release.
+Status: commit `8c01edf` is deployed and GitHub CI passed all 418 tests. Public
+health and the access gate are verified; the owner confirmed the `/health` dashboard
+setting. Authenticated learning and restart acceptance tests remain pending.
+This is not a production release.
 
 ## Architecture
 
@@ -12,7 +14,7 @@ site, Docker runtime, browser database client, RAG, or reference upload is neede
 
 Existing service: https://japanese-ai-tutor.onrender.com
 Health after deployment: https://japanese-ai-tutor.onrender.com/health
-The existing live service returned 404 at `/health` during the initial inspection.
+The deployed service now returns `200 {"status":"ok"}` at `/health`.
 
 ## Manual setup before pushing this checkpoint
 
