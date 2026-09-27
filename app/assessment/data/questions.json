@@ -1,0 +1,1433 @@
+[
+  {
+    "id": "q001",
+    "skill": "hiragana",
+    "topic": "hiragana",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which hiragana represents the sound “a”?",
+    "choices": [
+      "あ",
+      "い",
+      "う",
+      "え"
+    ],
+    "answers": [
+      "あ"
+    ],
+    "explanation": "あ represents a.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q002",
+    "skill": "hiragana",
+    "topic": "hiragana",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which hiragana represents the sound “ne”?",
+    "choices": [
+      "れ",
+      "わ",
+      "ね",
+      "ぬ"
+    ],
+    "answers": [
+      "ね"
+    ],
+    "explanation": "ね represents ne.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q003",
+    "skill": "hiragana",
+    "topic": "hiragana",
+    "difficulty": 1,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which hiragana represents the sound “tsu”?",
+    "choices": [
+      "し",
+      "つ",
+      "す",
+      "ち"
+    ],
+    "answers": [
+      "つ"
+    ],
+    "explanation": "つ represents tsu.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q004",
+    "skill": "hiragana",
+    "topic": "hiragana",
+    "difficulty": 2,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which hiragana represents the sound “ryo”?",
+    "choices": [
+      "りよ",
+      "りゅ",
+      "りょ",
+      "りゃ"
+    ],
+    "answers": [
+      "りょ"
+    ],
+    "explanation": "りょ represents ryo.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q005",
+    "skill": "hiragana",
+    "topic": "hiragana",
+    "difficulty": 2,
+    "jlpt_reference": null,
+    "question_type": "kanji_reading",
+    "prompt": "Write しょ in katakana (or give its sound).",
+    "choices": [],
+    "answers": [
+      "ショ"
+    ],
+    "explanation": "しょ is sho; the small ょ changes the syllable.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "sho"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q006",
+    "skill": "katakana",
+    "topic": "katakana",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which katakana represents the sound “ka”?",
+    "choices": [
+      "カ",
+      "ケ",
+      "ク",
+      "タ"
+    ],
+    "answers": [
+      "カ"
+    ],
+    "explanation": "カ represents ka.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q007",
+    "skill": "katakana",
+    "topic": "katakana",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which katakana represents the sound “shi”?",
+    "choices": [
+      "ツ",
+      "ソ",
+      "ン",
+      "シ"
+    ],
+    "answers": [
+      "シ"
+    ],
+    "explanation": "シ represents shi.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q008",
+    "skill": "katakana",
+    "topic": "katakana",
+    "difficulty": 1,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which katakana represents the sound “nu”?",
+    "choices": [
+      "ス",
+      "ヌ",
+      "フ",
+      "ラ"
+    ],
+    "answers": [
+      "ヌ"
+    ],
+    "explanation": "ヌ represents nu.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q009",
+    "skill": "katakana",
+    "topic": "katakana",
+    "difficulty": 2,
+    "jlpt_reference": null,
+    "question_type": "multiple_choice",
+    "prompt": "Which katakana represents the sound “kya”?",
+    "choices": [
+      "キヤ",
+      "キュ",
+      "キャ",
+      "シャ"
+    ],
+    "answers": [
+      "キャ"
+    ],
+    "explanation": "キャ represents kya.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q010",
+    "skill": "katakana",
+    "topic": "katakana",
+    "difficulty": 2,
+    "jlpt_reference": null,
+    "question_type": "kanji_reading",
+    "prompt": "Write キャ in hiragana (or give its sound).",
+    "choices": [],
+    "answers": [
+      "きゃ"
+    ],
+    "explanation": "キャ is kya; the small ャ changes the syllable.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "kya"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q011",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 水.",
+    "choices": [
+      "water",
+      "fire",
+      "mountain",
+      "person"
+    ],
+    "answers": [
+      "water"
+    ],
+    "explanation": "水: water.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q012",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 食べる.",
+    "choices": [
+      "to drink",
+      "to eat",
+      "to sleep",
+      "to read"
+    ],
+    "answers": [
+      "to eat"
+    ],
+    "explanation": "食べる: to eat.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q013",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 約束.",
+    "choices": [
+      "weather",
+      "homework",
+      "promise / appointment",
+      "station"
+    ],
+    "answers": [
+      "promise / appointment"
+    ],
+    "explanation": "約束: promise / appointment.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q014",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 間に合う.",
+    "choices": [
+      "to be in time",
+      "to get lost",
+      "to break",
+      "to forget"
+    ],
+    "answers": [
+      "to be in time"
+    ],
+    "explanation": "間に合う: to be in time.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q015",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 改善.",
+    "choices": [
+      "opposition",
+      "improvement",
+      "permission",
+      "repetition"
+    ],
+    "answers": [
+      "improvement"
+    ],
+    "explanation": "改善: improvement.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q016",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 妥協.",
+    "choices": [
+      "investigation",
+      "compromise",
+      "expansion",
+      "certainty"
+    ],
+    "answers": [
+      "compromise"
+    ],
+    "explanation": "妥協: compromise.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q017",
+    "skill": "vocabulary",
+    "topic": "vocabulary in context",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 躊躇.",
+    "choices": [
+      "hesitation",
+      "gratitude",
+      "cooperation",
+      "isolation"
+    ],
+    "answers": [
+      "hesitation"
+    ],
+    "explanation": "躊躇: hesitation.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q018",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “This is a book.”",
+    "choices": [
+      "これは本です。",
+      "これは水です。",
+      "これは猫です。",
+      "これは駅です。"
+    ],
+    "answers": [
+      "これは本です。"
+    ],
+    "explanation": "本 means book; これは…です identifies something.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q019",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “I want to go to Japan.”",
+    "choices": [
+      "日本を行きたいです。",
+      "日本に行きたいです。",
+      "日本が行きました。",
+      "日本で行きません。"
+    ],
+    "answers": [
+      "日本に行きたいです。"
+    ],
+    "explanation": "Destination に and verb stem + たい.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q020",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “I have eaten sushi before.”",
+    "choices": [
+      "寿司を食べるつもりです。",
+      "寿司を食べてはいけません。",
+      "寿司を食べたことがあります。",
+      "寿司を食べなければなりません。"
+    ],
+    "answers": [
+      "寿司を食べたことがあります。"
+    ],
+    "explanation": "Past plain verb + ことがある expresses experience.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q021",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “I study while listening to music.”",
+    "choices": [
+      "音楽を聞いてから勉強します。",
+      "音楽を聞かずに勉強します。",
+      "音楽を聞くために勉強します。",
+      "音楽を聞きながら勉強します。"
+    ],
+    "answers": [
+      "音楽を聞きながら勉強します。"
+    ],
+    "explanation": "Verb stem + ながら means while doing.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q022",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “It does not mean that everyone agrees.”",
+    "choices": [
+      "全員が賛成するわけではありません。",
+      "全員が賛成するはずです。",
+      "全員が賛成したに違いありません。",
+      "全員が賛成するしかありません。"
+    ],
+    "answers": [
+      "全員が賛成するわけではありません。"
+    ],
+    "explanation": "わけではない limits or denies a general conclusion.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q023",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “We have no choice but to postpone the plan.”",
+    "choices": [
+      "計画を延期するまでもない。",
+      "計画を延期するわけにはいかない。",
+      "計画を延期せざるを得ない。",
+      "計画を延期したとは限らない。"
+    ],
+    "answers": [
+      "計画を延期せざるを得ない。"
+    ],
+    "explanation": "せざるを得ない expresses an unavoidable action.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q024",
+    "skill": "grammar",
+    "topic": "sentence patterns",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "grammar_selection",
+    "prompt": "Choose the sentence meaning “I cannot help hoping for their recovery.”",
+    "choices": [
+      "回復を願うにとどまらない。",
+      "回復を願わずにはいられない。",
+      "回復を願うには及ばない。",
+      "回復を願うとも限らない。"
+    ],
+    "answers": [
+      "回復を願わずにはいられない。"
+    ],
+    "explanation": "ずにはいられない expresses an irresistible feeling or action.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q025",
+    "skill": "particles",
+    "topic": "topic marking",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "sentence_completion",
+    "prompt": "Fill the blank: 私___学生です。",
+    "choices": [
+      "を",
+      "に",
+      "は",
+      "で"
+    ],
+    "answers": [
+      "は"
+    ],
+    "explanation": "は marks the topic.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q026",
+    "skill": "particles",
+    "topic": "destination and location particles",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "sentence_completion",
+    "prompt": "Fill the destination marker: 学校___行きます。",
+    "choices": [
+      "を",
+      "に",
+      "で",
+      "が"
+    ],
+    "answers": [
+      "に"
+    ],
+    "explanation": "に marks a destination.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q027",
+    "skill": "particles",
+    "topic": "destination and location particles",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_completion",
+    "prompt": "Fill the action-location marker: 図書館___本を読みます。",
+    "choices": [
+      "に",
+      "を",
+      "へ",
+      "で"
+    ],
+    "answers": [
+      "で"
+    ],
+    "explanation": "で marks where an action takes place.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q028",
+    "skill": "particles",
+    "topic": "limiting particles",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_completion",
+    "prompt": "Choose “only” in the pattern meaning “I have only 100 yen”: 百円___ありません。",
+    "choices": [
+      "しか",
+      "まで",
+      "でも",
+      "ほど"
+    ],
+    "answers": [
+      "しか"
+    ],
+    "explanation": "しか combines with a negative predicate.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q029",
+    "skill": "particles",
+    "topic": "contrast and concession",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the contrast: 説明は短い___、分かりやすい。",
+    "choices": [
+      "について",
+      "ながらも",
+      "ために",
+      "ことに"
+    ],
+    "answers": [
+      "ながらも"
+    ],
+    "explanation": "ながらも can mean although, contrasting brevity and clarity.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q030",
+    "skill": "particles",
+    "topic": "contrast and concession",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "sentence_completion",
+    "prompt": "Choose “let alone”: 彼は漢字___、ひらがなも読めない。",
+    "choices": [
+      "に限り",
+      "どころか",
+      "に沿って",
+      "に応じて"
+    ],
+    "answers": [
+      "どころか"
+    ],
+    "explanation": "どころか here means let alone; even the easier script cannot be read.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q031",
+    "skill": "particles",
+    "topic": "contrast and concession",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "sentence_completion",
+    "prompt": "Choose “even”: 専門家___解けない問題だ。",
+    "choices": [
+      "とて",
+      "だけに",
+      "にせよ",
+      "をもって"
+    ],
+    "answers": [
+      "とて"
+    ],
+    "explanation": "とて after a noun can mean even, in formal usage.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q032",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "sentence_completion",
+    "prompt": "Choose the polite present form of 食べる.",
+    "choices": [
+      "食べます",
+      "食べました",
+      "食べませんでした",
+      "食べた"
+    ],
+    "answers": [
+      "食べます"
+    ],
+    "explanation": "食べる → 食べます.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q033",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the polite past form: 昨日、ラーメンを___。",
+    "choices": [
+      "食べます",
+      "食べました",
+      "食べたい",
+      "食べる"
+    ],
+    "answers": [
+      "食べました"
+    ],
+    "explanation": "食べました is the polite past.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q034",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the て-form of 書く.",
+    "choices": [
+      "書いて",
+      "書って",
+      "書きて",
+      "書んで"
+    ],
+    "answers": [
+      "書いて"
+    ],
+    "explanation": "く usually changes to いて.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q035",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the potential form of 泳ぐ (“can swim”).",
+    "choices": [
+      "泳がれる",
+      "泳げる",
+      "泳がせる",
+      "泳いだ"
+    ],
+    "answers": [
+      "泳げる"
+    ],
+    "explanation": "Godan potential: 泳ぐ → 泳げる.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q036",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the passive form of 読む.",
+    "choices": [
+      "読ませる",
+      "読める",
+      "読まれる",
+      "読もう"
+    ],
+    "answers": [
+      "読まれる"
+    ],
+    "explanation": "Passive: 読む → 読まれる.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q037",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the causative-passive form of 食べる.",
+    "choices": [
+      "食べさせる",
+      "食べられる",
+      "食べさせられる",
+      "食べよう"
+    ],
+    "answers": [
+      "食べさせられる"
+    ],
+    "explanation": "食べさせられる means be made to eat.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q038",
+    "skill": "verb_conjugation",
+    "topic": "verb forms",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the respectful past form of いらっしゃる.",
+    "choices": [
+      "いらっしゃりました",
+      "いらっしゃいました",
+      "いらっしゃったです",
+      "いらっしゃられました"
+    ],
+    "answers": [
+      "いらっしゃいました"
+    ],
+    "explanation": "The polite stem is いらっしゃい; this is respectful past.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q039",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "sentence_completion",
+    "prompt": "Choose the polite sentence meaning “It is hot.”",
+    "choices": [
+      "暑いです。",
+      "暑かったです。",
+      "暑くないです。",
+      "暑くなかったです。"
+    ],
+    "answers": [
+      "暑いです。"
+    ],
+    "explanation": "い-adjective + です.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q040",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the past form of 高い.",
+    "choices": [
+      "高いでした",
+      "高かった",
+      "高くかった",
+      "高なかった"
+    ],
+    "answers": [
+      "高かった"
+    ],
+    "explanation": "Replace final い with かった.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q041",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the past negative form of おいしい.",
+    "choices": [
+      "おいしくなかった",
+      "おいしいなかった",
+      "おいしくないでした",
+      "おいしなかった"
+    ],
+    "answers": [
+      "おいしくなかった"
+    ],
+    "explanation": "い → くなかった.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q042",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the negative form of いい.",
+    "choices": [
+      "いくない",
+      "よくない",
+      "いいない",
+      "よいくない"
+    ],
+    "answers": [
+      "よくない"
+    ],
+    "explanation": "いい conjugates using よい.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q043",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the conditional form: “if it is quiet”.",
+    "choices": [
+      "静かければ",
+      "静かなら",
+      "静かくなら",
+      "静かいなら"
+    ],
+    "answers": [
+      "静かなら"
+    ],
+    "explanation": "な-adjective conditional: 静かなら.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q044",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the correct adverbial form: 事情を___説明した。",
+    "choices": [
+      "詳しい",
+      "詳しく",
+      "詳しな",
+      "詳しかった"
+    ],
+    "answers": [
+      "詳しく"
+    ],
+    "explanation": "い-adjective adverbial: 詳しい → 詳しく.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q045",
+    "skill": "adjective_conjugation",
+    "topic": "adjective forms",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "sentence_completion",
+    "prompt": "Choose the correct formal concessive form: たとえ条件が___、引き受ける。",
+    "choices": [
+      "厳しかろうとも",
+      "厳しいろうとも",
+      "厳しくろうとも",
+      "厳しなろうとも"
+    ],
+    "answers": [
+      "厳しかろうとも"
+    ],
+    "explanation": "い-adjective conjectural/concessive form: 厳しかろうとも.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q046",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 山.",
+    "choices": [],
+    "answers": [
+      "やま"
+    ],
+    "explanation": "山 is read やま.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "yama"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q047",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 学校.",
+    "choices": [],
+    "answers": [
+      "がっこう"
+    ],
+    "explanation": "学校 is read がっこう.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "gakkou"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q048",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 時間.",
+    "choices": [],
+    "answers": [
+      "じかん"
+    ],
+    "explanation": "時間 is read じかん.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "jikan"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q049",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 予約.",
+    "choices": [],
+    "answers": [
+      "よやく"
+    ],
+    "explanation": "予約 is read よやく.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "yoyaku"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q050",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 経済.",
+    "choices": [],
+    "answers": [
+      "けいざい"
+    ],
+    "explanation": "経済 is read けいざい.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "keizai"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q051",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 貢献.",
+    "choices": [],
+    "answers": [
+      "こうけん"
+    ],
+    "explanation": "貢献 is read こうけん.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "kouken"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q052",
+    "skill": "kanji",
+    "topic": "kanji readings",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "kanji_reading",
+    "prompt": "Write the kana reading of 顕著.",
+    "choices": [],
+    "answers": [
+      "けんちょ"
+    ],
+    "explanation": "顕著 is read けんちょ.",
+    "evaluation": "fixed",
+    "romaji_answers": [
+      "kencho"
+    ],
+    "source": "curated"
+  },
+  {
+    "id": "q053",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "reading_comprehension",
+    "prompt": "これは水です。\nWhat is this?",
+    "choices": [
+      "Water",
+      "A book",
+      "A cat",
+      "A station"
+    ],
+    "answers": [
+      "Water"
+    ],
+    "explanation": "水 means water.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q054",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "reading_comprehension",
+    "prompt": "昨日、友達と東京に行きました。昼ご飯にラーメンを食べました。\nWhere did the speaker go?",
+    "choices": [
+      "Osaka",
+      "Tokyo",
+      "Kyoto",
+      "Nara"
+    ],
+    "answers": [
+      "Tokyo"
+    ],
+    "explanation": "東京に行きました gives the destination.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q055",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "reading_comprehension",
+    "prompt": "図書館は月曜日が休みです。今日は月曜日なので、明日本を返します。\nWhen will the speaker return the book?",
+    "choices": [
+      "Today",
+      "Tomorrow",
+      "Every Monday",
+      "Next month"
+    ],
+    "answers": [
+      "Tomorrow"
+    ],
+    "explanation": "明日 means tomorrow; the library is closed today.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q056",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "reading_comprehension",
+    "prompt": "雨が降ったら試合は中止です。今朝から雨が降り続いています。\nWhat happens to the match?",
+    "choices": [
+      "It starts earlier",
+      "It moves indoors",
+      "It is canceled",
+      "It is postponed one hour"
+    ],
+    "answers": [
+      "It is canceled"
+    ],
+    "explanation": "雨が降ったら…中止 and ongoing rain imply cancellation.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q057",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "reading_comprehension",
+    "prompt": "この製品は安いが、修理に費用がかかる。長く使うなら、購入時の価格だけで判断しないほうがよい。\nWhat does the writer recommend?",
+    "choices": [
+      "Buy the cheapest product",
+      "Consider costs beyond the purchase price",
+      "Never repair products",
+      "Replace products every month"
+    ],
+    "answers": [
+      "Consider costs beyond the purchase price"
+    ],
+    "explanation": "Repair costs matter for long-term use.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q058",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "reading_comprehension",
+    "prompt": "制度の導入に反対しているわけではない。ただ、十分な検証もないまま全国で実施するのは慎重であるべきだ。\nWhat is the writer’s position?",
+    "choices": [
+      "Reject the system entirely",
+      "Implement everywhere immediately",
+      "Proceed cautiously until adequately evaluated",
+      "Avoid all evaluation"
+    ],
+    "answers": [
+      "Proceed cautiously until adequately evaluated"
+    ],
+    "explanation": "The writer qualifies support by requiring evidence before nationwide use.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q059",
+    "skill": "reading",
+    "topic": "reading for meaning",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "reading_comprehension",
+    "prompt": "効率化は目的ではなく手段にすぎない。数値の改善に固執するあまり、本来守るべき価値を損なうなら、本末転倒と言わざるを得ない。\nWhat is the central criticism?",
+    "choices": [
+      "Efficiency always damages value",
+      "Numerical improvement can displace the real purpose",
+      "Values cannot be discussed",
+      "Efficiency is the only legitimate goal"
+    ],
+    "answers": [
+      "Numerical improvement can displace the real purpose"
+    ],
+    "explanation": "The criticism concerns confusing a means with the purpose.",
+    "evaluation": "choice",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q060",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 0,
+    "jlpt_reference": null,
+    "question_type": "sentence_construction",
+    "prompt": "Write a Japanese sentence meaning “I am a student.”",
+    "choices": [],
+    "answers": [
+      "私は学生です。",
+      "学生です。"
+    ],
+    "explanation": "Preserve student identity; an omitted subject is acceptable.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q061",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "sentence_construction",
+    "prompt": "Write a Japanese sentence meaning “I studied Japanese yesterday.”",
+    "choices": [],
+    "answers": [
+      "昨日、日本語を勉強しました。",
+      "私は昨日日本語を勉強した。"
+    ],
+    "explanation": "Past study of Japanese yesterday; plain and polite styles are both fully valid.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q062",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 4,
+    "jlpt_reference": "N4",
+    "question_type": "english_to_japanese",
+    "prompt": "Translate into Japanese: “I want to go to Japan.”",
+    "choices": [],
+    "answers": [
+      "日本に行きたいです。",
+      "日本へ行きたい。"
+    ],
+    "explanation": "Desire to go to Japan; accept に or へ and plain or polite forms.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q063",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 6,
+    "jlpt_reference": "N4",
+    "question_type": "sentence_construction",
+    "prompt": "Write a Japanese sentence meaning “I have been to Kyoto before.”",
+    "choices": [],
+    "answers": [
+      "京都に行ったことがあります。",
+      "京都へ行ったことがある。"
+    ],
+    "explanation": "Past experience, not just a single dated trip.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q064",
+    "skill": "reading",
+    "topic": "translation meaning",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "japanese_to_english",
+    "prompt": "Translate into English: 努力したからといって、必ず成功するとは限らない。",
+    "choices": [],
+    "answers": [
+      "Making an effort does not necessarily mean you will succeed."
+    ],
+    "explanation": "Convey that effort does not guarantee success; accept alternate English phrasing.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q065",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 11,
+    "jlpt_reference": "N2",
+    "question_type": "sentence_construction",
+    "prompt": "Write a Japanese sentence meaning “If I had known that, I would not have gone.”",
+    "choices": [],
+    "answers": [
+      "それを知っていたら、行かなかったでしょう。",
+      "それを知っていれば、行かなかったのに。"
+    ],
+    "explanation": "Past counterfactual: not knowing led to going. Accept natural conditional variants.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q066",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 14,
+    "jlpt_reference": "N1",
+    "question_type": "sentence_construction",
+    "prompt": "Write a Japanese sentence meaning “Regardless of the outcome, the experience itself is valuable.”",
+    "choices": [],
+    "answers": [
+      "結果のいかんにかかわらず、経験そのものに価値がある。",
+      "結果がどうであれ、その経験自体に価値がある。"
+    ],
+    "explanation": "Convey independence from outcome and intrinsic value of the experience; simpler accurate Japanese is fully valid.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q067",
+    "skill": "sentence_construction",
+    "topic": "sentence construction",
+    "difficulty": 8,
+    "jlpt_reference": "N3",
+    "question_type": "sentence_construction",
+    "prompt": "Write a Japanese sentence meaning “Although I was tired, I finished the work.”",
+    "choices": [],
+    "answers": [
+      "疲れていたのに、仕事を終えました。",
+      "疲れていたけれど、仕事を終わらせた。"
+    ],
+    "explanation": "Convey tiredness, contrast and completed work; accept natural alternatives.",
+    "evaluation": "semantic",
+    "romaji_answers": [],
+    "source": "curated"
+  },
+  {
+    "id": "q068",
+    "skill": "kanji",
+    "topic": "kanji meanings",
+    "difficulty": 2,
+    "jlpt_reference": "N5",
+    "question_type": "kanji_meaning",
+    "prompt": "What does 時間 mean in English?",
+    "choices": [],
+    "answers": [
+      "time"
+    ],
+    "explanation": "時間 means time.",
+    "evaluation": "fixed",
+    "romaji_answers": [],
+    "source": "curated"
+  }
+]

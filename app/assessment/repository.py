@@ -9,6 +9,8 @@ from pydantic import ValidationError
 from app.assessment.questions import BANK_VERSION, QuestionBank
 from app.assessment.schemas import AssessmentState, LearnerProfile
 from app.errors import TutorError
+from app.storage import postgres_connection
+import psycopg
 
 logger = logging.getLogger(__name__)
 
@@ -16,19 +18,24 @@ logger = logging.getLogger(__name__)
 class AssessmentRepository:
     """SQLite snapshots plus append-only evidence, committed in one transaction."""
 
-    def __init__(self, path: str):
+    def __init__(self, path: str, database_url: str = ''):
         self.path = Path(path)
+        self.database_url = database_url
         self.ready = False
 
     @contextmanager
-    def connection(self):
+    def connection(self, *, initialize=False):
         connection = None
         try:
+            if self.database_url:
+                with postgres_connection(self.database_url, initialize=initialize) as db:
+                    yield db
+                return
             connection = sqlite3.connect(str(self.path), timeout=3)
             connection.execute('PRAGMA foreign_keys=ON')
             with connection:
                 yield connection
-        except (sqlite3.Error, OSError, ValidationError, ValueError) as exc:
+        except (sqlite3.Error, psycopg.Error, OSError, ValidationError, ValueError) as exc:
             logger.error('Assessment storage failure: %s', type(exc).__name__)
             raise TutorError('assessment_storage', 'Assessment storage is unavailable. Please retry; ordinary chat is still available.', 503) from exc
         finally:
@@ -37,10 +44,11 @@ class AssessmentRepository:
 
     def initialize(self, bank: QuestionBank):
         try:
-            self.path.parent.mkdir(parents=True, exist_ok=True)
+            if not self.database_url:
+                self.path.parent.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
             raise TutorError('assessment_storage', 'Cannot create assessment storage. Check ASSESSMENT_DB_PATH.', 503) from exc
-        with self.connection() as db:
+        with self.connection(initialize=True) as db:
             version = db.execute('PRAGMA user_version').fetchone()[0]
             if version not in (0, 1, 2, 3, 4, 5):
                 raise TutorError('database_version', 'This assessment database version is not supported by this app.', 503)

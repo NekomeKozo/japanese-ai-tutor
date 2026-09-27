@@ -1,0 +1,33 @@
+name: Tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: tutor_test
+          POSTGRES_PASSWORD: ephemeral_ci_only
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 10s
+          --health-timeout 5s --health-retries 5
+    env:
+      TEST_POSTGRES_URL: postgresql://tutor_test:ephemeral_ci_only@127.0.0.1:5432/postgres
+      ENVIRONMENT: development
+      LLM_PROVIDER: gemini
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-lock.txt
+      - run: python scripts/audit_deployment.py
+      - run: pytest -q
+      - run: for file in frontend/*.js; do node --check "$file"; done

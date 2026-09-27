@@ -1,0 +1,22 @@
+# No Docker deployment is currently used. Fail closed if one is added later.
+**
+!app/
+!app/**
+!frontend/
+!frontend/**
+!requirements*.txt
+!.python-version
+**/__pycache__/
+**/*.pyc
+**/.env
+**/.env.*
+**/reference/
+**/references/
+**/knowledge_base/
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/*.sqlite3-*
+**/*.pdf
+**/*.epub
+**/*.log

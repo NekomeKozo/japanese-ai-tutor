@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,7 +12,7 @@ ENV_FILE = PROJECT_ROOT / '.env'
 
 class Settings(BaseSettings):
     # Resolve against the application, even when uvicorn is launched elsewhere.
-    model_config = SettingsConfigDict(env_file=ENV_FILE, env_file_encoding='utf-8', extra='ignore')
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_file_encoding='utf-8', extra='ignore', hide_input_in_errors=True)
 
     llm_provider: str = 'gemini'
     # Blank uses the selected adapter's default; explicit models survive upgrades.
@@ -25,3 +27,32 @@ class Settings(BaseSettings):
     romaji_enabled: bool = False
     assessment_db_path: str = 'data/assessment.sqlite3'
     assessment_ttl_seconds: int = Field(default=86400, ge=60, le=604800)
+    environment: Literal['development', 'staging'] = 'development'
+    frontend_url: str = ''
+    database_url: SecretStr = SecretStr('')
+    staging_access_enabled: bool = False
+    staging_access_code: SecretStr = SecretStr('')
+    staging_session_secret: SecretStr = SecretStr('')
+    staging_session_hours: int = Field(default=168, ge=1, le=720)
+    ai_rate_limit_per_hour: int = Field(default=40, ge=1, le=200)
+    ai_global_rate_limit_per_hour: int = Field(default=200, ge=1, le=1000)
+    scope_enforcement_enabled: bool = False
+    llm_failover_enabled: bool = False
+    llm_fallback_provider: str = 'groq'
+    groq_api_key: SecretStr = SecretStr('')
+    groq_model: str = ''
+
+    @model_validator(mode='after')
+    def staging_configuration(self):
+        if self.environment == 'staging':
+            origin = urlsplit(self.frontend_url)
+            if origin.scheme != 'https' or not origin.netloc or origin.username or origin.password or origin.query or origin.fragment or origin.path not in ('', '/'):
+                raise ValueError('Staging requires FRONTEND_URL as its HTTPS origin')
+            if not self.database_url.get_secret_value().startswith(('postgresql://', 'postgres://')):
+                raise ValueError('Staging requires a PostgreSQL DATABASE_URL')
+            if not self.staging_access_enabled or not self.scope_enforcement_enabled:
+                raise ValueError('Staging requires access and scope enforcement')
+        if self.staging_access_enabled:
+            if len(self.staging_access_code.get_secret_value()) < 16 or len(self.staging_session_secret.get_secret_value()) < 32:
+                raise ValueError('Staging requires an access code of at least 16 characters and a signing secret of at least 32 characters')
+        return self

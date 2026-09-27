@@ -4,6 +4,7 @@ from contextvars import ContextVar
 import json
 import logging
 import re
+import time
 
 from app.errors import TutorError
 
@@ -55,6 +56,7 @@ def checked_generation(provider: str):
     def decorate(generate):
         @wraps(generate)
         async def checked(self, **kwargs):
+            started = time.monotonic()
             try:
                 output = await generate(self, **kwargs)
                 if kwargs.get('schema') is not None:
@@ -62,6 +64,8 @@ def checked_generation(provider: str):
                         json.loads(output)
                     except (ValueError, TypeError) as exc:
                         raise TutorError('invalid_model_response', 'The tutor returned an unreadable response. Please try again.') from exc
+                logger.info('LLM success provider=%s path=%s latency_ms=%d',
+                            provider, current_request_path(), int((time.monotonic() - started) * 1000))
                 return output
             except TutorError as exc:
                 # Never include exceptions, request/response bodies, headers or prompts.

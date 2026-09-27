@@ -4,13 +4,17 @@ from fastapi import APIRouter, Request
 
 from app.assessment.schemas import AnswerRequest, StartRequest
 from app.errors import TutorError
+from app.safeguards import claim, study_guard
 
 router = APIRouter(prefix='/api/assessments', tags=['placement'])
 
 
 @router.post('', status_code=201)
 async def start(body: StartRequest, request: Request):
-    return request.app.state.assessment.start(body)
+    result = request.app.state.assessment.start(body)
+    claim(request, 'assessment', result['assessment_id'])
+    claim(request, 'learner', result['learner_id'])
+    return result
 
 
 @router.get('/{assessment_id}')
@@ -21,6 +25,7 @@ async def resume(assessment_id: UUID, request: Request):
 
 @router.post('/{assessment_id}/answers')
 async def answer(assessment_id: UUID, body: AnswerRequest, request: Request):
+    study_guard(request, body.answer, study_answer=True)
     return await request.app.state.assessment.answer(assessment_id, body)
 
 

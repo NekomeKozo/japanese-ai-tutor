@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Request
 
 from app.curriculum.schemas import CompletionRequest, PlanRequest
+from app.safeguards import study_guard
 
 router=APIRouter(tags=['curriculum'])
 PREFIX='/api/learners/{learner_id}/study'
@@ -30,11 +31,13 @@ async def start(learner_id:UUID,session_id:UUID,request:Request):
 
 @router.post(PREFIX+'/{session_id}/activities/{activity_id}/open')
 async def open_activity(learner_id:UUID,session_id:UUID,activity_id:UUID,request:Request):
+    study_guard(request)
     return await request.app.state.curriculum.open_activity(learner_id,session_id,activity_id)
 
 
 @router.post(PREFIX+'/{session_id}/activities/{activity_id}/complete')
 async def complete_activity(learner_id:UUID,session_id:UUID,activity_id:UUID,body:CompletionRequest,request:Request):
+    study_guard(request, body.answer, study_answer=True)
     return await request.app.state.curriculum.complete_activity(learner_id,session_id,activity_id,body)
 
 

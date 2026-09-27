@@ -1,6 +1,14 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 6 — Spaced Repetition & Intelligent Review Scheduler.** Gemini and OpenAI use
+**Current phase: Phase 6.5 — staging deployment preparation (live acceptance pending).**
+See [deployment setup and manual Render steps](docs/deployment.md) and
+[Phase 6.5 status](PHASE6_5_REPORT.md). Development retains local SQLite; staging
+requires PostgreSQL, server-side private access, and scope safeguards. The existing
+Render service serves both frontend and API, with Supabase for persistent storage.
+Groq can provide a bounded fallback while Gemini remains primary. Do not share the
+staging site with testers until deployment configuration and live checks are complete.
+
+Phase 6 — Spaced Repetition & Intelligent Review Scheduler remains intact. Gemini and OpenAI use
 one provider interface; Gemini is the default for new development setups. This preserves the existing
 tutor, adaptive placement and persistent learning memory in place. Today's Study builds
 and saves an evidence-based plan for 5–60 minutes. Application code selects topics,

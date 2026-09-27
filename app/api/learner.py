@@ -3,13 +3,16 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request
 
 from app.learner.schemas import PreferencesPatch
+from app.safeguards import claim
 
 router = APIRouter(prefix='/api/learners', tags=['learner memory'])
 
 
 @router.post('', status_code=201)
 async def create(request: Request):
-    return request.app.state.learners.create()
+    result = request.app.state.learners.create()
+    claim(request, 'learner', result['learner_id'])
+    return result
 
 
 @router.get('/{learner_id}/profile')
@@ -29,7 +32,9 @@ async def activity(learner_id: UUID, request: Request, limit: int = Query(20, ge
 
 @router.post('/{learner_id}/sessions', status_code=201)
 async def create_session(learner_id: UUID, request: Request):
-    return request.app.state.saved_sessions.create(learner_id)
+    result = request.app.state.saved_sessions.create(learner_id)
+    claim(request, 'session', result['session_id'])
+    return result
 
 
 @router.get('/{learner_id}/sessions')

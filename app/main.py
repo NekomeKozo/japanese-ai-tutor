@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -31,6 +31,8 @@ from app.llm.factory import create_provider, provider_metadata
 from app.llm.common import request_path
 from app.memory.conversation import ConversationStore
 from app.tutor.service import TutorService
+from app.safeguards import (router as access_router, before_request, protect_resources,
+                            initialize_access, WindowLimiter)
 
 FRONTEND = Path(__file__).resolve().parent.parent / 'frontend'
 logger = logging.getLogger(__name__)
@@ -48,19 +50,30 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             llm = provider or create_provider(settings, client)
             metadata = provider_metadata(settings)
             logging.getLogger('uvicorn.error').info(
-                'Tutor runtime cwd=%s env_file=%s env_file_exists=%s provider=%s model=%s api_key_present=%s',
-                Path.cwd(), settings.model_config.get('env_file', ENV_FILE), ENV_FILE.is_file(),
+                'Tutor runtime environment=%s database_backend=%s provider=%s model=%s api_key_present=%s',
+                settings.environment, 'postgresql' if settings.database_url.get_secret_value() else 'sqlite',
                 metadata['provider'], metadata['model'], metadata['api_key_present'])
             try:
                 bank = QuestionBank.load()
             except (ValueError, OSError):
+                if settings.environment == 'staging':
+                    raise RuntimeError('The built-in placement question bank is missing or invalid.') from None
                 logger.error('Assessment question bank is invalid; ordinary chat remains available')
                 bank = QuestionBank([])
-            repository = AssessmentRepository(settings.assessment_db_path)
+            repository = AssessmentRepository(settings.assessment_db_path, settings.database_url.get_secret_value())
+            app.state.repository = repository
             try:
                 repository.initialize(bank)
+                if settings.staging_access_enabled:
+                    initialize_access(repository)
             except TutorError:
+                if settings.environment == 'staging' or settings.staging_access_enabled:
+                    raise RuntimeError('Staging storage initialization failed; check database configuration.') from None
                 logger.error('Assessment database initialization failed; ordinary chat remains available')
+            app.state.ai_limiter = WindowLimiter()
+            app.state.global_limiter = WindowLimiter()
+            app.state.login_limiter = WindowLimiter()
+            app.state.login_client_limiter = WindowLimiter()
             app.state.assessment = AssessmentEngine(repository, bank,
                 AnswerEvaluator(llm, settings.llm_timeout_seconds), settings.assessment_ttl_seconds)
             app.state.learners = LearnerService(repository)
@@ -74,7 +87,11 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             yield
             app.state.memory.sessions.clear()
 
-    app = FastAPI(title='Adaptive AI Japanese Tutor', version='0.6.0', lifespan=lifespan)
+    app = FastAPI(title='Adaptive AI Japanese Tutor', version='0.6.5', lifespan=lifespan,
+                  dependencies=[Depends(protect_resources)],
+                  docs_url=None if settings.environment == 'staging' else '/docs',
+                  redoc_url=None if settings.environment == 'staging' else '/redoc',
+                  openapi_url=None if settings.environment == 'staging' else '/openapi.json')
 
     @app.middleware('http')
     async def response_headers(request: Request, call_next):
@@ -82,11 +99,14 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         # Routing populates this scope before the service calls its provider.
         token = request_path.set(request.scope)
         try:
-            response = await call_next(request)
+            response = await before_request(request)
+            if response is None:
+                response = await call_next(request)
         finally:
             request_path.reset(token)
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'no-referrer'
         # Keep Swagger /docs functional; the tutor UI needs no external scripts.
         if not request.url.path.startswith(('/docs', '/redoc')):
             response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'"
@@ -118,6 +138,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         return JSONResponse(status_code=500, content={'error': {'code': 'internal_error',
             'message': 'Something went wrong. Please try again.'}})
 
+    app.include_router(access_router)
     app.include_router(router)
     app.include_router(assessment_router)
     app.include_router(learner_router)
@@ -125,6 +146,17 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(mastery_router)
     app.include_router(review_router)
     app.mount('/static', StaticFiles(directory=FRONTEND), name='static')
+
+    @app.get('/health', include_in_schema=False)
+    async def health():
+        return {'status': 'ok'}
+
+    @app.get('/ready', include_in_schema=False)
+    async def ready(request: Request):
+        request.app.state.repository.require_ready()
+        with request.app.state.repository.connection() as db:
+            db.execute('SELECT 1').fetchone()
+        return {'status': 'ready'}
 
     @app.get('/', include_in_schema=False)
     async def index():

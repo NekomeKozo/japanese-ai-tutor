@@ -6,6 +6,8 @@ from app.llm.base import LLMProvider
 from app.llm.openai import OpenAIProvider
 from app.llm.gemini import GeminiProvider
 from app.llm.common import DEFAULT_MODELS, logger, model_name
+from app.llm.groq import GroqProvider, groq_model
+from app.llm.failover import FailoverProvider
 
 
 def provider_metadata(settings: Settings) -> dict:
@@ -13,24 +15,33 @@ def provider_metadata(settings: Settings) -> dict:
     if name not in PROVIDERS:
         return {'provider': 'unconfigured', 'model': None, 'api_key_present': False}
     try:
-        model = model_name(settings.llm_model, DEFAULT_MODELS[name])
+        model = groq_model(settings) if name == 'groq' else model_name(settings.llm_model, DEFAULT_MODELS[name])
     except TutorError:
         model = None
     return {'provider': name, 'model': model,
             'api_key_present': bool(getattr(settings, PROVIDERS[name][1]).get_secret_value().strip())}
 
 
-PROVIDERS = {'gemini': (GeminiProvider, 'gemini_api_key'), 'openai': (OpenAIProvider, 'openai_api_key')}
+PROVIDERS = {'gemini': (GeminiProvider, 'gemini_api_key'), 'openai': (OpenAIProvider, 'openai_api_key'), 'groq': (GroqProvider, 'groq_api_key')}
 
 
 def configuration_issue(settings: Settings) -> str | None:
     provider = PROVIDERS.get(settings.llm_provider.strip().lower())
     if provider is None:
-        return 'Set LLM_PROVIDER to gemini or openai and restart the server.'
+        return 'Set LLM_PROVIDER to gemini, openai or groq and restart the server.'
     if not getattr(settings, provider[1]).get_secret_value().strip():
         return f'Set {provider[1].upper()} in .env and restart the server to begin.'
     try:
-        model_name(settings.llm_model, 'default')
+        if settings.llm_provider.strip().lower() == 'groq':
+            groq_model(settings)
+        else:
+            model_name(settings.llm_model, 'default')
+        if settings.llm_failover_enabled:
+            if settings.llm_provider.strip().lower() != 'gemini' or settings.llm_fallback_provider != 'groq':
+                return 'Failover requires Gemini primary and Groq fallback.'
+            if not settings.groq_api_key.get_secret_value().strip():
+                return 'Configure GROQ_API_KEY on the server before enabling failover.'
+            groq_model(settings)
     except TutorError as exc:
         return exc.message
     return None
@@ -54,4 +65,7 @@ def create_provider(settings: Settings, client: httpx.AsyncClient) -> LLMProvide
         logger.warning('LLM configuration issue category=%s', code)
         return UnconfiguredProvider(issue, code)
     adapter, _ = PROVIDERS[settings.llm_provider.strip().lower()]
-    return adapter(settings, client)
+    primary = adapter(settings, client)
+    if settings.llm_failover_enabled:
+        return FailoverProvider(primary, GroqProvider(settings, client), settings.llm_timeout_seconds)
+    return primary

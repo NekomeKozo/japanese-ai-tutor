@@ -10,6 +10,9 @@ knowledge_base/
 
 # Local databases
 data/
+!app/assessment/data/
+app/assessment/data/*
+!app/assessment/data/questions.json
 *.db
 *.sqlite
 *.sqlite3

@@ -24,6 +24,10 @@ function setBusy(value) {
 
 async function api(path, options = {}) {
   const response = await fetch(path, options);
+  if (response.status === 401 && path !== '/api/access') {
+    window.location.assign('/access');
+    throw new Error('Sign in to continue.');
+  }
   if (response.status === 204) return null;
   const data = await response.json();
   if (!response.ok) {
@@ -35,7 +39,7 @@ async function api(path, options = {}) {
 }
 
 function showError(error) {
-  $('error').textContent = error instanceof TypeError ? 'Cannot reach the server. Check that it is running, then try again.' : error.message;
+  $('error').textContent = error instanceof TypeError ? 'The service is temporarily unavailable. Please try again shortly.' : error.message;
   $('error').hidden = false;
 }
 

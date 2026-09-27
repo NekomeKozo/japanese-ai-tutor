@@ -49,7 +49,7 @@ class GeminiProvider:
         if response.status_code == 404:
             raise TutorError('provider_failure', 'The configured AI model is unavailable. Check LLM_MODEL on the server and restart.')
         if response.status_code >= 500:
-            raise TutorError('provider_failure', 'The AI provider is temporarily unavailable. Please try again shortly.')
+            raise TutorError('provider_failure', 'The AI provider is temporarily unavailable. Please try again shortly.', retryable_provider=True)
         if response.is_error:
             raise TutorError('provider_failure', 'The AI provider could not complete this request. Check your model configuration or try again.')
         try:
