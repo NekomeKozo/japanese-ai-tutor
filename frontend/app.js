@@ -20,6 +20,10 @@ function setBusy(value) {
   for (const id of ['send', 'reset', 'message', 'mode', 'level']) $(id).disabled = value;
   $('send').textContent = value ? 'Working…' : 'Send message';
   $('conversation').setAttribute('aria-busy', String(value));
+  if (!value && tutorOpenPending) {
+    tutorOpenPending = false;
+    if (!$('tutor-panel').hidden) ensureTutorSession();
+  }
 }
 
 function friendlyError(error) {

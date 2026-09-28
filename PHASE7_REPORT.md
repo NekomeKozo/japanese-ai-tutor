@@ -37,7 +37,7 @@ secret, or security middleware changed.
 
 Desktop uses a persistent sidebar. Below 960px, four primary destinations use bottom
 navigation with safe-area spacing; Placement and Settings remain in the header.
-Hash URLs support direct navigation and browser Back/Forward. Unsent tutor and study
+Hash URLs support direct navigation and browser Back/Forward. Learner and placement restoration run concurrently; saved tutor history loads only when Tutor is opened. Unsent tutor and study
 answers, settings drafts, and active study content remain in memory during navigation.
 Server-saved progress restores after reload; unsent drafts do not persist across reload.
 
@@ -94,10 +94,10 @@ profile keeps existing server records.
 - Full pinned-environment backend suite with disposable PostgreSQL 18 on loopback:
   **419 passed**, two existing dependency deprecation warnings.
 - Earlier SQLite-only run: 414 passed, five PostgreSQL tests skipped; superseded by the full run above.
-- Node built-in frontend regression suite: **13 passed**. Covers DOM contracts, startup,
+- Node built-in frontend regression suite: **14 passed**. Covers DOM contracts, startup,
   next-action priority, routing, failed restoration, study/tutor/placement/settings draft
   retention, 401 handling, friendly provider errors, read-only Home, chat retry IDs,
-  and failed dashboard loading.
+  failed dashboard loading, and deferred conversation restoration.
 - JavaScript syntax checks: passed for all frontend scripts.
 - Source and available Git-history secret/private-file audit: passed.
 - Browser preview used an isolated `phase7-preview.sqlite3`, fake provider and synthetic
@@ -126,7 +126,7 @@ Pending deployment of the Phase 7 commit, CI confirmation, and checks on the act
 Render service: access, Home CTA, placement, study, due review, tutor correction/exercise,
 Progress, Settings, persistence, unauthorized access and scope enforcement.
 
-Actual-phone verification remains owner-assisted: open the deployed site on a phone,
+The owner chose to test on an actual phone later (2026-09-28), so this acceptance item remains pending. Actual-phone verification remains owner-assisted: open the deployed site on a phone,
 use bottom navigation, type Japanese with the on-screen keyboard, send a message, submit
 a study/review answer, and confirm Settings and Progress remain usable without horizontal
 scrolling. Desktop viewport emulation does not substitute for this check.
@@ -144,4 +144,3 @@ Pre-Phase-7 checkpoint: `dfea4e6` (Phase 6.5 private-alpha acceptance). Changes 
 to frontend, tests, CI and documentation. Use a normal revert commit for Phase 7 commits
 or Render's rollback to the verified prior deployment. Do not reset/force-push history
 or delete learner data. There are no new database migrations to reverse.
-

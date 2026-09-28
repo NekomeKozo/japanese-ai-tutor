@@ -40,7 +40,7 @@ async function renderRoute() {
     if (section === 'study') await loadStudy();
     if (section === 'progress') { progressSection(detail); await renderProfile(); }
     if (section === 'settings') await loadSettings();
-    if (section === 'tutor' && !sessionId) await resetSession();
+    if (section === 'tutor' && !sessionId) await ensureTutorSession();
   } catch (error) {
     if (sequence !== routeRequest) return;
     if (section === 'progress') profileError(error);
@@ -155,10 +155,10 @@ async function boot() {
   try {
     try { const goal = sessionStorage.getItem('japanese-tutor-onboarding-goal'); if (goal) $('onboarding-goal-select').value = goal; } catch { /* Optional draft only. */ }
     const id = recalled('learner');
-    if (id) { await activateLearner(id);
+    await Promise.all([id ? activateLearner(id) : Promise.resolve(), resumeAssessment()]);
+    if (id) {
       try { if (!sessionStorage.getItem('japanese-tutor-onboarding-goal')) $('onboarding-goal-select').value = activeProfile.preferences.primary_goal; } catch { /* Optional draft. */ }
     }
-    await resumeAssessment();
     appReady = true;
   } catch (error) { showAppError(error); }
   finally { booting = false; $('app-loading').hidden = true; }

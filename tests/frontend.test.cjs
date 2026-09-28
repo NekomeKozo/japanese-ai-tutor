@@ -83,3 +83,8 @@ test('failed chat keeps the draft and retries with the same request ID',async()=
 test('failed dashboard request never presents empty data as a loaded summary',async()=>{
   const h=harness(); h.run("placementLearnerId='learner'"); await assert.rejects(h.run('renderHome()')); assert.equal(h.elements.get('home-content').hidden,true); assert.equal(h.elements.get('home-loading').hidden,true);
 });
+
+test('restoring a learner does not load or create a tutor conversation until Tutor is opened',async()=>{
+  const h=harness(); h.ctx.fetch=async(url,opts={})=>{h.requests.push({url,...opts});return {ok:true,status:200,json:async()=>({learner_id:'learner',estimated_level:'Beginner',preferences:{}})};};
+  await h.run("activateLearner('learner')"); assert.equal(h.requests.length,1); assert.ok(h.requests[0].url.endsWith('/profile')); assert.equal(h.run('sessionId'),null);
+});

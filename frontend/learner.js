@@ -1,5 +1,6 @@
 'use strict';
 let activeProfile = null;
+let tutorOpenPending = false;
 let profileRequest = 0;
 let profileLoadedFor = null;
 document.addEventListener('learning-updated', () => { profileLoadedFor = null; });
@@ -36,12 +37,24 @@ async function activateLearner(id) {
   remember('learner', placementLearnerId);
   $('placement-context').textContent = `${profile.estimated_level} · Saved learner profile · Preferences and recent learning guide the tutor.`;
   $('level').value = profile.preferences.preferred_difficulty || profile.estimated_level.match(/N[1-5]/)?.[0] || 'beginner';
-  const savedId = recalled(`session-${placementLearnerId}`);
-  if (savedId) {
-    try { await openSavedSession(savedId); return; }
-    catch (error) { if (error.code !== 'saved_session_not_found') throw error; }
-  }
-  await resetSession();
+  $('message').value = ''; updateCount();
+}
+
+async function ensureTutorSession() {
+  if (sessionId) return;
+  if (busy) { tutorOpenPending = true; return; }
+  tutorOpenPending = false;
+  setBusy(true);
+  $('status').textContent = 'Opening your conversation…';
+  try {
+    const savedId = placementLearnerId && recalled(`session-${placementLearnerId}`);
+    if (savedId) {
+      try { await openSavedSession(savedId); return; }
+      catch (error) { if (error.code !== 'saved_session_not_found') throw error; }
+    }
+    await resetSession();
+  } catch (error) { showError(error); }
+  finally { setBusy(false); }
 }
 
 function dateLabel(value) { return value ? new Date(value).toLocaleString() : 'No activity yet'; }
