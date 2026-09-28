@@ -1,12 +1,28 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 6.5 — staging deployment preparation (live acceptance pending).**
-See [deployment setup and manual Render steps](docs/deployment.md) and
-[Phase 6.5 status](PHASE6_5_REPORT.md). Development retains local SQLite; staging
-requires PostgreSQL, server-side private access, and scope safeguards. The existing
-Render service serves both frontend and API, with Supabase for persistent storage.
-Groq can provide a bounded fallback while Gemini remains primary. Do not share the
-staging site with testers until deployment configuration and live checks are complete.
+**Current phase: Phase 7 — product UI overhaul (live acceptance in progress).**
+
+The vanilla HTML/CSS/JavaScript application now opens on **Home**, with a next action
+based on saved placement, study, and review data. Desktop uses a sidebar; mobile uses
+Home / Study / Tutor / Progress bottom navigation. Settings and Placement are secondary.
+Home does not call a model. Study activities and in-page answer drafts survive section
+navigation; reload restores saved server progress, but does not retain unsent text.
+
+Start with a learning goal, then take adaptive placement or choose a beginner profile.
+Progress separates Overview, Skills, Knowledge, and History. Preferences live in Settings;
+profile recovery is under Advanced and remains subject to server-side browser ownership.
+See [Phase 7 verification and limitations](PHASE7_REPORT.md).
+
+The verified Phase 6.5 deployment is retained: Render serves both frontend and API,
+Supabase PostgreSQL persists staging data, Gemini is primary and Groq is a bounded fallback.
+Development can still use SQLite. Private access, ownership, scope safeguards, CSP,
+rate limits, and secure cookies remain unchanged. See [deployment documentation](docs/deployment.md).
+
+Frontend regression checks require only Node's built-in test runner:
+
+```sh
+node --test tests/frontend.test.cjs
+```
 
 Phase 6 — Spaced Repetition & Intelligent Review Scheduler remains intact. Gemini and OpenAI use
 one provider interface; Gemini is the default for new development setups. This preserves the existing
@@ -18,7 +34,7 @@ skill dimension. The calculator is deterministic and makes no model calls.
 
 ## Daily Review
 
-In **Today's Study → Daily Review**, choose a time budget and start reviewing. Only
+In **Study → Daily Review**, choose a time budget and start reviewing. Only
 previously assessed material becomes scheduled. Due reviews target specific skills such
 as vocabulary production or kanji on-reading. Remaining items stay available for later;
 skipping does not count as failure. Existing active study plans are resumed safely.
@@ -60,11 +76,11 @@ For developer maintenance, stop the server and back up first:
 Use `--action suspend` or `--action resume` with `--dimension production` to manage a
 specific target. These operations are deliberately absent from the ordinary UI.
 See [Phase 6 report](PHASE6_REPORT.md) and [verification](PHASE6_VERIFICATION.md).
-Phase 7 product/UI work has not begun.
+Phase 7 changes presentation and navigation; the scheduling algorithm remains unchanged.
 
 ## Japanese Knowledge
 
-Open **My learning → Japanese Knowledge**, filter by content or knowledge status, and
+Open **Progress → Knowledge**, filter by content or knowledge status, and
 select a topic to see its dimensions, confidence, last practice and meaningful changes.
 “Not enough evidence” means unassessed; it is not a zero score. Recognition does not
 establish production. The existing recent-practice summaries remain separate.

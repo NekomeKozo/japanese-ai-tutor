@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#285d4e">
   <title>AI Japanese Tutor</title>
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/app.js" defer></script>
@@ -11,25 +12,49 @@
   <script src="/static/study.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
+  <script src="/static/shell.js" defer></script>
 </head>
 <body>
-  <main>
-    <header>
-      <div><p class="eyebrow">日本語 · PHASE 6</p><h1>AI Japanese Tutor</h1><p>Learn a little. Try it yourself. Build understanding.</p></div>
-      <button id="reset" type="button" class="secondary">New session</button>
-    </header>
-    <nav aria-label="Learning sections"><button id="placement-tab" class="secondary" type="button">Placement</button><button id="tutor-tab" class="secondary" type="button">Tutor chat</button><button id="study-tab" class="secondary" type="button">Today's Study</button><button id="profile-tab" class="secondary" type="button">My learning</button></nav>
-    <section id="placement-panel" aria-label="Placement assessment">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <aside class="app-sidebar" aria-label="Application navigation">
+    <a class="brand" href="#home"><span class="brand-mark" lang="ja">あ</span><span>Japanese Tutor<small>A little, every day.</small></span></a>
+    <nav class="primary-nav" aria-label="Main">
+      <a id="home-tab" href="#home"><span aria-hidden="true">⌂</span>Home</a>
+      <a id="study-tab" href="#study"><span aria-hidden="true">▤</span>Study</a>
+      <a id="tutor-tab" href="#tutor"><span aria-hidden="true">あ</span>Tutor</a>
+      <a id="profile-tab" href="#progress"><span aria-hidden="true">▥</span>Progress</a>
+    </nav>
+    <nav class="secondary-nav" aria-label="More">
+      <a id="placement-tab" href="#placement">Placement</a><a id="settings-tab" href="#settings">Settings</a>
+    </nav>
+    <p class="sidebar-note">Small steps.<br>Lasting understanding.</p>
+  </aside>
+  <main id="main-content" tabindex="-1">
+    <header class="page-header"><div><p id="page-kicker" class="eyebrow">YOUR LEARNING SPACE</p><h1 id="page-title" tabindex="-1">Home</h1></div><button id="reset" type="button" class="secondary" hidden>New conversation</button></header>
+    <p id="connection-notice" class="notice" role="status" hidden>You’re offline. Reconnect to save answers and continue learning.</p>
+    <p id="app-loading" role="status">Opening your learning space…</p>
+    <div id="app-error" role="alert" hidden><p id="app-error-text"></p><button id="app-retry" type="button" class="secondary">Try again</button><a href="#settings">Profile recovery</a></div>
+    <section id="home-panel" aria-label="Home" hidden>
+      <div id="home-loading" role="status">Loading your next step…</div>
+      <div id="home-content" hidden>
+        <section class="hero-card"><p class="eyebrow">YOUR NEXT STEP</p><h2 id="home-headline">Make room for a little Japanese.</h2><p id="home-description"></p><button id="home-action" type="button">Take placement</button><p id="home-action-note" class="small"></p></section>
+        <div id="home-stats" class="dashboard-grid"></div>
+        <div class="dashboard-grid"><section id="home-focus" class="placement-card"></section><section id="home-recent" class="placement-card"></section></div>
+      </div>
+    </section>
+    <section id="placement-panel" aria-label="Placement assessment" hidden>
       <div id="placement-intro" class="placement-card">
-        <h2>Find your starting point</h2>
+        <p class="eyebrow">LET’S FIND YOUR STARTING POINT</p><h2>Japanese that fits your life.</h2>
+        <div id="onboarding-goal"><p>First, what would you like to use Japanese for?</p><label for="onboarding-goal-select">Your learning goal</label><select id="onboarding-goal-select"><option value="general">General Japanese</option><option value="conversation">Conversation</option><option value="travel">Travel</option><option value="work">Work</option><option value="university">University</option><option value="JLPT_N5">JLPT N5</option><option value="JLPT_N4">JLPT N4</option><option value="JLPT_N3">JLPT N3</option><option value="JLPT_N2">JLPT N2</option><option value="JLPT_N1">JLPT N1</option></select><p class="small">You can change this later in Settings.</p><button id="onboarding-next" type="button">Continue</button></div>
+        <div id="onboarding-experience" hidden><p class="eyebrow">NEXT · YOUR EXPERIENCE</p>
         <p>Before we begin, we’ll estimate your current Japanese ability. Questions become easier or harder as you answer. Most assessments take 15–30 questions; complete beginners may finish sooner.</p>
         <p>This is a study estimate, not an official JLPT exam. Answer naturally without looking things up. Choose “I don’t know” whenever you need to.</p>
         <label for="self-report">How would you describe your experience?</label>
         <select id="self-report"><option value="unknown">I don’t know my level</option><option value="beginner">I am a complete beginner</option><option value="some">I studied some Japanese</option><option value="N5">I think I am around N5</option><option value="N4">I think I am around N4</option></select>
         <p class="small">Your answers determine the result. This choice only guides where questions start.</p>
         <button id="start-assessment" type="button">Start placement</button>
-        <button id="skip-placement" class="secondary" type="button">Use beginner chat</button>
-        <p class="small">Placement, learner profiles and profile conversations are saved on the tutor server. Keep this browser's cookies to return to your learning.</p>
+        <button id="skip-placement" class="secondary" type="button">Start as a beginner</button>
+        <p class="small">Placement, learner profiles and profile conversations are saved on the tutor server. Keep this browser's cookies to return to your learning.</p><button id="onboarding-back" class="secondary" type="button">Back to goal</button></div>
       </div>
       <div id="placement-question" class="placement-card" hidden>
         <h2 id="question-heading" tabindex="-1">Placement question</h2>
@@ -65,27 +90,26 @@
     </section>
     <p id="error" role="alert" hidden></p>
     <form id="chat-form">
-      <label for="mode">Learning task</label>
+      <label for="mode">How can I help?</label>
       <select id="mode">
-        <option value="chat">Chat / answer an exercise</option><option value="correct">Correct my Japanese</option>
+        <option value="chat">Ask / answer</option><option value="correct">Correct my Japanese</option>
         <option value="grammar">Explain grammar</option><option value="vocabulary">Explain vocabulary</option>
         <option value="examples">Give examples</option><option value="exercise">Give me an exercise</option><option value="quiz">Quiz me</option>
       </select>
-      <label for="message">Your message or topic</label>
+      <label for="message">Your Japanese, question, or idea</label>
       <textarea id="message" rows="3" maxlength="4000" required placeholder="Try: 日本を行きたいです。 Or: explain 〜たい"></textarea>
       <div class="composer-footer"><span id="count">0 / 4,000 · Ctrl+Enter to send</span><button id="send" type="submit">Send message</button></div>
     </form>
     </section>
-    <section id="profile-panel" aria-label="Learner profile" hidden>
+    <section id="profile-panel" aria-label="Progress" hidden>
       <div class="placement-card">
-        <h2>My learning</h2><p id="profile-summary">Complete placement or use beginner chat to create your learning profile.</p>
-        <p id="learner-identity" class="small"></p>
-        <form id="restore-profile"><label for="learner-id">Open a saved learner ID</label><input id="learner-id" placeholder="Learner UUID" required><button type="submit">Open profile</button></form>
-        <button id="temporary-chat" type="button" class="secondary">Use temporary chat</button>
-        <p id="profile-error" role="alert" hidden></p><p id="profile-notice" role="status"></p>
+        <h2>Your learning, taking shape.</h2><p id="profile-summary" role="status">Loading your learning summary…</p>
+        <p id="profile-error" role="alert" hidden></p><button id="profile-retry" type="button" class="secondary" hidden>Reload progress</button>
+        <a id="progress-setup" href="#placement" hidden>Find your starting point</a>
       </div>
+      <nav class="section-nav" aria-label="Progress sections"><a href="#progress/overview">Overview</a><a href="#progress/skills">Skills</a><a href="#progress/knowledge">Knowledge</a><a href="#progress/history">History</a></nav>
       <div id="profile-details" hidden>
-        <section class="placement-card" aria-label="Japanese Knowledge">
+        <section id="progress-knowledge" class="placement-card" aria-label="Japanese Knowledge" hidden>
           <h2>Japanese Knowledge</h2>
           <p>Estimated knowledge from your practice. Confidence grows with varied evidence. Unassessed skills stay unknown.</p>
           <div class="mastery-filters">
@@ -97,20 +121,24 @@
           <div class="mastery-pagination"><button id="mastery-prev" type="button" class="secondary">Previous topics</button><button id="mastery-next" type="button" class="secondary">More topics</button></div>
           <div id="mastery-detail" aria-live="polite"></div>
         </section>
-        <div id="profile-evidence" class="placement-card"></div>
-        <div class="placement-card"><h2>Tutor preferences</h2>
-          <form id="preferences-form">
+        <div id="progress-overview" class="placement-card"></div><div id="profile-evidence" class="placement-card" hidden></div>
+        <div id="learning-history" class="placement-card" hidden></div>
+      </div>
+    </section>
+    <section id="settings-panel" aria-label="Settings" hidden>
+        <div class="placement-card"><h2>Make it yours</h2>
+          <p id="settings-loading" role="status">Loading preferences…</p><p id="settings-error" role="alert" hidden></p><button id="settings-retry" type="button" class="secondary" hidden>Reload preferences</button><p id="settings-empty" hidden>Create a learner profile to save preferences. <a href="#placement">Get started</a></p><form id="preferences-form" hidden><fieldset><legend>Japanese display</legend>
             <label><input id="pref-romaji" type="checkbox"> Include romaji when helpful</label>
             <label><input id="pref-furigana" type="checkbox"> Include kana readings when helpful</label>
-            <label>Explanation language <select id="pref-language"><option value="english">English</option><option value="japanese">Japanese</option><option value="balanced">English and Japanese</option></select></label>
+            </fieldset><fieldset><legend>Tutor behavior</legend><label>Explanation language <select id="pref-language"><option value="english">English</option><option value="japanese">Japanese</option><option value="balanced">English and Japanese</option></select></label>
             <label>Correction style <select id="pref-style"><option>gentle</option><option>balanced</option><option>strict</option></select></label>
-            <label>Preferred difficulty <select id="pref-difficulty"><option value="">Use learner estimate</option><option value="beginner">Beginner</option><option>N5</option><option>N4</option><option>N3</option><option>N2</option><option>N1</option></select></label>
-            <label>Learning goal <select id="pref-goal"><option value="general">General Japanese</option><option value="travel">Travel</option><option value="conversation">Conversation</option><option value="university">University</option><option value="work">Work</option><option>JLPT_N5</option><option>JLPT_N4</option><option>JLPT_N3</option><option>JLPT_N2</option><option>JLPT_N1</option></select></label>
-            <button type="submit">Save preferences</button>
+            </fieldset><fieldset><legend>Learning</legend><label>Preferred difficulty <select id="pref-difficulty"><option value="">Use learner estimate</option><option value="beginner">Beginner</option><option>N5</option><option>N4</option><option>N3</option><option>N2</option><option>N1</option></select></label>
+            <label>Learning goal <select id="pref-goal"><option value="general">General Japanese</option><option value="travel">Travel</option><option value="conversation">Conversation</option><option value="university">University</option><option value="work">Work</option><option value="JLPT_N5">JLPT N5</option><option value="JLPT_N4">JLPT N4</option><option value="JLPT_N3">JLPT N3</option><option value="JLPT_N2">JLPT N2</option><option value="JLPT_N1">JLPT N1</option></select></label>
+            </fieldset><p id="profile-notice" role="status"></p><button id="preferences-save" type="submit">Save preferences</button>
           </form>
         </div>
-        <div id="learning-history" class="placement-card"></div>
-      </div>
+
+      <details class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
     </section>
     <section id="study-panel" aria-label="Today's Study" hidden>
       <div id="daily-review" class="placement-card" hidden>
@@ -123,8 +151,8 @@
         <button id="review-start" type="button">Start review</button>
         <p class="small">We’ll choose what fits your time. Skipped items remain available for another session.</p>
       </div>
-      <div class="placement-card">
-        <h2>Today's Japanese study</h2>
+      <div id="study-setup" class="placement-card">
+        <h2>A small step forward.</h2>
         <p id="study-intro">A plan based on your skills, recent practice and learning goal.</p>
         <button id="study-create-learner" type="button" class="secondary" hidden>Start with a beginner profile</button>
         <form id="study-plan-form">
@@ -132,17 +160,17 @@
           <input id="study-minutes" type="number" min="5" max="60" step="1" value="30" required>
           <label for="study-focus">Session focus</label>
           <select id="study-focus"><option value="balanced">Balanced</option><option value="review">Review</option><option value="new_material">New material</option><option value="grammar">Grammar</option><option value="vocabulary">Vocabulary</option><option value="kanji">Kanji</option><option value="reading">Reading</option><option value="sentence_construction">Sentence writing</option><option value="quick_practice">Quick practice</option></select>
-          <button id="study-generate" type="submit">Generate study plan</button>
+          <button id="study-generate" type="submit">Build my study plan</button>
         </form>
-        <p id="study-error" role="alert" hidden></p><p id="study-status" role="status"></p>
+        <p id="study-error" role="alert" hidden></p><button id="study-retry" type="button" class="secondary" hidden>Reload saved study</button><p id="study-status" role="status"></p>
       </div>
-      <div id="study-preview" class="placement-card" hidden></div>
+      <div id="study-preview" tabindex="-1" class="placement-card" hidden></div>
       <div id="study-controls" class="assessment-actions" hidden>
         <button id="study-start" type="button">Start session</button>
         <button id="study-abandon" type="button" class="secondary">End this plan</button>
       </div>
       <div id="study-activity" class="placement-card" hidden>
-        <h2 id="study-heading" tabindex="-1">Current activity</h2>
+        <p id="study-progress-label" class="eyebrow"></p><progress id="study-meter" max="1" value="0" aria-label="Activities finished"></progress><p id="study-purpose" class="small"></p><h2 id="study-heading" tabindex="-1">Current activity</h2>
         <div id="study-content" aria-live="polite"></div>
         <form id="study-answer-form" hidden>
           <fieldset id="study-choices"><legend>Choose an answer</legend></fieldset>
@@ -157,7 +185,7 @@
         </div>
       </div>
     </section>
-    <footer>Profile sessions are saved on the tutor server · AI explanations and learning observations can be mistaken</footer>
+    <footer>Take your time. Understanding grows with practice.<br><span>AI explanations may make mistakes.</span></footer>
   </main>
 </body>
 </html>

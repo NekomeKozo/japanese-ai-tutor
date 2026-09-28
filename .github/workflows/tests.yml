@@ -31,3 +31,4 @@ jobs:
       - run: python scripts/audit_deployment.py
       - run: pytest -q
       - run: for file in frontend/*.js; do node --check "$file"; done
+      - run: node --test tests/frontend.test.cjs

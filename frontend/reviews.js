@@ -4,8 +4,9 @@ let reviewRequest = 0;
 async function refreshReviews() {
   const learner = placementLearnerId;
   const sequence = ++reviewRequest;
-  $('daily-review').hidden = !learner;
+  $('daily-review').hidden = !learner || Boolean(studyPlan && ['planned','in_progress'].includes(studyPlan.status));
   if (!learner) return;
+  $('review-start').disabled = true; $('review-summary').textContent = 'Checking your reviews…';
   const minutes = Math.max(5, Math.min(60, Number($('review-minutes').value) || 10));
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   try {
@@ -22,13 +23,14 @@ async function refreshReviews() {
     $('review-start').textContent = active ? 'Continue saved session' : 'Start review';
     $('review-start').disabled = !active && !queue.items.length;
   } catch (error) {
-    if (sequence === reviewRequest) $('review-summary').textContent = error.message;
+    if (sequence === reviewRequest) $('review-summary').textContent = friendlyError(error);
   }
 }
 
 $('review-minutes').addEventListener('change', refreshReviews);
 document.addEventListener('learner-changed', () => { ++reviewRequest; $('daily-review').hidden = true; });
 $('review-start').addEventListener('click', () => studyAction(async () => {
+  if (studyActivity && !$('study-activity').hidden && (!$('study-answer-form').hidden || !$('study-next').hidden)) { visibleFocus('study-heading'); return; }
   if (!studyPlan || !['planned', 'in_progress'].includes(studyPlan.status)) {
     const minutes = Number($('review-minutes').value);
     if (!Number.isInteger(minutes) || minutes < 5 || minutes > 60) throw new Error('Choose 5–60 whole minutes.');

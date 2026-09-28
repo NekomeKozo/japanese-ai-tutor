@@ -6,15 +6,16 @@ let studyPending = null;
 let studyBusy = false;
 const studyPath = () => `/api/learners/${placementLearnerId}/study/${studyPlan.session_id}`;
 
-function studyError(error) { $('study-error').textContent = error.message; $('study-error').hidden = false; }
+function studyError(error) { $('study-error').textContent = friendlyError(error); $('study-error').hidden = false; $('study-retry').hidden = false; }
 async function studyAction(action) {
   if (busy || studyBusy) return;
-  studyBusy = true; setBusy(true); $('study-error').hidden = true;
-  const buttons = $('study-panel').querySelectorAll('button'); buttons.forEach(button => { button.disabled = true; });
-  $('study-status').textContent = 'Working on your study session…';
+  studyBusy = true; setBusy(true); $('study-error').hidden = true; $('study-retry').hidden = true;
+  const buttons = $('study-panel').querySelectorAll('button,input,select,textarea'); buttons.forEach(button => { button.disabled = true; });
+  const trigger = document.activeElement?.id;
+  $('study-status').textContent = trigger === 'study-generate' ? 'Building your study plan…' : trigger === 'study-submit' ? 'Checking your answer…' : 'Preparing your next study step…';
   try { await action(); $('study-status').textContent = 'Saved · You can return to this plan later.'; }
   catch (error) {
-    studyError(error); $('study-status').textContent = 'Your saved plan is safe. Retry or skip this activity.';
+    studyError(error); $('study-status').textContent = 'This step couldn’t finish. Your answer stays here; try again when ready.';
     if ($('study-content').textContent === 'Preparing this activity…') $('study-content').replaceChildren(node('p', 'Lesson unavailable. Choose Continue session to retry, or skip this activity.'));
   }
   finally { studyBusy = false; setBusy(false); buttons.forEach(button => { button.disabled = false; }); await refreshReviews(); }
@@ -22,34 +23,46 @@ async function studyAction(action) {
 
 function renderStudy() {
   const hasLearner = Boolean(placementLearnerId);
+  $('study-panel').setAttribute('data-state', studyPlan?.status || 'setup');
   const active = studyPlan && ['planned', 'in_progress'].includes(studyPlan.status);
   $('study-create-learner').hidden = hasLearner;
   $('study-plan-form').hidden = !hasLearner || active;
-  $('study-intro').textContent = hasLearner ? 'Choose a study length and focus. Your saved evidence guides the plan.' : 'Complete placement for a tailored starting point, or begin with a simple introductory profile.';
+  $('study-intro').textContent = active ? 'Your plan is saved. Work through one activity at a time.' : hasLearner ? 'Choose a study length and focus. Your saved evidence guides the plan.' : 'Complete placement for a tailored starting point, or begin with a simple introductory profile.';
   $('study-preview').hidden = !studyPlan;
   $('study-controls').hidden = !active;
+  $('daily-review').hidden = !hasLearner || active;
   if (!studyPlan) { $('study-activity').hidden = true; return; }
+  const done = studyPlan.activities.filter(a => ['completed','skipped'].includes(a.status)).length;
+  $('study-meter').max = Math.max(1, studyPlan.activities.length); $('study-meter').value = done;
+  $('study-progress-label').textContent = `${done} of ${studyPlan.activities.length} activities finished`;
   const preview = $('study-preview'); preview.replaceChildren(node('h2', studyPlan.status === 'completed' ? 'Session recap' : 'Your study plan'));
-  preview.append(node('p', `${studyPlan.estimated_minutes} minutes · ${studyPlan.status.replaceAll('_', ' ')}`), node('p', studyPlan.note, 'small'));
+  preview.append(node('p', `Planned time: ${studyPlan.estimated_minutes} minutes · ${studyPlan.status.replaceAll('_', ' ')}`), node('p', studyPlan.note, 'small'));
   const list = node('ol');
   studyPlan.activities.forEach(activity => {
     const item = node('li'); item.append(node('strong', `${activity.title} · ${activity.duration_minutes} min`),
       node('p', `${activity.purpose === 'review' ? 'Review' : 'New material'} · ${activity.status.replaceAll('_', ' ')} · ${activity.reason}`, 'small'));
     list.append(item);
-  }); preview.append(list);
+  });
+  if (studyPlan.status === 'in_progress') { const details = node('details'); details.append(node('summary', 'See your plan'), list); preview.append(details); } else preview.append(list);
   $('study-start').textContent = studyPlan.status === 'planned' ? 'Start session' : studyPlan.current_activity_id ? 'Continue session' : 'Finish session';
   if (studyPlan.recap) {
+    const completed = studyPlan.activities.filter(a => a.status === 'completed');
+    preview.append(node('p', `${completed.length} activities completed · ${completed.filter(a => a.purpose === 'review').length} reviews completed`));
     resultList(preview, 'Practiced', studyPlan.recap.practiced, 'No activities were completed.');
     resultList(preview, 'Went well in this session', studyPlan.recap.strong_performance, 'More evidence is needed.');
     resultList(preview, 'Worth revisiting', studyPlan.recap.needs_review, 'No repeated review need established by this session.');
     preview.append(node('p', `${studyPlan.recap.skipped_count} skipped · ${studyPlan.recap.note}`, 'small'));
+    const home = node('a', 'Return Home', 'button-link'); home.href = '#home'; preview.append(home);
     $('study-activity').hidden = true;
   }
 }
 
 async function loadStudy() {
-  $('study-error').hidden = true;
+  $('study-error').hidden = true; $('study-retry').hidden = true;
   if (!placementLearnerId) { studyPlan = null; renderStudy(); return; }
+  if (studyPlan) { renderStudy(); await refreshReviews(); return; }
+  $('study-status').textContent = 'Loading your saved study…';
+  $('study-plan-form').hidden = true;
   const learner = placementLearnerId;
   const active = await api(`/api/learners/${learner}/study/active`);
   if (learner !== placementLearnerId) return;
@@ -64,20 +77,21 @@ async function loadStudy() {
   if (learner !== placementLearnerId) return;
   studyPlan = saved;
   if (studyPlan) remember(`study-${learner}`, studyPlan.session_id);
-  studyActivity = null; $('study-activity').hidden = true; renderStudy(); await refreshReviews();
+  studyActivity = null; $('study-activity').hidden = true; renderStudy(); $('study-status').textContent = ''; await refreshReviews();
 }
 
 async function currentActivity() {
   studyPlan = await api(studyPath());
   renderStudy();
   if (!studyPlan.current_activity_id) {
-    studyPlan = await api(`${studyPath()}/complete`, {method:'POST'}); renderStudy(); return;
+    studyPlan = await api(`${studyPath()}/complete`, {method:'POST'}); renderStudy(); visibleFocus('study-preview'); return;
   }
   studyActivity = studyPlan.activities.find(activity => activity.activity_id === studyPlan.current_activity_id);
   $('study-activity').hidden = false;
   const reviewItems = studyPlan.activities.filter(a => a.review_schedule_id);
   const reviewPosition = reviewItems.findIndex(a => a.activity_id === studyActivity.activity_id) + 1;
   $('study-heading').textContent = studyActivity.review_schedule_id ? `Review ${reviewPosition} of ${reviewItems.length} · ${studyActivity.title} · ${studyActivity.focus_dimension.replaceAll('_', ' ')}` : `${studyActivity.order}. ${studyActivity.title}`;
+  $('study-purpose').textContent = `${studyActivity.purpose === 'review' ? 'Review' : 'Learn & practice'} · ${studyActivity.duration_minutes} minute estimate · ${studyActivity.reason}`;
   $('study-content').replaceChildren(node('p', 'Preparing this activity…'));
   $('study-feedback').textContent = '';
   $('study-answer-form').hidden = true; $('study-next').hidden = true; $('study-skip').hidden = false;
@@ -92,10 +106,9 @@ async function currentActivity() {
   });
   $('study-answer').value = ''; $('study-answer').hidden = Boolean(choices.length); $('study-answer-label').hidden = Boolean(choices.length);
   $('study-answer-form').hidden = false; studyPending = null;
-  studyPlan = await api(studyPath()); renderStudy(); $('study-heading').focus();
+  studyPlan = await api(studyPath()); renderStudy(); visibleFocus('study-heading');
 }
 
-$('study-tab').addEventListener('click', () => { showPanel('study'); loadStudy().catch(studyError); });
 document.addEventListener('learner-changed', () => { studyPlan = null; studyActivity = null; studyPending = null; renderStudy(); });
 $('study-create-learner').addEventListener('click', () => studyAction(async () => {
   const learner = await api('/api/learners', {method:'POST'}); await activateLearner(learner.learner_id); renderStudy();
@@ -108,6 +121,7 @@ $('study-plan-form').addEventListener('submit', event => {
   });
 });
 $('study-start').addEventListener('click', () => studyAction(async () => {
+  if (studyActivity && !$('study-activity').hidden && !$('study-answer-form').hidden) { visibleFocus('study-heading'); return; }
   if (studyPlan.status === 'planned') studyPlan = await api(`${studyPath()}/start`, {method:'POST'});
   await currentActivity();
 }));
@@ -131,3 +145,5 @@ $('study-skip').addEventListener('click', () => studyAction(async () => {
 $('study-abandon').addEventListener('click', () => studyAction(async () => {
   studyPlan = await api(`${studyPath()}/abandon`, {method:'POST'}); $('study-activity').hidden = true; renderStudy();
 }));
+
+$('study-retry').addEventListener('click', () => loadStudy().catch(studyError));

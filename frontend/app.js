@@ -18,10 +18,15 @@ function node(tag, text, className) {
 function setBusy(value) {
   busy = value;
   for (const id of ['send', 'reset', 'message', 'mode', 'level']) $(id).disabled = value;
-  $('send').textContent = value ? 'Please wait…' : 'Send message';
+  $('send').textContent = value ? 'Working…' : 'Send message';
   $('conversation').setAttribute('aria-busy', String(value));
 }
 
+function friendlyError(error) {
+  if (error instanceof TypeError || error instanceof SyntaxError) return 'We couldn’t connect just now. Check your connection and try again.';
+  if (['provider_error','provider_unavailable','provider_not_configured','invalid_provider_response'].includes(error.code) || /provider|API key|model configuration/i.test(error.message)) return 'The tutor couldn’t answer just now. Your text is still here; please try again shortly.';
+  return error.message || 'Something went wrong. Please try again.';
+}
 async function api(path, options = {}) {
   const response = await fetch(path, options);
   if (response.status === 401 && path !== '/api/access') {
@@ -35,11 +40,12 @@ async function api(path, options = {}) {
     error.code = data.error?.code;
     throw error;
   }
+  if (options.method && options.method !== 'GET') document.dispatchEvent(new Event('learning-updated'));
   return data;
 }
 
 function showError(error) {
-  $('error').textContent = error instanceof TypeError ? 'The service is temporarily unavailable. Please try again shortly.' : error.message;
+  $('error').textContent = friendlyError(error);
   $('error').hidden = false;
 }
 
@@ -54,9 +60,9 @@ function renderReply(reply, container = $('conversation')) {
   const article = addMessage('tutor', reply.message, container);
   if (reply.evaluation) article.append(node('p', reply.evaluation.status.replaceAll('_', ' '), 'evaluation'));
   if (reply.correction) {
-    article.append(node('h2', 'Your sentence'), node('p', reply.correction.original), node('h2', 'Suggested Japanese'), node('p', reply.correction.improved));
+    article.append(node('h2', 'Your sentence'), node('p', reply.correction.original, 'correction-original'), node('h2', 'Suggested Japanese'), node('p', reply.correction.improved, 'correction-improved'));
   }
-  if (reply.explanation) article.append(node('h2', 'Explanation'), node('p', reply.explanation));
+  if (reply.explanation) article.append(node('h2', reply.correction ? 'Why' : 'Explanation'), node('p', reply.explanation));
   if (reply.examples.length) {
     const list = node('ul');
     reply.examples.forEach((example) => list.append(node('li', example)));
@@ -78,7 +84,7 @@ function renderReply(reply, container = $('conversation')) {
 async function refreshStatus() {
   const health = await api('/api/health');
   $('status').textContent = health.provider_configured
-    ? 'Ready · Ask a question or choose a learning task.' : health.setup_message;
+    ? 'Ready when you are. Ask a question or try some Japanese.' : 'The tutor is unavailable right now. Please try again later.';
 }
 
 async function resetSession() {
@@ -101,7 +107,7 @@ async function resetSession() {
     updateCount();
     await refreshStatus();
   } catch (error) { showError(error); }
-  finally { setBusy(false); $('message').focus(); }
+  finally { setBusy(false); visibleFocus('message'); }
 }
 
 function updateCount() { $('count').textContent = `${$('message').value.length} / 4,000 · Ctrl+Enter to send`; }
@@ -133,7 +139,7 @@ $('chat-form').addEventListener('submit', async (event) => {
   } catch (error) {
     showError(error);
     $('status').textContent = 'Your message is still in the editor. Retry, or start a new session if it expired.';
-  } finally { setBusy(false); $('message').focus(); }
+  } finally { setBusy(false); visibleFocus('message'); }
 });
 $('reset').addEventListener('click', resetSession);
 $('message').addEventListener('input', updateCount);
