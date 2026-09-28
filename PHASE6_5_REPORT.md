@@ -1,9 +1,9 @@
 # Phase 6.5 progress report — 2026-09-28
 
-**Status: implementation deployed; GitHub CI passed all 418 tests and the public
-health endpoint and access gate are verified live. Authenticated learning acceptance
-is in progress. Phase 6.5 is not complete. No Phase 7
-or RAG work has begun.**
+**Status: implementation deployed; GitHub CI passed all 419 tests. Desktop tutor,
+placement, learning memory, curriculum, mastery, review scheduling, and persistence
+across deployment are verified live. Physical-phone confirmation remains pending,
+so final Phase 6.5 acceptance is not yet complete. No Phase 7 or RAG work has begun.**
 
 ## Initial audit
 
@@ -103,7 +103,7 @@ adapter, `frontend/app.js`, and two persistence descriptions in `frontend/index.
 ## Live status and manual handoff
 
 Frontend/backend host: existing Render Free Web Service.
-Database host: existing Supabase Free PostgreSQL; authenticated persistence verification pending.
+Database host: existing Supabase Free PostgreSQL; startup log and live learner persistence verified.
 Site: https://japanese-ai-tutor.onrender.com
 Health target: https://japanese-ai-tutor.onrender.com/health
 
@@ -125,17 +125,39 @@ The owner supplied the safe startup log confirming staging, PostgreSQL, and Gemi
 primary (`gemini-3.5-flash-lite`). Live tutor requests returned structured Japanese
 explanation and exercise feedback. Profile history showed the saved conversation,
 concept explanation, and one correct vocabulary performance observation. A five-minute
-vocabulary study plan was created and opened; the due queue showed seven grammar items.
+vocabulary study plan was created and completed with a correct breakfast answer.
+The saved Travel preference was used by a generated verb-form review. A correct
+`これを読んでください。` answer completed that review, reduced due grammar items from
+seven to six, and scheduled its next review for September 29, 2026 at 01:28 Manila
+time. Both session recaps were saved. The live study screen was inspected at
+390 × 844 and returned to the default desktop viewport afterward.
 
 Live verification found two small repair needs: “Python script” was missing from
 the pre-inference scope pattern during a pending exercise, and provider INFO logs
-were not routed through Uvicorn's standard handler. Both are repaired locally.
+were not routed through Uvicorn's standard handler. Both repairs were pushed in
+commit `3c1c8e4`. The deployed scope pre-check was retested successfully: the same
+programming request now returns the application rejection without adding a chat turn.
+The owner confirmed Render automatically deployed that commit at 01:29 Manila time
+on September 28. A new Japanese exercise answer also succeeded on the deployed repair.
 The scope regression failed before the fix and passed afterward; 113 focused
 staging/provider/runtime tests pass. Diagnostics remain metadata-only.
 
-Actual provider selection per request, final study/review persistence across another
-redeploy, and physical phone access still need verification. Controlled Groq failover
-is covered by offline tests; no deliberate quota exhaustion was performed.
+Placement and all three original saved chat exchanges loaded after the next service
+restart. The completed review recap, six due items, one item scheduled for tomorrow,
+Travel preference, study history, and verb-form application mastery also survived
+deployment. A fresh Japanese answer succeeded. The owner supplied its safe log:
+`LLM success provider=gemini path=/api/chat latency_ms=2677`.
+
+GitHub Actions run
+[36337098092](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36337098092)
+passed **419 tests**, the source/history audit, and JavaScript syntax checks for
+`3c1c8e4`. The temporary approval-review usage limit cleared before the CI check
+was retried through the normal approval path.
+
+Groq configuration is accepted by the deployed provider factory; Gemini remains
+primary. Controlled Groq failover is covered by offline tests; no deliberate quota
+exhaustion or forced live fallback was performed. Physical-phone access still needs
+owner confirmation; the browser's 390 × 844 layout check is not a physical-device test.
 No dashboard secret values were retrieved.
 
 ## Limits, costs, and rollback

@@ -1,9 +1,10 @@
 # Phase 6.5 private staging
 
-Status: commit `8c01edf` is deployed and GitHub CI passed all 418 tests. Public
-health and the access gate are verified; the owner confirmed the `/health` dashboard
-setting. Authenticated learning and restart acceptance tests remain pending.
-This is not a production release.
+Status: runtime commit `3c1c8e4` is deployed and GitHub CI passed all 419 tests.
+Public health, private access, Gemini tutor responses, placement, learner memory,
+curriculum, mastery, reviews, and persistence across deployment are verified.
+The owner confirmed the `/health` dashboard setting. Physical-phone confirmation
+remains pending; the live narrow browser layout was checked. This is not a production release.
 
 ## Architecture
 
