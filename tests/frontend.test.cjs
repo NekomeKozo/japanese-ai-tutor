@@ -88,3 +88,10 @@ test('restoring a learner does not load or create a tutor conversation until Tut
   const h=harness(); h.ctx.fetch=async(url,opts={})=>{h.requests.push({url,...opts});return {ok:true,status:200,json:async()=>({learner_id:'learner',estimated_level:'Beginner',preferences:{}})};};
   await h.run("activateLearner('learner')"); assert.equal(h.requests.length,1); assert.ok(h.requests[0].url.endsWith('/profile')); assert.equal(h.run('sessionId'),null);
 });
+
+
+test('an active study error remains visible after navigating away and back',async()=>{
+  const h=harness(); h.run("placementLearnerId='learner'; studyPlan={session_id:'saved',status:'in_progress',activities:[],estimated_minutes:5,note:''}; refreshReviews=async()=>{};");
+  h.elements.get('study-error').hidden=false; h.elements.get('study-error').textContent='Please retry this lesson.';
+  await h.run('loadStudy()'); assert.equal(h.elements.get('study-error').hidden,false); assert.equal(h.elements.get('study-error').textContent,'Please retry this lesson.');
+});

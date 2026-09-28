@@ -6,7 +6,7 @@ let studyPending = null;
 let studyBusy = false;
 const studyPath = () => `/api/learners/${placementLearnerId}/study/${studyPlan.session_id}`;
 
-function studyError(error) { $('study-error').textContent = friendlyError(error); $('study-error').hidden = false; $('study-retry').hidden = false; }
+function studyError(error) { $('study-error').textContent = friendlyError(error); $('study-error').hidden = false; $('study-retry').hidden = Boolean(studyPlan); }
 async function studyAction(action) {
   if (busy || studyBusy) return;
   studyBusy = true; setBusy(true); $('study-error').hidden = true; $('study-retry').hidden = true;
@@ -58,9 +58,9 @@ function renderStudy() {
 }
 
 async function loadStudy() {
-  $('study-error').hidden = true; $('study-retry').hidden = true;
   if (!placementLearnerId) { studyPlan = null; renderStudy(); return; }
   if (studyPlan) { renderStudy(); await refreshReviews(); return; }
+  $('study-error').hidden = true; $('study-retry').hidden = true;
   $('study-status').textContent = 'Loading your saved study…';
   $('study-plan-form').hidden = true;
   const learner = placementLearnerId;
@@ -109,7 +109,7 @@ async function currentActivity() {
   studyPlan = await api(studyPath()); renderStudy(); visibleFocus('study-heading');
 }
 
-document.addEventListener('learner-changed', () => { studyPlan = null; studyActivity = null; studyPending = null; renderStudy(); });
+document.addEventListener('learner-changed', () => { studyPlan = null; studyActivity = null; studyPending = null; $('study-error').hidden = true; $('study-retry').hidden = true; $('study-status').textContent = ''; renderStudy(); });
 $('study-create-learner').addEventListener('click', () => studyAction(async () => {
   const learner = await api('/api/learners', {method:'POST'}); await activateLearner(learner.learner_id); renderStudy();
 }));
