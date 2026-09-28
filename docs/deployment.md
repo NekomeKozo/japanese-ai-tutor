@@ -3,8 +3,9 @@
 Status: runtime commit `3c1c8e4` is deployed and GitHub CI passed all 419 tests.
 Public health, private access, Gemini tutor responses, placement, learner memory,
 curriculum, mastery, reviews, and persistence across deployment are verified.
-The owner confirmed the `/health` dashboard setting. Physical-phone confirmation
-remains pending; the live narrow browser layout was checked. This is not a production release.
+The owner confirmed the `/health` dashboard setting and successful sign-in, page
+display, and navigation on an actual phone. Phase 6.5 private-alpha acceptance is
+complete; the live narrow browser layout was also checked. This is not a production release.
 
 ## Architecture
 
@@ -207,7 +208,8 @@ After deployment, use a disposable staging learner to verify:
 6. Restart the Render service, reopen the browser and confirm PostgreSQL progress.
 7. Open a second browser identity; confirm the first learner's IDs return 404.
 8. Check phone access, narrow layout, private-file 404s, and browser assets/network
-   for absence of secrets. A real phone test still requires the owner.
+   for absence of secrets. The owner confirmed the real phone check on September 28, 2026;
+   future physical-device regression checks also require the owner.
 9. Confirm Groq configuration without exhausting Gemini quota. Automated failover
    tests inject transient failures; do not add a public “force fallback” endpoint.
 

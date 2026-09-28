@@ -1,9 +1,10 @@
 # Phase 6.5 progress report — 2026-09-28
 
-**Status: implementation deployed; GitHub CI passed all 419 tests. Desktop tutor,
+**Status: Phase 6.5 private-alpha acceptance complete. Implementation is deployed;
+GitHub CI passed all 419 tests. Desktop tutor,
 placement, learning memory, curriculum, mastery, review scheduling, and persistence
-across deployment are verified live. Physical-phone confirmation remains pending,
-so final Phase 6.5 acceptance is not yet complete. No Phase 7 or RAG work has begun.**
+across deployment are verified live. The owner confirmed successful sign-in, page
+display, and navigation on an actual phone. No Phase 7 or RAG work has begun.**
 
 ## Initial audit
 
@@ -156,8 +157,9 @@ was retried through the normal approval path.
 
 Groq configuration is accepted by the deployed provider factory; Gemini remains
 primary. Controlled Groq failover is covered by offline tests; no deliberate quota
-exhaustion or forced live fallback was performed. Physical-phone access still needs
-owner confirmation; the browser's 390 × 844 layout check is not a physical-device test.
+exhaustion or forced live fallback was performed. On September 28, 2026, the owner
+confirmed the requested actual-phone sign-in, page, and navigation check. This is
+separate from the agent's 390 × 844 browser layout inspection.
 No dashboard secret values were retrieved.
 
 ## Limits, costs, and rollback
@@ -178,5 +180,4 @@ cloud rollback target because it lacks PostgreSQL/authentication. Cloud rollback
 use a verified Phase 6.5 checkpoint, without destructive schema downgrades. See the
 deployment guide for backups, logs, redeployment and recovery.
 
-Phase 7 recommendation: complete the outstanding live acceptance checklist first,
-then begin the separately authorized UI phase. Do not begin it automatically.
+Phase 7 may be planned when separately authorized. Do not begin it automatically.
