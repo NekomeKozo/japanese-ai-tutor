@@ -260,3 +260,31 @@ def test_context_byte_budget_keeps_complete_records(knowledge,settings):
     context=asyncio.run(KnowledgeService(knowledge,settings).context_for('destination particle'))
     assert len(context.payload.encode())<=1000
     if context.payload: assert isinstance(json.loads(context.payload)['untrusted_references'],list)
+
+
+def test_retrieval_diagnostics_reach_deployment_handler_without_private_text(knowledge, settings, monkeypatch):
+    import io
+    from app.knowledge.service import logger
+
+    output = io.StringIO()
+    server_logger = logging.getLogger('uvicorn.error')
+    monkeypatch.setattr(server_logger, 'handlers', [logging.StreamHandler(output)])
+    monkeypatch.setattr(server_logger, 'propagate', False)
+    root_logger = logging.getLogger()
+    previous_levels = [(item, item.level) for item in (server_logger, root_logger, logger)]
+    server_logger.setLevel(logging.INFO)
+    root_logger.setLevel(logging.WARNING)
+    logger.setLevel(logging.NOTSET)
+    settings.knowledge_enabled = True
+    service = KnowledgeService(knowledge, settings)
+    try:
+        context = asyncio.run(service.context_for('destination particle', 'grammar'))
+        assert context.status == 'available'
+        assert 'Knowledge retrieval status=available results=' in output.getvalue()
+        assert 'latency_ms=' in output.getvalue()
+        assert 'destination' not in output.getvalue()
+        assert 'private.md' not in output.getvalue()
+        assert context.results[0].chunk.text not in output.getvalue()
+    finally:
+        for item, level in previous_levels:
+            item.setLevel(level)
