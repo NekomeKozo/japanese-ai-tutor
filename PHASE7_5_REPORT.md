@@ -1,6 +1,6 @@
 # Phase 7.5 — Private knowledge and lexical RAG
 
-Status: local implementation complete. Live knowledge import and activation
+Status: local implementation and private PostgreSQL import complete. Live activation
 requires the owner-controlled configuration step; Phase 7.5 is not yet fully accepted.
 
 ## Initial audit
@@ -109,12 +109,23 @@ no duplicate results, about **5.9 ms median / 26.4 ms maximum** local retrieval 
 These are retrieval observations, not an accuracy score. Bounded manual spot checks
 found relevant evidence within the top three for desire, particle contrast, ながら,
 て-form, 時間, たり and 学校 readings; some first results remained broad or partial.
-Neither model answer quality nor remote PostgreSQL retrieval latency is yet verified.
+Model answer quality using live grounding is not yet verified.
 
-Live activation/import, grounded Gemini answers and persisted-state checks after that
-deployment remain pending. No Render/Supabase dashboard settings or secrets have changed.
-The local environment has no configured PostgreSQL connection. Import requires the
-owner to supply the existing connection privately; its value was not requested in chat.
+On 2026-09-29, after the owner configured the existing database connection privately,
+the explicit importer populated **29 sources, 943 chunks and 143,665 postings** in
+the existing PostgreSQL database. Raw PDFs and the local inventory were not uploaded.
+Three positive sample queries and one no-match query returned the same chunk/page
+provenance as the local index. Remote lookup times from this machine were **1.31–1.97 s**;
+the bounded knowledge service returned `available` with a 1,743-byte context. These
+include connection latency and do not measure latency from Render itself.
+
+Learner schema version remained 5 and the learner count remained three. Database
+permission checks showed both `anon` and `authenticated` had neither schema USAGE
+nor SELECT on knowledge_chunks. No learner tables were modified by the importer.
+
+Live activation, grounded Gemini answers and persisted-state checks after that
+deployment remain pending. No Render/Supabase dashboard settings were changed by the
+agent. The connection value was neither printed nor requested in chat.
 No pgvector or additional service is needed. Follow docs/knowledge.md for the explicit
 import, owner activation, safe rebuild and rollback steps.
 
