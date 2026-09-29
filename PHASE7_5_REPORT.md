@@ -90,6 +90,11 @@ Final full regression: **448 passed** (29 additional cases over Phase 7), includ
 real disposable PostgreSQL migration, rollback and learner-schema preservation.
 All **15 frontend tests** passed; JavaScript/Python syntax checks, Git whitespace check
 and source/available-history privacy audit passed. The two dependency warnings remain.
+Published implementation checkpoint: `e24569b`. GitHub Actions also passed:
+https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36554475987.
+After publication, live `/health` returned 200 and unauthenticated `/api/health`
+and protected static resources returned 401. This verifies service/access availability,
+not live grounded tutoring or the exact Render deployment revision.
 
 Synthetic benchmark: 36 queries spanning grammar, particles, conjugation, adjectives,
 vocabulary, kanji/readings, kana and no-match cases. All 33 expected topics appeared
