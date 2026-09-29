@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     llm_fallback_provider: str = 'groq'
     groq_api_key: SecretStr = SecretStr('')
     groq_model: str = ''
+    knowledge_enabled: bool = False
+    knowledge_top_k: int = Field(default=3, ge=1, le=8)
+    knowledge_context_limit: int = Field(default=6000, ge=1000, le=12000)
+    knowledge_min_score: float = Field(default=.35, ge=.1, le=1)
+    knowledge_db_path: str = 'knowledge_base/index.sqlite3'
 
     @model_validator(mode='after')
     def staging_configuration(self):

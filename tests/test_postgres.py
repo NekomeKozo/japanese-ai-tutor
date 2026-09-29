@@ -66,6 +66,24 @@ def test_fresh_repeat_migration_and_rollback(pg_client, pg_settings):
         assert not db.execute("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='learner_state'").fetchone()
 
 
+def test_private_knowledge_migration_rebuild_and_rollback(pg_client,pg_settings):
+    from app.knowledge.repository import KnowledgeRepository
+    from tests.test_knowledge import seed,document
+    from app.knowledge.chunker import chunk_document
+    repo=KnowledgeRepository(database_url=pg_settings.database_url.get_secret_value())
+    repo.initialize(); seed(repo); repo.initialize()
+    assert repo.retrieve('destination')[0].chunk.page==1
+    before=repo.counts()
+    doc=document('destination replacement rollback')
+    chunks=chunk_document(doc)
+    with pytest.raises(TutorError): repo.replace_source(doc.source,chunks+chunks,'bad')
+    assert repo.counts()==before and repo.source_version(doc.source.source_id)=='v1'
+    with pg_client.app.state.repository.connection() as db:
+        assert db.execute('PRAGMA user_version').fetchone()[0]==5
+        assert db.execute('SELECT COUNT(*) FROM assessment_questions').fetchone()[0]>0
+        assert db.execute("SELECT table_schema FROM information_schema.tables WHERE table_name='knowledge_chunks'").fetchone()[0]=='tutor_private'
+
+
 def test_migration_failure_is_atomic(pg_settings, monkeypatch):
     from app.review import migrations
     original = migrations.migrate

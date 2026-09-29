@@ -2,6 +2,11 @@
 
 **Current phase: Phase 7 — product UI overhaul deployed; actual-phone acceptance pending.**
 
+Phase 7.5 adds optional private lexical retrieval to tutor chat. It is disabled by
+default until the private index is built/imported and the owner enables it. See
+[knowledge build and deployment](docs/knowledge.md) and [Phase 7.5 status](PHASE7_5_REPORT.md).
+Raw references and generated indexes must remain ignored and are never served by the app.
+
 The vanilla HTML/CSS/JavaScript application now opens on **Home**, with a next action
 based on saved placement, study, and review data. Desktop uses a sidebar; mobile uses
 Home / Study / Tutor / Progress bottom navigation. Settings and Placement are secondary.

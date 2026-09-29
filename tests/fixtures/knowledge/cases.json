@@ -1,0 +1,14 @@
+[
+ {"topic":"desire","text":"たい expresses the speaker's desire to do an action. Attach たい to the verb stem: 歩きたい。For another person's desires, consider what evidence and context allow you to say.","queries":["What does たい mean?","たい expresses desire","want to"]},
+ {"topic":"topic","text":"は marks a topic, while が often identifies the subject or supplies focused information. Context determines which information is already being discussed. 春は雨が多いです。","queries":["Difference between は and が","topic subject particles","は が"]},
+ {"topic":"destination","text":"に can mark a destination with movement verbs. で can mark where an action takes place. 公園に行きます。公園で走ります。Compare destination and action location.","queries":["に instead of で","destination action location","に で"]},
+ {"topic":"simultaneous","text":"ながら links simultaneous actions performed by the same person. Attach it to the verb stem. 歩きながら話します。The main action is expressed by the final predicate.","queries":["How does ながら work?","simultaneous actions","nagara"]},
+ {"topic":"teform","text":"て形, the te-form, connects verbs to other constructions. For the godan verb 書く, the form is 書いて. For the ichidan verb 見る, it is 見て. Verb class matters.","queries":["How do I make the te-form?","て形","書いて 見て"]},
+ {"topic":"time","text":"時間 is read じかん and means time or a duration in hours. 時間があります means that time is available. A number followed by 時間 can express how many hours.","queries":["What does 時間 mean?","じかん hours","時間 reading"]},
+ {"topic":"tari","text":"たり lists representative actions rather than an exhaustive sequence. The form derives from the past form plus り. 休みには歩いたり絵を描いたりします。","queries":["How do I use たり?","representative actions","tari"]},
+ {"topic":"adjectives","text":"い adjectives generally form the negative by replacing final い with くない. 高い becomes 高くない. いい has the irregular negative よくない. Do not apply this rule to every word ending in い.","queries":["negative adjectives","高くない","よくない"]},
+ {"topic":"school","text":"学校 means school and is read がっこう. The small っ indicates a consonant closure before こ. 学校で友達に会います。Read the whole word rather than guessing each kanji separately.","queries":["学校 reading","がっこう","school kanji"]},
+ {"topic":"hiragana","text":"Hiragana represents Japanese sound units. The five basic vowels are あ い う え お. Small ゃ ゅ ょ combine with certain kana to make contracted sounds such as きゃ.","queries":["hiragana vowels","あ い う え お","contracted sounds"]},
+ {"topic":"passive","text":"The passive form presents an event from the affected participant's perspective. 読まれる is the passive of 読む. Passive sentences can describe effects on someone, not only neutral events.","queries":["passive form","読まれる","affected participant"]},
+ {"topic":"nomatch","text":null,"queries":["quasar spacetime tensor","kubernetes autoscaler","zzunfindablexyz"]}
+]

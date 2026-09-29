@@ -13,6 +13,7 @@ from app.llm.base import LLMProvider, Message
 from app.memory.conversation import ConversationStore
 from app.tutor.prompts import build_instructions, format_request
 from app.tutor.schemas import ChatRequest, ChatResponse, TutorResponse
+from app.knowledge.service import GROUNDING_INSTRUCTIONS
 
 
 def parse_response(raw: str) -> TutorResponse:
@@ -26,11 +27,22 @@ def parse_response(raw: str) -> TutorResponse:
 
 class TutorService:
     def __init__(self, provider: LLMProvider, memory: ConversationStore, settings: Settings,
-                 profiles: AssessmentRepository | None = None, learners=None, saved_sessions=None):
+                 profiles: AssessmentRepository | None = None, learners=None, saved_sessions=None, knowledge=None):
         self.provider, self.memory, self.settings = provider, memory, settings
         self.profiles = profiles
         self.learners, self.saved_sessions = learners, saved_sessions
         self.saved_busy = set()
+        self.knowledge = knowledge
+
+    async def grounding(self, request, instructions, messages):
+        if self.knowledge is None or not self.settings.knowledge_enabled:
+            return instructions, messages, None
+        context = await self.knowledge.context_for(request.message, request.mode)
+        return instructions + GROUNDING_INSTRUCTIONS, self.knowledge.messages(messages, context), context
+
+    def validate_grounding(self, reply, context):
+        if context is not None:
+            self.knowledge.check_response(reply, context)
 
     def learner_instructions(self, request, *, observe=False):
         profile = self.learners.profile(request.learner_id)
@@ -60,9 +72,11 @@ class TutorService:
                 raise TutorError('session_closed', 'This saved conversation has ended. Start a new conversation.', 409)
             messages = self.saved_sessions.history(saved, self.settings.max_history_turns)
             messages.append(Message('user', format_request(request.mode, request.message)))
+            instructions, messages, grounding = await self.grounding(request,
+                self.learner_instructions(request, observe=True), messages)
             try:
                 async with asyncio.timeout(self.settings.llm_timeout_seconds):
-                    raw = await self.provider.generate(instructions=self.learner_instructions(request, observe=True),
+                    raw = await self.provider.generate(instructions=instructions,
                         messages=messages, schema=ObservedTutorResponse.model_json_schema())
             except TimeoutError as exc:
                 raise TutorError('provider_timeout', 'The tutor took too long to respond. Please try again.', 504) from exc
@@ -73,6 +87,7 @@ class TutorService:
             except (ValueError, TypeError) as exc:
                 raise TutorError('invalid_model_response', 'The tutor returned an invalid response. Please try again.') from exc
             reply = parse_response(teaching)
+            self.validate_grounding(reply, grounding)
             reply = self.saved_sessions.commit(request, reply, observations, saved['version'])
             return ChatResponse(session_id=request.session_id, response=reply)
         finally:
@@ -97,15 +112,17 @@ class TutorService:
                 instructions += ('\nApplication placement evidence (provisional, never official certification): '
                     + json.dumps(summary, ensure_ascii=False) + '\nUse this evidence to choose a starting difficulty and '
                     'review focus, while respecting explicit learner requests. Do not invent unmeasured abilities.')
+            instructions, messages, grounding = await self.grounding(request, instructions, [*session.messages, user])
             try:
                 async with asyncio.timeout(self.settings.llm_timeout_seconds):
                     raw = await self.provider.generate(
                         instructions=instructions,
-                        messages=[*session.messages, user],
+                        messages=messages,
                         schema=TutorResponse.model_json_schema(),
                     )
             except TimeoutError as exc:
                 raise TutorError('provider_timeout', 'The tutor took too long to respond. Please try again.', 504) from exc
             reply = parse_response(raw)
+            self.validate_grounding(reply, grounding)
             self.memory.append_turn(session, user, Message('assistant', reply.model_dump_json()))
             return ChatResponse(session_id=request.session_id, response=reply)

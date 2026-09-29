@@ -28,6 +28,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-lock.txt
+      - run: pip install -r requirements-knowledge.txt
       - run: python scripts/audit_deployment.py
       - run: pytest -q
       - run: for file in frontend/*.js; do node --check "$file"; done

@@ -31,6 +31,8 @@ from app.llm.factory import create_provider, provider_metadata
 from app.llm.common import request_path
 from app.memory.conversation import ConversationStore
 from app.tutor.service import TutorService
+from app.knowledge.repository import KnowledgeRepository
+from app.knowledge.service import KnowledgeService
 from app.safeguards import (router as access_router, before_request, protect_resources,
                             initialize_access, WindowLimiter)
 
@@ -83,7 +85,9 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             app.state.curriculum = CurriculumService(repository,app.state.learners,llm,
                 AnswerEvaluator(llm,settings.llm_timeout_seconds),settings.llm_timeout_seconds)
             app.state.tutor = TutorService(llm, app.state.memory, settings, repository,
-                app.state.learners, app.state.saved_sessions)
+                app.state.learners, app.state.saved_sessions,
+                knowledge=KnowledgeService(KnowledgeRepository(settings.knowledge_db_path,
+                    settings.database_url.get_secret_value()), settings))
             yield
             app.state.memory.sessions.clear()
 
