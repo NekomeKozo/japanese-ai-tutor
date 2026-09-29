@@ -1,6 +1,6 @@
 # Phase 7 — Product application and UI overhaul
 
-Status: implementation and local verification complete; live deployment acceptance and actual-phone check pending.
+Status: implementation deployed and automated checks passed; live browser acceptance recorded below. Actual-phone acceptance is deferred by the owner.
 
 ## UI audit and architecture
 
@@ -94,10 +94,10 @@ profile keeps existing server records.
 - Full pinned-environment backend suite with disposable PostgreSQL 18 on loopback:
   **419 passed**, two existing dependency deprecation warnings.
 - Earlier SQLite-only run: 414 passed, five PostgreSQL tests skipped; superseded by the full run above.
-- Node built-in frontend regression suite: **14 passed**. Covers DOM contracts, startup,
+- Node built-in frontend regression suite: **15 passed**. Covers DOM contracts, startup,
   next-action priority, routing, failed restoration, study/tutor/placement/settings draft
   retention, 401 handling, friendly provider errors, read-only Home, chat retry IDs,
-  failed dashboard loading, and deferred conversation restoration.
+  failed dashboard loading, deferred conversation restoration, and preservation of active-study errors across navigation.
 - JavaScript syntax checks: passed for all frontend scripts.
 - Source and available Git-history secret/private-file audit: passed.
 - Browser preview used an isolated `phase7-preview.sqlite3`, fake provider and synthetic
@@ -122,9 +122,46 @@ A representative 390px Home screenshot was saved as a task artifact. No browser 
 
 ## Live acceptance checklist
 
-Pending deployment of the Phase 7 commit, CI confirmation, and checks on the actual
-Render service: access, Home CTA, placement, study, due review, tutor correction/exercise,
-Progress, Settings, persistence, unauthorized access and scope enforcement.
+Verified on https://japanese-ai-tutor.onrender.com/ on 2026-09-28–29:
+
+- Phase 7 shell deployed; Home restored the existing Early N5 profile, Travel goal,
+  six due reviews and the appropriate Start daily review action.
+- Settings loaded and saved existing preferences with explicit success feedback.
+- Progress loaded the learner estimate and Knowledge list (57 topics).
+- Tutor restored saved history only when opened. A Japanese correction displayed the
+  original, suggested Japanese and explanation; a generated exercise displayed its prompt and hint.
+- An unrelated Python-script request was rejected by the existing scope safeguard;
+  the unsent text remained available in the editor.
+- A two-activity due review accepted both answers, displayed persisted next-review
+  dates, completed with a two-review recap and reduced the due count from six to four.
+- One review lesson initially encountered a provider error. Explicit Continue session
+  retry succeeded without replacing the plan. This revealed an error-visibility issue:
+  switching sections hid the error. Commit `d9888f3` fixes that and adds a regression test.
+- Public `/health` returned 200; unauthenticated `/api/health` and protected static
+  resources returned 401. Existing signed-in browser access remained valid.
+- A new five-minute vocabulary study plan opened an activity, accepted the answer,
+  completed, and restored its one-activity recap after reload.
+- A separate beginner placement accepted a choice and three unknown answers, completed
+  after four questions and restored its low-confidence result after reload. Unassessed
+  skills and the non-official-JLPT limitation were visible. The test result was not
+  adopted: the existing Early N5 learner remained selected and its records were retained.
+- Reload preserved the selected learner, saved settings, completed study and recent
+  history, including both completed study sessions. Mobile-width Home, History and Settings
+  had matching client/scroll widths (375px content at a 390px viewport).
+- Final live Home screenshot was saved as the task artifact `phase7-live-mobile.png`;
+  the browser console contained no errors. Viewport override was reset afterward.
+- Render displayed its wake-up screen on the next-day visit; the application loaded
+  after the service resumed. Cold-start delay remains a hosting limitation.
+
+Fresh access-code entry was not repeated during this final pass; the existing signed-in
+session and unauthorized-request rejection were verified. The redesigned access form
+was tested locally with a disposable code. Actual-phone keyboard behavior remains
+unverified, as described below.
+
+Implementation commits: `63bef18b`, `0bf5371`, `d9888f3`. GitHub Actions passed for all
+three; the final implementation run is
+https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36437649114.
+No provider, secret, database or staging-security settings were changed.
 
 The owner chose to test on an actual phone later (2026-09-28), so this acceptance item remains pending. Actual-phone verification remains owner-assisted: open the deployed site on a phone,
 use bottom navigation, type Japanese with the on-screen keyboard, send a message, submit

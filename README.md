@@ -1,6 +1,6 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 7 — product UI overhaul (live acceptance in progress).**
+**Current phase: Phase 7 — product UI overhaul deployed; actual-phone acceptance pending.**
 
 The vanilla HTML/CSS/JavaScript application now opens on **Home**, with a next action
 based on saved placement, study, and review data. Desktop uses a sidebar; mobile uses
