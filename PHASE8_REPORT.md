@@ -1,7 +1,9 @@
 # Phase 8 — Adaptive Japanese Conversation System
 
-Status: implemented and locally verified on 2026-09-30. Live staging acceptance is
-pending deployment. This report distinguishes local fixtures from actual provider checks.
+Status: implemented, regression-tested and deployed as `5c51e3e`; live flow checks
+recorded on 2026-10-01 (Asia/Manila). Provider-log and actual-phone acceptance remain
+pending. This report distinguishes local fixtures from
+actual provider checks.
 
 ## Initial audit and checkpoint
 
@@ -142,11 +144,55 @@ assertions in curriculum/learning-memory/mastery/PostgreSQL/review tests; README
 
 ## Deployment and remaining verification
 
-Pending: push/CI, Render live revision and health, real Gemini introductions/restaurant,
-brief correction, teaching/RAG question, scope rejection plus Japanese vocabulary,
-reload/navigation, completion/new scenario/general Tutor. No dashboard changes are
-required. Automated fallback compatibility is verified; no deliberate live quota
-exhaustion or provider outage is planned.
+Feature commit `5c51e3e` was pushed normally. GitHub Actions run `36714052899` passed.
+The live application displays the new catalog and supports creation/completion of
+practice, demonstrating that the additive migration and new routes are running.
+Public `/health` returned 200; unauthenticated `/api/health` and `/static/shell.js`
+returned 401. Source/history privacy audit, JavaScript syntax and whitespace checks passed.
+
+Live introduction passed: the authored opening appeared, `ミゲルです。` produced a short
+natural introduction and follow-up question, and finish showed one saved turn and
+one scored observation while keeping difficulty beginner. A new restaurant scenario
+then started successfully. After the overnight interruption and a Render cold start,
+the restaurant restored its goal, balanced correction policy, beginner difficulty,
+one saved exchange and exactly one opening. `二人です。` received a natural invitation
+to the table; `水をください。` received a natural continuation asking about the order.
+The water reply included a short redundant explanation/example despite the prompt's
+preference to omit those for valid replies; it did not become a long lesson.
+These checks use a new beginner profile in the in-app
+browser, leaving the earlier N5 profile in the other browser untouched.
+
+The deliberately incorrect restaurant sentence hit a connection-style browser error
+twice, including a retry with the existing request ID. Public health remained 200;
+reload showed exactly the two earlier successful exchanges, with no duplicate turn.
+After two other requests succeeded, a fresh correction attempt passed: it suggested
+`ラーメンを食べたいです。`, explained the たい/かったです distinction in two sentences,
+and continued briefly. The earlier intermittent failure's root cause remains unknown
+without service logs. Do not claim it was repaired by a code change.
+
+Live scope check passed: `Write Python code for me.` was rejected by the application,
+then `How do I say software engineer in Japanese?` was allowed and the tutor returned
+to the restaurant. The explicit question `「お会計お願いします」はどういう意味ですか？`
+received a brief, correct bill/check explanation and returned to roleplay. Actual
+reference-match status is unverified without retrieval logs; a fluent answer alone
+does not prove a source match.
+
+Home→Progress→Tutor preserved the active restaurant and all five saved exchanges
+(one opening plus ten learner/tutor messages).
+
+Restaurant finish and completed-state reload passed: the deterministic recap showed five learner turns, five
+observations, three scored turns averaging 83%, and beginner difficulty. The two
+teaching/help questions did not inflate the scored-turn count.
+
+General Tutor passed after selecting New conversation: a short Japanese greeting
+request produced an ordinary lesson/example and exercise, with no restaurant role.
+
+Pending: exact Render
+revision and per-request provider/retrieval log checks require dashboard access.
+Automatic approval review blocked the Render-to-GitHub login redirect because the
+separate authentication destination lacked explicit approval. Approval was requested;
+no alternate access method or environment change was attempted. Automated fallback
+compatibility is verified; no deliberate live quota exhaustion/outage is planned.
 
 Existing free-tier database round trips and cold starts may dominate latency. Practice
 adds state/evidence reads to session retrieval and a UI state refresh after a successful
@@ -169,7 +215,10 @@ the original checkpoint alone after migration because it rejects schema 6.
 To roll back, first finish active practices while Phase 8 is deployed if feasible.
 On main, inspect `git log --oneline e2cb29f..HEAD`, then use normal `git revert` for
 the Phase 8 feature/documentation commits in newest-first order, preserving `e2cb29f`.
+While that range contains only Phase 8 commits and the working tree is clean, the
+concrete commands are `git revert --no-commit e2cb29f..HEAD`, then
+`git commit -m "Rollback Phase 8 application; retain additive database schema"`.
 Resolve any documentation conflicts, run regression tests, and push normally to
-trigger Render. Keep schema version 6 and all additive tables/data; do not drop tables,
+trigger Render with `git push origin main`. Keep schema version 6 and all additive tables/data; do not drop tables,
 reset Supabase, force-push or destructively downgrade. Old UI cannot manage active
 practice state, so unfinished roleplays need review before a later re-upgrade.
