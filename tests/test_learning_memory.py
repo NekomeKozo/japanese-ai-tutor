@@ -309,7 +309,7 @@ def test_version_one_migration_preserves_all_old_rows_and_is_idempotent(settings
             assert data['initial_placement'] == completed['result']
             assert client.get(f'/api/assessments/{active["assessment_id"]}').json() == active
             with sqlite3.connect(settings.assessment_db_path) as db:
-                assert db.execute('PRAGMA user_version').fetchone()[0] == 5
+                assert db.execute('PRAGMA user_version').fetchone()[0] == 6
                 for table, rows in original.items():
                     assert db.execute(f'SELECT * FROM {table} ORDER BY 1,2').fetchall() == rows
                 assert db.execute("SELECT COUNT(*) FROM learning_events WHERE event_type='assessment_completed'").fetchone()[0] == 1

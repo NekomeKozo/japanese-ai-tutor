@@ -18,7 +18,9 @@ async function openSavedSession(id) {
   pendingChat = null;
   remember(`session-${placementLearnerId}`, sessionId);
   $('conversation').replaceChildren();
-  if (!saved.turns.length) $('conversation').append(welcome.cloneNode(true));
+  applyPractice(saved.conversation);
+  if (saved.conversation) addMessage('tutor', saved.conversation.scenario.opening_line);
+  else if (!saved.turns.length) $('conversation').append(welcome.cloneNode(true));
   saved.turns.forEach(turn => { addMessage('learner', turn.message); renderReply(turn.response); });
   $('message').value = '';
   updateCount();
@@ -47,6 +49,7 @@ async function ensureTutorSession() {
   setBusy(true);
   $('status').textContent = 'Opening your conversation…';
   try {
+    if (await restoreActivePractice()) return;
     const savedId = placementLearnerId && recalled(`session-${placementLearnerId}`);
     if (savedId) {
       try { await openSavedSession(savedId); return; }

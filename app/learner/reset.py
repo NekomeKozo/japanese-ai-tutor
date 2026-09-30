@@ -17,6 +17,8 @@ def reset_learner(repository, learner_id, confirmation):
         if not db.execute('SELECT 1 FROM learner_state WHERE learner_id=?', (key,)).fetchone():
             raise ValueError('Learner not found.')
         baseline = db.execute('SELECT p.profile_json,a.state_json FROM learner_profiles p JOIN assessments a ON a.id=p.assessment_id WHERE p.learner_id=?', (key,)).fetchone()
+        if db.execute('PRAGMA user_version').fetchone()[0] >= 6:
+            db.execute('DELETE FROM conversation_states WHERE learner_id=?', (key,))
         if db.execute('PRAGMA user_version').fetchone()[0]>=5:
             for table in ('review_attempts','review_schedules'):
                 db.execute(f'DELETE FROM {table} WHERE learner_id=?',(key,))
@@ -45,7 +47,7 @@ def main():
         parser.error('Database must already exist.')
     repository = AssessmentRepository(str(args.database.resolve()))
     with repository.connection() as db:
-        if db.execute('PRAGMA user_version').fetchone()[0] not in (2,3,4,5):
+        if db.execute('PRAGMA user_version').fetchone()[0] not in (2,3,4,5,6):
             parser.error('Run the current application once to migrate this database before resetting.')
     repository.ready = True
     reset_learner(repository, args.learner_id, args.confirm_reset)

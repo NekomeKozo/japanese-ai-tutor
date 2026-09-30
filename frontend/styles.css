@@ -177,3 +177,7 @@ button,textarea,input,select { scroll-margin-bottom:100px; }
 #study-panel[data-state="completed"] #study-preview { order:-1; }
 #study-panel[data-state="in_progress"] #study-setup h2, #study-panel[data-state="in_progress"] #study-intro { display:none; }
 #study-panel[data-state="in_progress"] #study-setup:has(#study-status:empty):not(:has([role="alert"]:not([hidden]))) { display:none; }
+:root { --practice-card-gap: .75rem; }
+.practice-card select { width: 100%; max-width: 100%; margin: .35rem 0 var(--practice-card-gap); }
+.practice-card button { margin-top: .5rem; }
+.practice-card p { overflow-wrap: anywhere; }

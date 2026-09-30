@@ -49,7 +49,7 @@ def pg_client(pg_settings, provider):
 def test_fresh_repeat_migration_and_rollback(pg_client, pg_settings):
     repo = pg_client.app.state.repository
     with repo.connection() as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0] == 5
+        assert db.execute('PRAGMA user_version').fetchone()[0] == 6
         count = db.execute('SELECT count(*) FROM assessment_questions').fetchone()[0]
         assert count == len(QuestionBank.load().items)
     repo.initialize(QuestionBank.load())
@@ -79,7 +79,7 @@ def test_private_knowledge_migration_rebuild_and_rollback(pg_client,pg_settings)
     with pytest.raises(TutorError): repo.replace_source(doc.source,chunks+chunks,'bad')
     assert repo.counts()==before and repo.source_version(doc.source.source_id)=='v1'
     with pg_client.app.state.repository.connection() as db:
-        assert db.execute('PRAGMA user_version').fetchone()[0]==5
+        assert db.execute('PRAGMA user_version').fetchone()[0]==6
         assert db.execute('SELECT COUNT(*) FROM assessment_questions').fetchone()[0]>0
         assert db.execute("SELECT table_schema FROM information_schema.tables WHERE table_name='knowledge_chunks'").fetchone()[0]=='tutor_private'
 

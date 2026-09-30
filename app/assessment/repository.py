@@ -79,6 +79,8 @@ class AssessmentRepository:
             migrate_mastery(db)
             from app.review.migrations import migrate as migrate_reviews
             migrate_reviews(db)
+            from app.conversation.migrations import migrate as migrate_conversation
+            migrate_conversation(db)
             for question in bank.items:
                 db.execute('INSERT OR IGNORE INTO assessment_questions VALUES (?, ?, ?)',
                            (BANK_VERSION, question.id, question.model_dump_json()))

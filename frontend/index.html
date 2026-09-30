@@ -9,6 +9,7 @@
   <script src="/static/app.js" defer></script>
   <script src="/static/assessment.js" defer></script>
   <script src="/static/learner.js" defer></script>
+  <script src="/static/conversation.js" defer></script>
   <script src="/static/study.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
@@ -78,7 +79,27 @@
     <section id="tutor-panel" aria-label="Tutor chat" hidden>
     <p id="placement-context" role="status">Beginner chat · No placement profile selected.</p>
     <div id="status" role="status">Connecting to the tutor…</div>
-    <section class="settings" aria-label="Learning preferences">
+    <section class="placement-card practice-card" aria-label="Conversation practice">
+      <div id="practice-setup">
+        <h2>Conversation practice</h2><p>Try a real-world exchange, one reply at a time.</p>
+        <p id="practice-profile-note">Create or restore a learner profile to save conversation practice. <a href="#placement">Get started</a></p>
+        <p id="practice-loading" role="status" hidden>Loading scenarios…</p>
+        <label for="practice-scenario">Scenario</label><select id="practice-scenario" disabled></select>
+        <p id="practice-description" class="small"></p>
+        <label for="practice-policy">Corrections</label><select id="practice-policy">
+          <option value="important_only">Only when meaning is affected</option><option value="balanced" selected>Balanced</option><option value="every_turn">Check every turn</option>
+        </select>
+        <button id="practice-start" type="button" disabled>Start conversation</button>
+      </div>
+      <div id="practice-active" hidden>
+        <p class="eyebrow">CONVERSATION PRACTICE</p><h2 id="practice-title"></h2>
+        <p id="practice-goal"></p><p id="practice-difficulty" class="small" role="status"></p>
+        <button id="practice-finish" type="button" class="secondary">Finish conversation</button>
+      </div>
+      <div id="practice-recap" hidden><h2 id="practice-recap-title" tabindex="-1">Conversation recap</h2><div id="practice-recap-content"></div><p class="small">Your transcript is saved in Progress → History. Start another scenario above or choose New conversation for general tutoring.</p></div>
+      <div id="practice-error" role="alert" hidden></div><button id="practice-retry" class="secondary" type="button" hidden>Reload scenarios</button>
+    </section>
+      <section id="tutor-level-controls" class="settings" aria-label="Learning preferences">
       <label>Starting level <select id="level">
         <option value="beginner">Absolute beginner</option><option>N5</option><option>N4</option>
         <option>N3</option><option>N2</option><option>N1</option>
@@ -90,7 +111,7 @@
     </section>
     <p id="error" role="alert" hidden></p>
     <form id="chat-form">
-      <label for="mode">How can I help?</label>
+      <label id="mode-label" for="mode">How can I help?</label>
       <select id="mode">
         <option value="chat">Ask / answer</option><option value="correct">Correct my Japanese</option>
         <option value="grammar">Explain grammar</option><option value="vocabulary">Explain vocabulary</option>

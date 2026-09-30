@@ -41,6 +41,7 @@ async function renderRoute() {
     if (section === 'progress') { progressSection(detail); await renderProfile(); }
     if (section === 'settings') await loadSettings();
     if (section === 'tutor' && !sessionId) await ensureTutorSession();
+    if (section === 'tutor') { await loadScenarioCatalog(); practiceControls(); }
   } catch (error) {
     if (sequence !== routeRequest) return;
     if (section === 'progress') profileError(error);

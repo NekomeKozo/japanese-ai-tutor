@@ -111,7 +111,8 @@ async def protect_resources(request: Request):
 def check_scope(text, *, study_answer=False):
     text = unicodedata.normalize('NFKC', text).casefold()
     attacks = r'ignore\s+(?:all\s+)?(?:previous|prior|system|the)\s+(?:instructions|restrictions|rules)|(?:reveal|print|show|tell|give|repeat).{0,35}(?:system prompt|hidden instructions|api.?key|environment variables|database password)|(?:no longer|stop being).{0,20}japanese tutor|forget japanese|become chatgpt'
-    if re.search(attacks, text):
+    scenario_override = r'\b(?:ignore|abandon|override)\b.{0,30}\b(?:scenario|roleplay)\b.{0,35}\b(?:become|act as|instead)\b'
+    if re.search(attacks, text) or re.search(scenario_override, text):
         raise TutorError('scope_rejected', REDIRECT, 422)
     # A Japanese keyword appended to an unrelated command is not an allowance.
     unrelated = r'\b(?:write|create|debug|fix|build)\b.{0,45}\b(?:python (?:code|program|script)|(?:windows )?driver|history essay|business plan|javascript app)|\b(?:do|solve)\b.{0,30}\b(?:calculus|math)\b|stock picks|general therapist|explain quantum physics'
@@ -129,6 +130,9 @@ def chat_has_exercise(request, body):
     """Allow short English answers only when the server has a pending exercise."""
     if body.learner_id and request.app.state.saved_sessions.exists(body.session_id):
         saved = request.app.state.saved_sessions.get(body.learner_id, body.session_id, 1)
+        if saved.get('conversation') and saved['conversation']['status'] == 'active':
+            from app.conversation.service import short_roleplay_answer
+            return short_roleplay_answer(body.message)
         return bool(saved['turns'] and saved['turns'][-1]['response'].get('exercise'))
     session = request.app.state.memory.sessions.get(body.session_id)
     if session and session.messages and session.messages[-1].role == 'assistant':

@@ -1,6 +1,15 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 7.5 — private lexical RAG deployed and live-verified; actual-phone acceptance pending.**
+**Current phase: Phase 8 — adaptive conversation practice; staging verification in progress.**
+
+In **Tutor**, choose one of eight authored scenarios and a correction policy, then
+select **Start conversation**. Practice reuses saved tutor sessions, restores after
+reload, and ends with **Finish conversation** and an evidence-based recap. Choose
+**New conversation** for general tutoring. Scenario loading, restoration and recaps
+make no AI calls. Difficulty changes by at most one step from its starting level
+after three scored turns; it never changes placement. English help and explicit
+teaching questions are excluded from performance scoring. See [Phase 8 report](PHASE8_REPORT.md)
+for migration, security, validation and rollback details. No voice or Phase 9 features.
 
 Phase 7.5 adds optional private lexical retrieval to tutor chat. It is enabled on the
 existing staging service, while new installations default to disabled until the private

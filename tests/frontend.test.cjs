@@ -95,3 +95,55 @@ test('an active study error remains visible after navigating away and back',asyn
   h.elements.get('study-error').hidden=false; h.elements.get('study-error').textContent='Please retry this lesson.';
   await h.run('loadStudy()'); assert.equal(h.elements.get('study-error').hidden,false); assert.equal(h.elements.get('study-error').textContent,'Please retry this lesson.');
 });
+
+const practice = {session_id:'practice',learner_id:'learner',status:'active',effective_level:'N5',correction_policy:'balanced',scenario:{key:'restaurant',title:'At a restaurant',description:'Order a meal.',goal:'Order food and a drink.',opening_line:'何名様ですか？',minimum_level:'N5'}};
+const practiceSaved = {session_id:'practice',learner_id:'learner',conversation:practice,turns:[],interaction_count:0,ended_at:null};
+function respond(h, handler) {
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,status:200,json:async()=>handler(url,options)};};
+}
+test('scenario setup loads authored data once without generation',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");respond(h,()=>[practice.scenario]);
+  await h.run('loadScenarioCatalog()');await h.run('loadScenarioCatalog()');
+  assert.equal(h.requests.length,1);assert.equal(h.requests[0].url,'/api/conversation/scenarios');
+  assert.equal(h.elements.get('practice-start').disabled,false);
+  assert.match(h.elements.get('practice-description').textContent,/Order a meal/);
+});
+test('saved roleplay restoration uses the existing transcript and one opening',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");respond(h,url=>url.endsWith('/active')?practice:practiceSaved);
+  await h.run('restoreActivePractice()');await h.run("openSavedSession('practice')");
+  assert.equal(h.run('sessionId'),'practice');assert.equal(h.elements.get('conversation').children.length,1);
+  assert.equal(h.elements.get('practice-active').hidden,false);assert.equal(h.elements.get('mode').hidden,true);
+  assert.equal(h.elements.get('practice-goal').textContent,practice.scenario.goal);
+  assert.ok(h.requests.every(r=>!r.method));
+});
+test('active roleplay cannot be silently closed by general reset',async()=>{
+  const h=harness();h.ctx.practice=practice;h.run("placementLearnerId='learner';sessionId='practice';applyPractice(practice)");
+  await h.run('resetSession()');assert.equal(h.requests.length,0);assert.equal(h.run('sessionId'),'practice');
+  assert.match(h.elements.get('error').textContent,/Finish/);
+});
+test('practice start uses an authored opening without a chat request',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");h.elements.get('practice-scenario').value='restaurant';h.elements.get('practice-policy').value='balanced';
+  respond(h,url=>url.endsWith('/conversations')?practice:practiceSaved);
+  await h.elements.get('practice-start').listeners.click();
+  assert.equal(h.requests.length,2);assert.ok(h.requests.every(r=>r.url!='/api/chat'));
+  assert.equal(h.run('practiceState.status'),'active');assert.equal(h.run('sessionId'),'practice');
+});
+test('uncertain start retry restores the already-created active conversation',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return url.endsWith('/conversations')?{ok:false,status:409,json:async()=>({error:{code:'conversation_active',message:'Resume first'}})}:{ok:true,status:200,json:async()=>url.endsWith('/active')?practice:practiceSaved};};
+  await h.elements.get('practice-start').listeners.click();assert.equal(h.run('sessionId'),'practice');
+  assert.equal(h.elements.get('practice-error').hidden,true);
+});
+test('finish renders stored recap and leaves transcript available',async()=>{
+  const h=harness();h.ctx.practice=practice;h.run("placementLearnerId='learner';sessionId='practice';applyPractice(practice)");
+  const finished={...practice,status:'completed',recap:{turn_count:3,final_effective_level:'N5',topics:['Particles'],observations:3,scored_turns:3,recent_performance_average:.7}};
+  respond(h,()=>finished);await h.elements.get('practice-finish').listeners.click();
+  assert.equal(h.requests.length,1);assert.ok(h.requests[0].url.endsWith('/finish'));
+  assert.equal(h.elements.get('practice-recap').hidden,false);assert.equal(h.elements.get('chat-form').hidden,true);
+  assert.equal(h.run('sessionId'),'practice');assert.equal(h.elements.get('practice-active').hidden,true);
+});
+test('roleplay navigation retains state and draft without a new conversation',async()=>{
+  const h=harness();h.ctx.practice=practice;h.run("appReady=true;placementLearnerId='learner';sessionId='practice';scenarioCatalog=[practice.scenario];applyPractice(practice)");
+  h.elements.get('message').value='水をください。';h.ctx.location.hash='#placement';await h.run('renderRoute()');h.ctx.location.hash='#tutor';await h.run('renderRoute()');
+  assert.equal(h.elements.get('message').value,'水をください。');assert.equal(h.run('practiceState.status'),'active');assert.equal(h.requests.length,0);
+});

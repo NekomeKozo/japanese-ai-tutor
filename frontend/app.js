@@ -20,6 +20,7 @@ function setBusy(value) {
   for (const id of ['send', 'reset', 'message', 'mode', 'level']) $(id).disabled = value;
   $('send').textContent = value ? 'Working…' : 'Send message';
   $('conversation').setAttribute('aria-busy', String(value));
+  practiceControls();
   if (!value && tutorOpenPending) {
     tutorOpenPending = false;
     if (!$('tutor-panel').hidden) ensureTutorSession();
@@ -92,6 +93,7 @@ async function refreshStatus() {
 }
 
 async function resetSession() {
+  if (practiceState?.status === 'active') { showError(new Error('Finish your active conversation first.')); return; }
   setBusy(true);
   $('error').hidden = true;
   try {
@@ -104,6 +106,7 @@ async function resetSession() {
     sessionId = session.session_id;
     savedSession = Boolean(placementLearnerId);
     pendingChat = null;
+    applyPractice(null);
     if (savedSession) remember(`session-${placementLearnerId}`, sessionId);
     $('conversation').replaceChildren(welcome.cloneNode(true));
     $('message').value = '';
@@ -140,6 +143,7 @@ $('chat-form').addEventListener('submit', async (event) => {
     updateCount();
     $('conversation').scrollTop = $('conversation').scrollHeight;
     $('status').textContent = 'Your turn · Take your time.';
+    await refreshPractice();
   } catch (error) {
     showError(error);
     $('status').textContent = 'Your message is still in the editor. Retry, or start a new session if it expired.';

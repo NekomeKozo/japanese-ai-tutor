@@ -21,6 +21,7 @@ def request_fingerprint(request):
 class SessionService:
     def __init__(self, repository):
         self.repository = repository
+        self.conversations = None
 
     def _lifecycle(self, db, key, learner_id, kind):
         event_id = str(uuid5(NAMESPACE_URL, f'{kind}:{key}'))
@@ -29,15 +30,17 @@ class SessionService:
 
     def create(self, learner_id):
         self.repository.require_ready()
-        key = uuid4()
         with self.repository.connection() as db:
             db.execute('BEGIN IMMEDIATE')
-            if not db.execute('SELECT 1 FROM learner_state WHERE learner_id=?', (str(learner_id),)).fetchone():
-                raise TutorError('learner_not_found', 'Learner not found.', 404)
-            now = now_iso()
-            db.execute('INSERT INTO tutor_sessions VALUES (?,?,?,?,?,?)', (str(key), str(learner_id), now, None, 0, 0))
-            self._lifecycle(db, key, learner_id, 'tutor_session_started')
-            db.execute('UPDATE learner_state SET last_activity_at=?,updated_at=? WHERE learner_id=?', (now, now, str(learner_id)))
+            return self.create_in(db, learner_id)
+
+    def create_in(self, db, learner_id):
+        if not db.execute('SELECT 1 FROM learner_state WHERE learner_id=?', (str(learner_id),)).fetchone():
+            raise TutorError('learner_not_found', 'Learner not found.', 404)
+        key, now = uuid4(), now_iso()
+        db.execute('INSERT INTO tutor_sessions VALUES (?,?,?,?,?,?)', (str(key), str(learner_id), now, None, 0, 0))
+        self._lifecycle(db, key, learner_id, 'tutor_session_started')
+        db.execute('UPDATE learner_state SET last_activity_at=?,updated_at=? WHERE learner_id=?', (now, now, str(learner_id)))
         return {'session_id': str(key), 'learner_id': str(learner_id)}
 
     def exists(self, session_id):
@@ -58,8 +61,9 @@ class SessionService:
             start, end, count, version = self._owned(db, learner_id, session_id)
             rows = db.execute('SELECT request_id,user_text,reply_json,created_at,mode FROM conversation_turns WHERE session_id=? ORDER BY turn_number DESC LIMIT ?',
                 (str(session_id), limit)).fetchall()
+            conversation = self.conversations.read(db, learner_id, session_id) if self.conversations else None
         return {'session_id': str(session_id), 'learner_id': str(learner_id), 'started_at': start, 'ended_at': end,
-            'interaction_count': count, 'version': version,
+            'interaction_count': count, 'version': version, 'conversation': conversation,
             'turns': [{'request_id': key, 'message': text, 'response': json.loads(reply), 'created_at': date, 'mode': mode}
                       for key, text, reply, date, mode in reversed(rows)]}
 
@@ -77,8 +81,14 @@ class SessionService:
         with self.repository.connection() as db:
             db.execute('BEGIN IMMEDIATE')
             self._owned(db, learner_id, session_id)
-            db.execute('UPDATE tutor_sessions SET ended_at=COALESCE(ended_at,?),version=version+1 WHERE session_id=? AND ended_at IS NULL', (now_iso(), str(session_id)))
-            self._lifecycle(db, session_id, learner_id, 'tutor_session_completed')
+            if self.conversations and db.execute("SELECT 1 FROM conversation_states WHERE session_id=? AND status='active'", (str(session_id),)).fetchone():
+                raise TutorError('conversation_active', 'Use Finish conversation to complete this practice.', 409)
+            self.close_in(db, learner_id, session_id)
+
+    def close_in(self, db, learner_id, session_id):
+        self._owned(db, learner_id, session_id)
+        db.execute('UPDATE tutor_sessions SET ended_at=COALESCE(ended_at,?),version=version+1 WHERE session_id=? AND ended_at IS NULL', (now_iso(), str(session_id)))
+        self._lifecycle(db, session_id, learner_id, 'tutor_session_completed')
 
     def replay(self, request):
         self.repository.require_ready()
@@ -142,15 +152,15 @@ class SessionService:
                     source=request.mode if request.mode in ('quiz', 'exercise') else 'tutor_chat')
                 # Only explicit correction of a submitted Japanese sentence supports
                 # production. Other chat observations retain conservative legacy quality.
-                metadata = {}
+                metadata = {'turn_id': str(request.request_id)}
                 if request.mode == 'correct' and reply.evaluation is not None:
                     from app.mastery.catalog import topic_type
                     if topic_type(key) in ('grammar', 'vocabulary'):
                         import hashlib
-                        metadata = {'mastery': {'dimension': 'production', 'evidence_type': 'production',
+                        metadata['mastery'] = {'dimension': 'production', 'evidence_type': 'production',
                             'activity_type': 'sentence_correction',
                             'context_id': hashlib.sha256(request.message.strip().encode()).hexdigest(),
-                            'hint_used': None, 'quality': .7}}
+                            'hint_used': None, 'quality': .7}
                 process_event(db, event, session_id=request.session_id, update_skill=False, metadata_extra=metadata)
                 if known and observation.score is not None:
                     by_skill.setdefault(TOPICS[key].skill, []).append((observation.score, TOPICS[key].difficulty))
@@ -159,4 +169,6 @@ class SessionService:
                 update_skill_state(db, str(request.learner_id), skill,
                     sum(s for s, _ in scores) / len(scores), sum(d for _, d in scores) / len(scores), now)
             db.execute('UPDATE learner_state SET last_activity_at=?,updated_at=? WHERE learner_id=?', (now, now, str(request.learner_id)))
+            if self.conversations:
+                db.execute('UPDATE conversation_states SET updated_at=? WHERE session_id=?', (now, str(request.session_id)))
         return reply

@@ -14,6 +14,8 @@ from app.memory.conversation import ConversationStore
 from app.tutor.prompts import build_instructions, format_request
 from app.tutor.schemas import ChatRequest, ChatResponse, TutorResponse
 from app.knowledge.service import GROUNDING_INSTRUCTIONS
+from app.knowledge.service import source_dump_request
+from app.conversation.service import instructions as conversation_instructions, teaching_question
 
 
 def parse_response(raw: str) -> TutorResponse:
@@ -34,9 +36,11 @@ class TutorService:
         self.saved_busy = set()
         self.knowledge = knowledge
 
-    async def grounding(self, request, instructions, messages):
+    async def grounding(self, request, instructions, messages, *, roleplay=False):
         if self.knowledge is None or not self.settings.knowledge_enabled:
             return instructions, messages, None
+        if roleplay and not teaching_question(request.message) and not source_dump_request(request.message):
+            return instructions + GROUNDING_INSTRUCTIONS, messages, None
         context = await self.knowledge.context_for(request.message, request.mode)
         return instructions + GROUNDING_INSTRUCTIONS, self.knowledge.messages(messages, context), context
 
@@ -64,16 +68,24 @@ class TutorService:
             raise TutorError('session_busy', 'Wait for the current reply before sending another message.', 409)
         self.saved_busy.add(request.session_id)
         try:
+            saved = self.saved_sessions.get(request.learner_id, request.session_id, self.settings.max_history_turns)
+            practice = saved.get('conversation')
+            if practice:
+                request = request.model_copy(update={'mode': 'chat'})
             replay = self.saved_sessions.replay(request)
             if replay:
                 return ChatResponse(session_id=request.session_id, response=replay)
-            saved = self.saved_sessions.get(request.learner_id, request.session_id, self.settings.max_history_turns)
             if saved['ended_at'] is not None:
                 raise TutorError('session_closed', 'This saved conversation has ended. Start a new conversation.', 409)
             messages = self.saved_sessions.history(saved, self.settings.max_history_turns)
+            if practice and not messages:
+                messages.append(Message('assistant', practice['scenario']['opening_line']))
             messages.append(Message('user', format_request(request.mode, request.message)))
+            instructions = self.learner_instructions(request, observe=True)
+            if practice:
+                instructions += conversation_instructions(practice)
             instructions, messages, grounding = await self.grounding(request,
-                self.learner_instructions(request, observe=True), messages)
+                instructions, messages, roleplay=bool(practice))
             try:
                 async with asyncio.timeout(self.settings.llm_timeout_seconds):
                     raw = await self.provider.generate(instructions=instructions,
@@ -87,6 +99,12 @@ class TutorService:
             except (ValueError, TypeError) as exc:
                 raise TutorError('invalid_model_response', 'The tutor returned an invalid response. Please try again.') from exc
             reply = parse_response(teaching)
+            if practice:
+                reply = reply.model_copy(update={'exercise': None})
+                # English help and explicit explanations are not evidence of Japanese performance.
+                import re
+                if teaching_question(request.message) or not re.search(r'[\u3040-\u30ff\u3400-\u9fff]', request.message):
+                    observations = [item for item in observations if item.event_type != 'performance']
             self.validate_grounding(reply, grounding)
             reply = self.saved_sessions.commit(request, reply, observations, saved['version'])
             return ChatResponse(session_id=request.session_id, response=reply)

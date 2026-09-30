@@ -384,7 +384,7 @@ def test_v2_migration_preserves_profiles_preferences_events_and_transcripts(sett
             assert profile(client,learner)['preferences']['primary_goal']=='travel'
             assert client.get(f'/api/learners/{learner}/sessions/{body["session_id"]}').json()['interaction_count']==1
         with sqlite3.connect(settings.assessment_db_path) as db:
-            assert db.execute('PRAGMA user_version').fetchone()[0]==5
+            assert db.execute('PRAGMA user_version').fetchone()[0]==6
             assert all(db.execute(f'SELECT * FROM {table} ORDER BY 1,2').fetchall()==rows for table,rows in before.items())
 
 

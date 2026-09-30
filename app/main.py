@@ -15,6 +15,8 @@ from app.api.learner import router as learner_router
 from app.api.curriculum import router as curriculum_router
 from app.api.mastery import router as mastery_router
 from app.api.reviews import router as review_router
+from app.api.conversation import router as conversation_router
+from app.conversation.service import ConversationService
 from app.review.service import ReviewService
 from app.mastery.service import MasteryService
 from app.curriculum.service import CurriculumService
@@ -82,6 +84,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             app.state.mastery = MasteryService(repository)
             app.state.reviews = ReviewService(repository)
             app.state.saved_sessions = SessionService(repository)
+            app.state.conversations = ConversationService(repository, app.state.saved_sessions)
+            app.state.saved_sessions.conversations = app.state.conversations
             app.state.curriculum = CurriculumService(repository,app.state.learners,llm,
                 AnswerEvaluator(llm,settings.llm_timeout_seconds),settings.llm_timeout_seconds)
             app.state.tutor = TutorService(llm, app.state.memory, settings, repository,
@@ -149,6 +153,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(curriculum_router)
     app.include_router(mastery_router)
     app.include_router(review_router)
+    app.include_router(conversation_router)
     app.mount('/static', StaticFiles(directory=FRONTEND), name='static')
 
     @app.get('/health', include_in_schema=False)
