@@ -1,9 +1,10 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 7 — product UI overhaul deployed; actual-phone acceptance pending.**
+**Current phase: Phase 7.5 — private lexical RAG deployed and live-verified; actual-phone acceptance pending.**
 
-Phase 7.5 adds optional private lexical retrieval to tutor chat. It is disabled by
-default until the private index is built/imported and the owner enables it. See
+Phase 7.5 adds optional private lexical retrieval to tutor chat. It is enabled on the
+existing staging service, while new installations default to disabled until the private
+index is built/imported and the owner enables it. See
 [knowledge build and deployment](docs/knowledge.md) and [Phase 7.5 status](PHASE7_5_REPORT.md).
 Raw references and generated indexes must remain ignored and are never served by the app.
 
