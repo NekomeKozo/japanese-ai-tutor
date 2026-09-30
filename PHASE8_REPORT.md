@@ -1,9 +1,9 @@
 # Phase 8 — Adaptive Japanese Conversation System
 
 Status: implemented, regression-tested and deployed as `5c51e3e`; live flow checks
-recorded on 2026-10-01 (Asia/Manila). Provider-log and actual-phone acceptance remain
-pending. This report distinguishes local fixtures from
-actual provider checks.
+recorded on 2026-10-01 (Asia/Manila). Live flow, Gemini request and owner-reported
+actual-phone acceptance passed. Live retrieval-match logging remains unverified.
+This report distinguishes local fixtures from actual provider checks.
 
 ## Initial audit and checkpoint
 
@@ -118,8 +118,10 @@ Home→Progress→Tutor with retained draft, and deterministic finish/recap pass
 Responsive overrides at 360, 390, 430, 768 and 1280 pixels showed no document horizontal
 overflow; the browser's effective CSS viewport was slightly smaller than the override.
 Labels and semantic controls appear in the accessibility tree, busy controls disable,
-and recap receives focus. Actual-phone/virtual-keyboard acceptance remains deferred by
-the owner; browser emulation is not an actual phone test.
+and recap receives focus. On 2026-10-01 the owner reported "phone test is good".
+Actual-phone acceptance is therefore recorded as owner-reported passed; the phone model,
+browser and individual keyboard checks were not specified. Browser emulation and
+owner phone acceptance are separate evidence.
 
 Final local regression: **488 backend passed**, including nine PostgreSQL cases,
 **22 frontend passed**. Added 39 backend cases and seven frontend checks. Coverage
@@ -187,12 +189,20 @@ teaching/help questions did not inflate the scored-turn count.
 General Tutor passed after selecting New conversation: a short Japanese greeting
 request produced an ordinary lesson/example and exercise, with no restaurant role.
 
-Pending: exact Render
-revision and per-request provider/retrieval log checks require dashboard access.
-Automatic approval review blocked the Render-to-GitHub login redirect because the
-separate authentication destination lacked explicit approval. Approval was requested;
-no alternate access method or environment change was attempted. Automated fallback
-compatibility is verified; no deliberate live quota exhaustion/outage is planned.
+On 2026-10-01 the owner supplied `LLM success provider=gemini path=/api/chat
+latency_ms=1697`, a successful POST `/api/chat` (200), and repeated `/health` (200)
+lines. This confirms Gemini handled a successful live chat request in 1.697 seconds
+of logged provider latency; it is not a measurement of total UI latency and does not
+identify every earlier request's provider.
+
+Remaining observability limits: exact Render revision in Events and live retrieval
+status/chunk-count logs were not independently inspected. The supplied log does not
+prove a knowledge match or explain the earlier intermittent errors. Automatic approval
+review previously blocked the Render-to-GitHub login redirect because the separate
+authentication destination lacked explicit approval; no alternate access method or
+environment change was attempted. Automated fallback compatibility is verified;
+no deliberate live quota exhaustion/outage was induced. Phase 8 implementation and
+functional/phone acceptance are recorded above, with these limits retained explicitly.
 
 Existing free-tier database round trips and cold starts may dominate latency. Practice
 adds state/evidence reads to session retrieval and a UI state refresh after a successful

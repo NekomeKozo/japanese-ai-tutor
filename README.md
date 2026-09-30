@@ -1,6 +1,6 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 8 — adaptive conversation practice deployed; live flow verified, provider-log and actual-phone acceptance pending.**
+**Current phase: Phase 8 — adaptive conversation practice deployed; live flow, Gemini and owner phone acceptance passed.**
 
 In **Tutor**, choose one of eight authored scenarios and a correction policy, then
 select **Start conversation**. Practice reuses saved tutor sessions, restores after
