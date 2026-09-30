@@ -50,7 +50,7 @@ class AssessmentRepository:
             raise TutorError('assessment_storage', 'Cannot create assessment storage. Check ASSESSMENT_DB_PATH.', 503) from exc
         with self.connection(initialize=True) as db:
             version = db.execute('PRAGMA user_version').fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7):
                 raise TutorError('database_version', 'This assessment database version is not supported by this app.', 503)
             # First additive migration. Phase 1 has no database or migration framework.
             if version == 0:

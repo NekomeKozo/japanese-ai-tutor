@@ -49,7 +49,7 @@ def migrate(db):
     from app.learner.catalog import TOPICS
     from app.learner.initialization import initialize_placement
     version = db.execute('PRAGMA user_version').fetchone()[0]
-    if version not in (1, 2, 3, 4, 5, 6):
+    if version not in (1, 2, 3, 4, 5, 6, 7):
         raise ValueError('Unsupported database version')
     if version == 1:
         for statement in DDL:

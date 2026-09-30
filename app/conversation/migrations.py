@@ -15,7 +15,7 @@ DDL = [
 
 def migrate(db):
     version = db.execute('PRAGMA user_version').fetchone()[0]
-    if version == 6:
+    if version in (6, 7):
         return
     if version != 5:
         raise ValueError('Unsupported conversation database version')

@@ -16,7 +16,7 @@ DDL = [
 ]
 
 def migrate(db, now=None):
-    if db.execute('PRAGMA user_version').fetchone()[0] in (5,6):
+    if db.execute('PRAGMA user_version').fetchone()[0] in (5,6,7):
         return
     for sql in DDL:
         db.execute(sql)
