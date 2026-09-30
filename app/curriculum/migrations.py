@@ -20,7 +20,7 @@ DDL = [
 
 def migrate(db):
     version=db.execute('PRAGMA user_version').fetchone()[0]
-    if version in (3,4,5): return
+    if version in (3,4,5,6): return
     if version!=2: raise ValueError('Unsupported curriculum database version')
     from app.learner.catalog import TOPICS
     for topic in TOPICS.values():
