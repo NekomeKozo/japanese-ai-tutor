@@ -1,7 +1,7 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -186,6 +186,10 @@ def test_schema_6_migration_is_additive_and_atomic(storage_settings, monkeypatch
         learner=create(client); repo=client.app.state.repository
         with repo.connection() as db:
             assert db.execute('PRAGMA user_version').fetchone()[0]==6
+            # A real Phase 8 catalog does not already contain the new N4 topics.
+            from app.jlpt.topics import VOCAB, KANJI
+            for item in VOCAB + KANJI:
+                db.execute('DELETE FROM learning_topics WHERE topic_key=?', (item[0],))
             tables=['learner_state','skill_state','learning_events','conversation_states','review_schedules']
             before={table:db.execute(f'SELECT * FROM {table}').fetchall() for table in tables}
     def fail(db):
@@ -197,12 +201,54 @@ def test_schema_6_migration_is_additive_and_atomic(storage_settings, monkeypatch
     with repo.connection() as db:
         assert db.execute('PRAGMA user_version').fetchone()[0]==6
         assert not db.execute("SELECT 1 FROM sqlite_master WHERE name='jlpt_sessions'").fetchone()
+        assert not db.execute("SELECT 1 FROM learning_topics WHERE topic_key='vocab_kariru'").fetchone()
     monkeypatch.setattr(migrations,'migrate',original)
     for _ in range(2):
         repo.initialize(QuestionBank.load())
         with repo.connection() as db:
             assert db.execute('PRAGMA user_version').fetchone()[0]==7
             assert {table:db.execute(f'SELECT * FROM {table}').fetchall() for table in tables}==before
+            assert db.execute("SELECT 1 FROM learning_topics WHERE topic_key='vocab_kariru'").fetchone()
+
+
+def test_schema_7_repairs_missing_topics_and_preserves_saved_mock(storage_settings):
+    from app.assessment.questions import QuestionBank
+    from app.jlpt.topics import VOCAB, KANJI
+    with TestClient(create_app(storage_settings,MockProvider())) as client:
+        learner=create(client); service=client.app.state.jlpt; repo=client.app.state.repository
+        now=datetime.now(timezone.utc); service.clock=lambda:now
+        # Choose a reproducible mixed mock containing the previously missing topic.
+        for seed in range(1,101):
+            request=Start(level='N4',mode='mock',timed=True,request_id=UUID(int=seed))
+            chosen=select(service.bank,request,set(),{})
+            if any(q.topic_id=='vocab_kariru' for q in chosen[:5]): break
+        else: pytest.fail('No mock containing target topic')
+        state=client.post(base(learner)+'/sessions',json=request.model_dump(mode='json')).json()
+        url=base(learner)+f'/sessions/{state["session_id"]}'
+        for _ in range(5):
+            response,_=submit(client,learner,state)
+            assert response.status_code==200
+            state=response.json()
+        with repo.connection() as db:
+            for item in VOCAB + KANJI:
+                db.execute('DELETE FROM learning_topics WHERE topic_key=?',(item[0],))
+            old=db.execute("SELECT * FROM learning_topics WHERE topic_key='particle_ni_destination'").fetchall()
+            assert old
+        assert counts(client,learner).get('performance',0)==0
+        for _ in range(2): repo.initialize(QuestionBank.load())
+        with repo.connection() as db:
+            assert db.execute('PRAGMA user_version').fetchone()[0]==7
+            assert db.execute("SELECT * FROM learning_topics WHERE topic_key='particle_ni_destination'").fetchall()==old
+        restored=client.get(url).json()
+        assert restored['answered_count']==5 and restored['deadline_at']==state['deadline_at']
+        now+=timedelta(hours=5)
+        finished=client.get(base(learner)+'/sessions/active')
+        assert finished.status_code==200, finished.text
+        result=finished.json()
+        assert result['status']=='completed' and result['result']['correct']==5
+        assert counts(client,learner)['performance']==5
+        assert client.post(url+'/finish').json()['result']==result['result']
+        assert counts(client,learner)['performance']==5
 
 
 @pytest.mark.parametrize('level',['N5','N4'])

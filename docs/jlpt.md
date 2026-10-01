@@ -44,7 +44,9 @@ a separate bank edit are required before publication. Keep candidate files priva
 
 ## Persistence, timing and recovery
 
-Schema 7 adds three JLPT tables without replacing existing learner data. A learner
+Schema 7 adds three JLPT tables and the required new topic identities without replacing
+existing learner data. Startup also fills missing Phase 9 topics in an already-upgraded
+schema-7 database, without overwriting existing topic metadata. A learner
 has at most one active JLPT session. Request identifiers make retried starts and
 answers idempotent. Questions, selected order and deadlines are stored on the server.
 Unsubmitted text survives section navigation, but reload restores submitted answers

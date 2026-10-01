@@ -1,7 +1,7 @@
 # Phase 9 — JLPT practice system
 
-Status on 2026-10-01: implementation and local verification complete; deployment
-and live acceptance pending. Phase 10 has NOT started. No audio, accounts,
+Status on 2026-10-01: implementation deployed; local and CI checks passed, live
+acceptance in progress. Phase 10 has NOT started. No audio, accounts,
 monetization, native mobile stack, or official-score claims were added.
 
 ## Initial audit and baseline
@@ -112,7 +112,7 @@ Reload restores submitted progress; section navigation also preserves unsent dra
 
 ## Validation completed locally
 
-- **526 backend tests passed, including all 13 PostgreSQL tests**, using the existing
+- **528 backend tests passed, including all 14 PostgreSQL tests**, using the existing
   disposable local PostgreSQL cluster. Two existing deprecation warnings remained.
 - **29 frontend tests passed**, plus JavaScript syntax and whitespace checks.
 - After the final reading-topic label adjustment, 10 relevant bank, integration and
@@ -138,9 +138,27 @@ has been claimed**; the owner's prior phone acceptance concerned Phase 8.
 
 ## Deployment and live verification
 
-Pending at this checkpoint. Existing Render service and Supabase database will be
-retained. No settings or credentials need changing. Live checks and CI evidence will
-be recorded here after the normal push and deployment.
+Commit `371531b` was pushed normally to `main`. Its [GitHub Tests run](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36846230216)
+passed. The existing Render site serves the new JLPT interface and successfully
+creates, saves and restores schema-7 sessions in staging. Public `/health` returned
+200; unauthenticated API/static checks returned 401, preserving the access gate.
+No settings, credentials, database or service were replaced.
+
+Live acceptance caught a legacy-catalog migration gap: a Phase 8 database lacked
+the 15 new N4 topic identities, although freshly initialized test databases had them.
+After the timed N4 mock expired, its deferred evidence failed with a foreign-key
+violation. No answers were lost: the transaction rolled back. The repair seeds only
+missing Phase 9 topic records on both schema-6 upgrade and schema-7 startup, preserving
+existing metadata, sessions and evidence. Regression tests now remove those records
+to model an actual legacy catalog and verify atomic upgrade, repeated repair and
+completion of a saved mock on SQLite and PostgreSQL. Live repair acceptance is pending.
+
+Live N5 mixed quick practice completed with a deliberate grammar error: **4/5, 80%**,
+vocabulary 2/2, kanji 1/1, grammar 0/1 and reading 1/1. Reload restored the first
+saved answer and the same session. Final history and expanded grammar explanation
+matched the submitted answers. Phone emulation at requested 390×844 produced an
+observed 375-pixel content/scroll width with no horizontal overflow. Further live
+mock and regression checks are in progress.
 
 ## Performance and limitations
 

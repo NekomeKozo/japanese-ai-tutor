@@ -21,10 +21,20 @@ DDL = [
 
 def migrate(db):
     version = db.execute('PRAGMA user_version').fetchone()[0]
+    if version not in (6, 7):
+        raise ValueError('Unsupported JLPT database version')
+    # Older databases seeded their catalog before the Phase 9 identities existed.
+    # Run on v7 too so an already-deployed upgrade repairs itself without deleting
+    # sessions, changing existing topic metadata, or replaying learner evidence.
+    from app.learner.catalog import TOPICS
+    from app.jlpt.topics import VOCAB, KANJI
+    for key in [item[0] for item in VOCAB + KANJI]:
+        topic = TOPICS[key]
+        db.execute('INSERT OR IGNORE INTO learning_topics VALUES (?,?,?,?,?,?,?)',
+                   (topic.key, topic.label, topic.skill, topic.kind,
+                    topic.difficulty, topic.reading, topic.meaning))
     if version == 7:
         return
-    if version != 6:
-        raise ValueError('Unsupported JLPT database version')
     for sql in DDL:
         db.execute(sql)
     db.execute('PRAGMA user_version=7')
