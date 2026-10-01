@@ -11,6 +11,7 @@
   <script src="/static/learner.js" defer></script>
   <script src="/static/conversation.js" defer></script>
   <script src="/static/study.js" defer></script>
+  <script src="/static/jlpt.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
   <script src="/static/shell.js" defer></script>
@@ -162,6 +163,8 @@
       <details class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
     </section>
     <section id="study-panel" aria-label="Today's Study" hidden>
+      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a></nav>
+      <div id="personalized-study">
       <div id="daily-review" class="placement-card" hidden>
         <h2>Daily Review</h2>
         <p id="review-summary" role="status">Checking your reviews…</p>
@@ -205,6 +208,39 @@
           <button id="study-skip" type="button" class="secondary">Skip activity</button>
         </div>
       </div>
+      </div>
+      <section id="jlpt-panel" aria-label="JLPT Practice" hidden>
+        <div class="placement-card">
+          <p class="eyebrow">Practice at your pace</p><h2>JLPT Practice</h2>
+          <p>Original N5 and N4 questions for vocabulary, kanji, grammar and reading. Practice accuracy is not an official JLPT score or a pass prediction.</p>
+          <p id="jlpt-empty" hidden>Create a learner profile in <a href="#placement">Placement</a> to save your practice.</p>
+          <form id="jlpt-setup" hidden>
+            <div class="jlpt-grid"><div><label for="jlpt-level">Level</label><select id="jlpt-level"><option>N5</option><option>N4</option></select></div>
+            <div><label for="jlpt-mode">Practice mode</label><select id="jlpt-mode"><option value="quick">Quick practice · 5 questions</option><option value="standard">Standard practice · 10 questions</option><option value="focused">Section practice · 10 questions</option><option value="weakness">Weakness practice · 10 questions</option><option value="mock">JLPT-style mock · 20 questions</option></select></div>
+            <div><label for="jlpt-section">Section</label><select id="jlpt-section"><option value="mixed">Mixed sections</option><option value="vocabulary">Vocabulary</option><option value="kanji">Kanji</option><option value="grammar">Grammar</option><option value="reading">Reading</option></select></div></div>
+            <label class="jlpt-check"><input id="jlpt-timed" type="checkbox"> Use a timer</label>
+            <p id="jlpt-mode-note" class="small">Practice gives feedback after each answer. Weakness practice uses repeated evidence; a balanced set is used when evidence is limited.</p>
+            <p class="small">Optional timing: one minute per language question, two per reading question. This is a study timer, not official exam timing. It keeps running when you leave.</p>
+            <button id="jlpt-start" type="submit">Start practice</button>
+          </form>
+          <p id="jlpt-status" role="status"></p><p id="jlpt-error" role="alert" hidden></p><button id="jlpt-retry" class="secondary" type="button" hidden>Reload saved practice</button>
+        </div>
+        <div id="jlpt-session" class="placement-card" hidden>
+          <p id="jlpt-progress" class="eyebrow"></p><p id="jlpt-timer" class="small"></p>
+          <progress id="jlpt-meter" max="5" value="0" aria-label="JLPT questions answered"></progress>
+          <form id="jlpt-answer-form">
+            <h2 id="jlpt-question-title" tabindex="-1"></h2><p id="jlpt-passage" class="jlpt-passage" lang="ja" hidden></p><p id="jlpt-prompt" class="jlpt-prompt"></p>
+            <fieldset id="jlpt-choices"><legend>Choose one answer</legend></fieldset>
+            <label id="jlpt-answer-label" for="jlpt-answer">Reading in kana</label><input id="jlpt-answer" lang="ja" maxlength="300" autocomplete="off">
+            <button id="jlpt-submit" type="submit">Check answer</button>
+          </form>
+          <div id="jlpt-feedback" tabindex="-1" hidden></div>
+          <button id="jlpt-next" type="button" hidden>Next question</button>
+          <div id="jlpt-finish-area"><p id="jlpt-finish-note" class="small"></p><div class="assessment-actions"><button id="jlpt-finish" type="button" class="secondary">Finish and see results</button><button id="jlpt-abandon" type="button" class="secondary">End without results</button></div></div>
+        </div>
+        <div id="jlpt-results" class="placement-card" tabindex="-1" hidden></div>
+        <section class="placement-card"><h2>Practice history</h2><p class="small">Your latest 30 sessions. Review saved explanations without adding another scored attempt.</p><div id="jlpt-history"></div></section>
+      </section>
     </section>
     <footer>Take your time. Understanding grows with practice.<br><span>AI explanations may make mistakes.</span></footer>
   </main>

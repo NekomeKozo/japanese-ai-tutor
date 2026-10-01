@@ -181,3 +181,19 @@ button,textarea,input,select { scroll-margin-bottom:100px; }
 .practice-card select { width: 100%; max-width: 100%; margin: .35rem 0 var(--practice-card-gap); }
 .practice-card button { margin-top: .5rem; }
 .practice-card p { overflow-wrap: anywhere; }
+/* JLPT remains a Study subsection at every width. */
+.study-nav { display:flex; flex-wrap:wrap; gap:.7rem; margin-bottom:1.25rem; }
+.study-nav a { padding:.65rem 1rem; border:1px solid var(--line, #cedbd3); border-radius:999px; text-decoration:none; }
+.study-nav a[aria-current="page"] { background:#285c50; color:white; }
+.jlpt-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.jlpt-grid select { width:100%; }
+.jlpt-check,.jlpt-choice { display:flex; align-items:center; gap:.7rem; }
+.jlpt-check input,.jlpt-choice input { width:auto; flex:0 0 auto; }
+.jlpt-choice { padding:.85rem; margin:.5rem 0; border:1px solid #cedbd3; border-radius:.7rem; cursor:pointer; min-height:48px; }
+.jlpt-choice:has(input:checked) { background:#e4eee8; border-color:#285c50; }
+.jlpt-passage { white-space:pre-wrap; line-height:2; padding:1rem; background:#f0f4ef; border-left:3px solid #285c50; overflow-wrap:anywhere; }
+.jlpt-prompt { font-size:1.12rem; line-height:1.8; }
+.jlpt-history-row { display:flex; align-items:center; justify-content:space-between; gap:1rem; border-bottom:1px solid #cedbd3; padding:.6rem 0; }
+#jlpt-results details { padding:.8rem 0; border-bottom:1px solid #cedbd3; }
+#jlpt-results summary { cursor:pointer; padding:.5rem 0; }
+@media(max-width:600px) { .jlpt-grid { grid-template-columns:1fr; } .jlpt-history-row { flex-wrap:wrap; } }

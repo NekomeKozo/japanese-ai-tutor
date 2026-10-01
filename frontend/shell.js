@@ -37,7 +37,12 @@ async function renderRoute() {
   visibleFocus('page-title');
   try {
     if (section === 'home') await renderHome();
-    if (section === 'study') await loadStudy();
+    if (section === 'study') {
+      const jlpt = detail === 'jlpt';
+      $('personalized-study').hidden = jlpt; $('jlpt-panel').hidden = !jlpt;
+      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : '#study') ? 'page' : 'false'));
+      if (jlpt) await loadJLPT(); else await loadStudy();
+    }
     if (section === 'progress') { progressSection(detail); await renderProfile(); }
     if (section === 'settings') await loadSettings();
     if (section === 'tutor' && !sessionId) await ensureTutorSession();
@@ -45,7 +50,7 @@ async function renderRoute() {
   } catch (error) {
     if (sequence !== routeRequest) return;
     if (section === 'progress') profileError(error);
-    else if (section === 'study') studyError(error);
+    else if (section === 'study') { if (detail === 'jlpt') jlptError(error); else studyError(error); }
     else if (section === 'settings') settingsError(error);
     else showAppError(error);
   }

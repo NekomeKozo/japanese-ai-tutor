@@ -23,7 +23,7 @@ function harness() {
   }
   for (const m of html.matchAll(/<([\w-]+)\b[^>]*\bid="([^"]+)"[^>]*>/g)) { const e=new Element(m[1]); e.hidden=/\bhidden\b/.test(m[0]); elements.set(m[2],e); }
   elements.get('review-minutes').value='10'; elements.get('onboarding-goal-select').value='general';
-  const ctx = vm.createContext({console, Event, URLSearchParams, Intl, TypeError, SyntaxError, crypto:require('node:crypto').webcrypto,
+  const ctx = vm.createContext({console, Event, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, crypto:require('node:crypto').webcrypto,
     document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(){},dispatchEvent(){}},
     window:{addEventListener(){},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
@@ -146,4 +146,65 @@ test('roleplay navigation retains state and draft without a new conversation',as
   const h=harness();h.ctx.practice=practice;h.run("appReady=true;placementLearnerId='learner';sessionId='practice';scenarioCatalog=[practice.scenario];applyPractice(practice)");
   h.elements.get('message').value='水をください。';h.ctx.location.hash='#placement';await h.run('renderRoute()');h.ctx.location.hash='#tutor';await h.run('renderRoute()');
   assert.equal(h.elements.get('message').value,'水をください。');assert.equal(h.run('practiceState.status'),'active');assert.equal(h.requests.length,0);
+});
+
+const jlptFixture = {session_id:'jlpt-saved',level:'N5',mode:'quick',status:'in_progress',question_count:5,answered_count:0,remaining_seconds:null,
+  question:{id:'jlpt_n5_kanji_01',section:'kanji',prompt:'Read 一 in 一つ.',choices:[],passage_text:null},feedback:null,result:null,review:[]};
+test('JLPT route restores lazily and preserves the answer draft on navigation',async()=>{
+  const h=harness();h.run("appReady=true;placementLearnerId='learner'");
+  respond(h,url=>url.endsWith('/catalog')?{}:url.endsWith('/history')?[]:jlptFixture);
+  h.ctx.location.hash='#study/jlpt';await h.run('renderRoute()');
+  assert.equal(h.requests.length,3);assert.equal(h.elements.get('personalized-study').hidden,true);
+  assert.equal(h.elements.get('jlpt-panel').hidden,false);
+  h.elements.get('jlpt-answer').value='ひと';h.ctx.location.hash='#placement';await h.run('renderRoute()');
+  h.ctx.location.hash='#study/jlpt';await h.run('renderRoute()');
+  assert.equal(h.elements.get('jlpt-answer').value,'ひと');assert.equal(h.requests.length,3);
+  assert.ok(h.requests.every(r=>!r.method && r.url!='/api/chat'));
+});
+test('JLPT network retry preserves answer and submission identity',async()=>{
+  const h=harness();h.ctx.fixture=jlptFixture;h.run("placementLearnerId='learner';jlptAccept(fixture)");
+  h.elements.get('jlpt-answer').value='ひと';
+  const submit=h.elements.get('jlpt-answer-form').listeners.submit;
+  await submit({preventDefault(){}});await submit({preventDefault(){}});
+  assert.equal(h.elements.get('jlpt-answer').value,'ひと');assert.equal(h.elements.get('jlpt-error').hidden,false);
+  assert.equal(h.requests.length,2);assert.equal(JSON.parse(h.requests[0].body).submission_id,JSON.parse(h.requests[1].body).submission_id);
+});
+test('JLPT successful answer shows feedback then advances without another API call',async()=>{
+  const h=harness();h.ctx.fixture=jlptFixture;h.run("placementLearnerId='learner';jlptAccept(fixture)");
+  const feedback={...jlptFixture.question,answer:'ひと',correct:true,correct_answers:['ひと'],explanation:'一つ is ひとつ.'};
+  respond(h,()=>({...jlptFixture,answered_count:1,question:{...jlptFixture.question,id:'jlpt_n5_kanji_02'},feedback}));
+  h.elements.get('jlpt-answer').value='ひと';await h.elements.get('jlpt-answer-form').listeners.submit({preventDefault(){}});
+  assert.equal(h.elements.get('jlpt-feedback').hidden,false);assert.equal(h.elements.get('jlpt-answer-form').hidden,true);
+  h.elements.get('jlpt-next').listeners.click();
+  assert.equal(h.elements.get('jlpt-answer-form').hidden,false);assert.equal(h.elements.get('jlpt-answer').value,'');assert.equal(h.requests.length,1);
+});
+test('mock UI shows no feedback before finish and uses server remaining time',()=>{
+  const h=harness();h.ctx.fixture={...jlptFixture,mode:'mock',remaining_seconds:180};
+  h.run("placementLearnerId='learner';jlptAccept(fixture)");
+  assert.equal(h.elements.get('jlpt-feedback').hidden,true);assert.equal(h.elements.get('jlpt-submit').textContent,'Save answer');
+  assert.match(h.elements.get('jlpt-timer').textContent,/3:00/);assert.equal(h.requests.length,0);
+});
+test('JLPT start retries use the same request and no provider path',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");
+  h.elements.get('jlpt-level').value='N5';h.elements.get('jlpt-mode').value='quick';h.elements.get('jlpt-section').value='mixed';
+  const submit=h.elements.get('jlpt-setup').listeners.submit;
+  await submit({preventDefault(){}});await submit({preventDefault(){}});
+  assert.equal(JSON.parse(h.requests[0].body).request_id,JSON.parse(h.requests[1].body).request_id);
+  assert.ok(h.requests.every(r=>r.url.endsWith('/jlpt/sessions')));
+});
+test('JLPT stale restore cannot display another learner’s session',async()=>{
+  const h=harness();h.run("placementLearnerId='first'");let release;
+  h.ctx.fetch=async url=>({ok:true,status:200,json:async()=>url.endsWith('/active')?await new Promise(resolve=>{release=resolve;}):[]});
+  const pending=h.run('loadJLPT()');await new Promise(resolve=>setImmediate(resolve));
+  h.run("placementLearnerId='second'");release(jlptFixture);await pending;
+  assert.equal(h.run('jlptState'),null);
+});
+test('JLPT follow-up initializes Tutor before filling its composer and preserves existing drafts',async()=>{
+  const h=harness();h.ctx.fixture={...jlptFixture.question,correct_answers:['ひと'],explanation:'One in this counter.'};
+  h.run("placementLearnerId='learner';jlptState={session_id:'jlpt-saved'};ensureTutorSession=async()=>{sessionId='tutor';$('message').value='';}");
+  respond(h,()=>h.ctx.fixture);await h.run('jlptAsk(fixture)');
+  assert.match(h.elements.get('message').value,/Please explain/);assert.equal(h.ctx.location.hash,'tutor');
+  const draft=h.elements.get('message').value;await h.run('jlptAsk(fixture)');
+  assert.equal(h.elements.get('message').value,draft);assert.equal(h.requests.length,1);
+  assert.match(h.elements.get('jlpt-error').textContent,/draft is still saved/);
 });
