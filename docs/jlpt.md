@@ -30,7 +30,7 @@ Git changes to the existing service; no new environment setting is required.
 In an existing development environment with private knowledge retrieval configured:
 
 ```sh
-python scripts/author_jlpt_candidate.py --level N5 --section grammar --topic particle_ni
+python scripts/author_jlpt_candidate.py --level N5 --section grammar --topic particle_ni_destination
 ```
 
 Use an actual canonical topic ID from `app/learner/catalog.py`. This is an explicit
