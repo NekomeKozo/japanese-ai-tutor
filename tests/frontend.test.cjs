@@ -169,6 +169,21 @@ test('JLPT network retry preserves answer and submission identity',async()=>{
   assert.equal(h.elements.get('jlpt-answer').value,'ひと');assert.equal(h.elements.get('jlpt-error').hidden,false);
   assert.equal(h.requests.length,2);assert.equal(JSON.parse(h.requests[0].body).submission_id,JSON.parse(h.requests[1].body).submission_id);
 });
+
+test('expired mock restoration refreshes history after completion and clears retry',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");h.elements.get('jlpt-retry').hidden=false;
+  let historyReads=0;
+  const finished={...jlptFixture,mode:'mock',status:'completed',question:null,elapsed_seconds:1500,
+    result:{correct:1,total:20,accuracy:5,answered:1,note:'Practice only',sections:{},done_well:[],needs_review:[]}};
+  respond(h,url=>url.endsWith('/catalog')?{}:url.endsWith('/active')?finished:
+    [{level:'N4',mode:'mock',status:++historyReads===1?'in_progress':'completed',accuracy:historyReads===1?null:5}]);
+  await h.run('loadJLPT()');
+  const row=h.elements.get('jlpt-history').children[0];
+  assert.match(row.children[0].textContent,/completed.*5%/);
+  assert.equal(row.children[1].textContent,'Open');
+  assert.equal(h.elements.get('jlpt-retry').hidden,true);
+  assert.equal(h.elements.get('jlpt-results').hidden,false);
+});
 test('JLPT successful answer shows feedback then advances without another API call',async()=>{
   const h=harness();h.ctx.fixture=jlptFixture;h.run("placementLearnerId='learner';jlptAccept(fixture)");
   const feedback={...jlptFixture.question,answer:'ひと',correct:true,correct_answers:['ひと'],explanation:'一つ is ひとつ.'};

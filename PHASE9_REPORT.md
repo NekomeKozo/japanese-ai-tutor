@@ -114,7 +114,7 @@ Reload restores submitted progress; section navigation also preserves unsent dra
 
 - **528 backend tests passed, including all 14 PostgreSQL tests**, using the existing
   disposable local PostgreSQL cluster. Two existing deprecation warnings remained.
-- **29 frontend tests passed**, plus JavaScript syntax and whitespace checks.
+- **30 frontend tests passed**, plus JavaScript syntax and whitespace checks.
 - After the final reading-topic label adjustment, 10 relevant bank, integration and
   authoring cases passed again. The Tutor handoff repair has frontend regression coverage.
 - Source and full Git-history deployment audit passed with no secret/private-file findings.
@@ -151,14 +151,26 @@ violation. No answers were lost: the transaction rolled back. The repair seeds o
 missing Phase 9 topic records on both schema-6 upgrade and schema-7 startup, preserving
 existing metadata, sessions and evidence. Regression tests now remove those records
 to model an actual legacy catalog and verify atomic upgrade, repeated repair and
-completion of a saved mock on SQLite and PostgreSQL. Live repair acceptance is pending.
+completion of a saved mock on SQLite and PostgreSQL. Repair commit `08b2ed1` passed
+[GitHub Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36880434086),
+including the full suite and deployment privacy audit. Live repair acceptance passed:
+the original mock recovered its saved answer, completed at its 25-minute deadline,
+and returned 1/20 (5%) with the remaining 19 correctly marked unanswered. The N4
+borrow-word evidence was retained. A frontend regression also covers a history race:
+after expiry completes a session, history is refreshed so it cannot remain labeled
+in progress. Retry controls clear after a successful restoration.
 
 Live N5 mixed quick practice completed with a deliberate grammar error: **4/5, 80%**,
 vocabulary 2/2, kanji 1/1, grammar 0/1 and reading 1/1. Reload restored the first
 saved answer and the same session. Final history and expanded grammar explanation
 matched the submitted answers. Phone emulation at requested 390×844 produced an
-observed 375-pixel content/scroll width with no horizontal overflow. Further live
-mock and regression checks are in progress.
+observed 375-pixel content/scroll width with no horizontal overflow. Live N4 mock
+saved one answer without revealing feedback, restored question 2 and its decreasing
+timer after reload, and later completed on expiry as described above. An explanation
+follow-up retained its draft and received a live Tutor response. The normal Daily
+Review flow selected the practiced possession topic, accepted a correct response,
+scheduled its next review and saved a completed session recap. Remaining conversation
+and final UI smoke checks are in progress.
 
 ## Performance and limitations
 

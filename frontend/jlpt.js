@@ -34,10 +34,14 @@ async function loadJLPT(force = false) {
   const owner = placementLearnerId, sequence = ++jlptLoadSequence;
   if (!owner) { jlptState = null; renderJLPT(); return; }
   if (!force && jlptOwner === owner) { jlptTick(); return; }
-  $('jlpt-status').textContent = 'Loading saved practice…'; $('jlpt-error').hidden = true;
-  const [catalog, active, history] = await Promise.all([
+  $('jlpt-status').textContent = 'Loading saved practice…'; $('jlpt-error').hidden = true; $('jlpt-retry').hidden = true;
+  const [catalog, active, initialHistory] = await Promise.all([
     jlptCatalog || api('/api/jlpt/catalog'), api(`${jlptBase()}/sessions/active`), api(`${jlptBase()}/history`)
   ]);
+  if (owner !== placementLearnerId || sequence !== jlptLoadSequence) return;
+  // Resolving an expired active session completes it. The parallel history read
+  // may have run before that transaction, so refresh only after this transition.
+  const history = active?.status === 'completed' ? await api(`${jlptBase()}/history`) : initialHistory;
   if (owner !== placementLearnerId || sequence !== jlptLoadSequence) return;
   jlptCatalog = catalog; jlptAccept(active); renderJLPTHistory(history); $('jlpt-status').textContent = '';
 }
