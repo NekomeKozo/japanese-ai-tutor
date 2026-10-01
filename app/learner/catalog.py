@@ -85,3 +85,9 @@ for key, label, reading, meaning in [
     TOPICS.setdefault(key, Topic(key, label, 'vocabulary', 'vocabulary', 2, reading, meaning))
 for key, label in list(KANJI_ITEMS.values()) + [('kanji_sei', '生'), ('kanji_kou', '校')]:
     TOPICS.setdefault(key, Topic(key, label, 'kanji', 'kanji', 2))
+
+from app.jlpt.topics import VOCAB as JLPT_VOCAB, KANJI as JLPT_KANJI
+for key, label, reading, meaning in JLPT_VOCAB:
+    TOPICS.setdefault(key, Topic(key, label, 'vocabulary', 'vocabulary', 5, reading, meaning))
+for key, label in JLPT_KANJI:
+    TOPICS.setdefault(key, Topic(key, label, 'kanji', 'kanji', 5))
