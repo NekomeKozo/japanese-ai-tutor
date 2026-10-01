@@ -1,6 +1,16 @@
 # Adaptive AI Japanese Tutor
 
-**Current phase: Phase 8 — adaptive conversation practice deployed; live flow, Gemini and owner phone acceptance passed.**
+**Current phase: Phase 9 — persistent N5/N4 JLPT-style practice.**
+
+Open **Study → JLPT practice** to choose quick, standard, focused, weakness-targeted,
+or mock practice. The initial bank contains 80 original questions across vocabulary,
+kanji, grammar and reading. Sessions, answers and optional timers survive reload.
+Practice gives immediate feedback; mock practice reveals results when finished.
+Scores are practice accuracy, never official JLPT scores or pass predictions.
+Attempts feed the existing learning memory, mastery and review systems without changing
+placement. Questions and grading do not call AI. **Ask Tutor about this** prepares an
+optional explanation follow-up for you to send. See [Phase 9 report](PHASE9_REPORT.md)
+and [bank authoring guidance](docs/jlpt.md). Phase 10 and audio have not begun.
 
 In **Tutor**, choose one of eight authored scenarios and a correction policy, then
 select **Start conversation**. Practice reuses saved tutor sessions, restores after
@@ -9,7 +19,7 @@ reload, and ends with **Finish conversation** and an evidence-based recap. Choos
 make no AI calls. Difficulty changes by at most one step from its starting level
 after three scored turns; it never changes placement. English help and explicit
 teaching questions are excluded from performance scoring. See [Phase 8 report](PHASE8_REPORT.md)
-for migration, security, validation and rollback details. No voice or Phase 9 features.
+for migration, security, validation and rollback details.
 
 Phase 7.5 adds optional private lexical retrieval to tutor chat. It is enabled on the
 existing staging service, while new installations default to disabled until the private
