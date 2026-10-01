@@ -15,7 +15,7 @@ def main():
         parser.error('Database must already exist')
     repo = AssessmentRepository(str(args.database))
     with repo.connection() as db:
-        if db.execute('PRAGMA user_version').fetchone()[0] not in (4,5,6):
+        if db.execute('PRAGMA user_version').fetchone()[0] not in (4,5,6,7):
             parser.error('Run the current app to migrate first')
     repo.ready = True
     print('Topics recomputed:', MasteryService(repo).recalculate_mastery(args.learner_id))

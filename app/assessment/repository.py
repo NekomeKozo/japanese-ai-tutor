@@ -81,6 +81,8 @@ class AssessmentRepository:
             migrate_reviews(db)
             from app.conversation.migrations import migrate as migrate_conversation
             migrate_conversation(db)
+            from app.jlpt.migrations import migrate as migrate_jlpt
+            migrate_jlpt(db)
             for question in bank.items:
                 db.execute('INSERT OR IGNORE INTO assessment_questions VALUES (?, ?, ?)',
                            (BANK_VERSION, question.id, question.model_dump_json()))

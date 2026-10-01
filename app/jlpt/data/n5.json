@@ -1,0 +1,930 @@
+[
+  {
+    "id": "jlpt_n5_vocabulary_01",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 水（みず）.",
+    "choices": [
+      "water",
+      "tea",
+      "rice",
+      "milk"
+    ],
+    "answers": [
+      "water"
+    ],
+    "explanation": "水（みず）means water.",
+    "topic_id": "vocab_mizu",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_02",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 駅（えき）.",
+    "choices": [
+      "hospital",
+      "school",
+      "park",
+      "station"
+    ],
+    "answers": [
+      "station"
+    ],
+    "explanation": "駅（えき）means station.",
+    "topic_id": "vocab_eki",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_03",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 明日（あした）.",
+    "choices": [
+      "today",
+      "last year",
+      "tomorrow",
+      "yesterday"
+    ],
+    "answers": [
+      "tomorrow"
+    ],
+    "explanation": "明日（あした）means tomorrow.",
+    "topic_id": "vocab_ashita",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_04",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 食べる（たべる）.",
+    "choices": [
+      "to walk",
+      "to eat",
+      "to drink",
+      "to sleep"
+    ],
+    "answers": [
+      "to eat"
+    ],
+    "explanation": "食べる（たべる）means to eat.",
+    "topic_id": "vocab_taberu",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_05",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 安い（やすい）.",
+    "choices": [
+      "inexpensive",
+      "heavy",
+      "busy",
+      "far"
+    ],
+    "answers": [
+      "inexpensive"
+    ],
+    "explanation": "安い（やすい）means inexpensive.",
+    "topic_id": "vocab_yasui",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_06",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 兄（あに）.",
+    "choices": [
+      "my younger brother",
+      "my older sister",
+      "my mother",
+      "my older brother"
+    ],
+    "answers": [
+      "my older brother"
+    ],
+    "explanation": "兄（あに）means my older brother.",
+    "topic_id": "vocab_ani",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_07",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 起きる（おきる）.",
+    "choices": [
+      "to return",
+      "to buy",
+      "to get up",
+      "to sit down"
+    ],
+    "answers": [
+      "to get up"
+    ],
+    "explanation": "起きる（おきる）means to get up.",
+    "topic_id": "vocab_okiru",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_08",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 図書館（としょかん）.",
+    "choices": [
+      "bank",
+      "library",
+      "post office",
+      "hotel"
+    ],
+    "answers": [
+      "library"
+    ],
+    "explanation": "図書館（としょかん）means library.",
+    "topic_id": "vocab_toshokan",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_09",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 今日（きょう）.",
+    "choices": [
+      "today",
+      "tomorrow",
+      "next month",
+      "yesterday"
+    ],
+    "answers": [
+      "today"
+    ],
+    "explanation": "今日（きょう）means today.",
+    "topic_id": "vocab_kyou",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_vocabulary_10",
+    "level": "N5",
+    "section": "vocabulary",
+    "question_type": "vocabulary_usage",
+    "prompt": "先生にお礼を言います。いちばん合う言葉はどれですか。",
+    "choices": [
+      "おやすみ",
+      "さようなら",
+      "いただきます",
+      "ありがとうございます"
+    ],
+    "answers": [
+      "ありがとうございます"
+    ],
+    "explanation": "ありがとうございます politely expresses thanks to the teacher; the other phrases serve different situations.",
+    "topic_id": "vocab_arigatou",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_kanji_01",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「一つ」の「一」の読み方を書いてください。",
+    "choices": [],
+    "answers": [
+      "ひと"
+    ],
+    "explanation": "In 一つ, the tested character is read ひと.",
+    "topic_id": "kanji_ichi",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "一つ",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_02",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「月がきれいです」の「月」の読み方は？",
+    "choices": [
+      "あめ",
+      "つき",
+      "ひ",
+      "ほし"
+    ],
+    "answers": [
+      "つき"
+    ],
+    "explanation": "In 月がきれいです, the tested character is read つき.",
+    "topic_id": "kanji_tsuki",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "月がきれいです",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_03",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「人」の読み方は？（一人の人を指します。）",
+    "choices": [
+      "ひと",
+      "いぬ",
+      "やま",
+      "みず"
+    ],
+    "answers": [
+      "ひと"
+    ],
+    "explanation": "In 人, the tested character is read ひと.",
+    "topic_id": "kanji_hito",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "人",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_04",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「山に登ります」の「山」の読み方は？",
+    "choices": [
+      "かわ",
+      "うみ",
+      "そら",
+      "やま"
+    ],
+    "answers": [
+      "やま"
+    ],
+    "explanation": "In 山に登ります, the tested character is read やま.",
+    "topic_id": "kanji_yama",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "山に登ります",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_05",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「学生」の「学」の部分の読み方を書いてください。",
+    "choices": [],
+    "answers": [
+      "がく"
+    ],
+    "explanation": "In 学生, the tested character is read がく.",
+    "topic_id": "kanji_gaku",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "学生",
+    "dimension": "on_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_06",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「学校」の「校」の部分の読み方は？",
+    "choices": [
+      "きょう",
+      "こう",
+      "せい",
+      "がく"
+    ],
+    "answers": [
+      "こう"
+    ],
+    "explanation": "In 学校, the tested character is read こう.",
+    "topic_id": "kanji_kou",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "学校",
+    "dimension": "on_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_07",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「先生」の「生」の部分の読み方は？",
+    "choices": [
+      "せい",
+      "しょう",
+      "い",
+      "なま"
+    ],
+    "answers": [
+      "せい"
+    ],
+    "explanation": "In 先生, the tested character is read せい.",
+    "topic_id": "kanji_sei",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "先生",
+    "dimension": "on_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_08",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「車で行きます」の「車」の読み方は？",
+    "choices": [
+      "でんしゃ",
+      "じてんしゃ",
+      "えき",
+      "くるま"
+    ],
+    "answers": [
+      "くるま"
+    ],
+    "explanation": "In 車で行きます, the tested character is read くるま.",
+    "topic_id": "kanji_kuruma",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "車で行きます",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n5_kanji_09",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_meaning",
+    "prompt": "漢字「山」の意味はどれですか。",
+    "choices": [
+      "rain",
+      "tree",
+      "mountain",
+      "river"
+    ],
+    "answers": [
+      "mountain"
+    ],
+    "explanation": "山 represents a mountain.",
+    "topic_id": "kanji_yama",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_kanji_10",
+    "level": "N5",
+    "section": "kanji",
+    "question_type": "kanji_meaning",
+    "prompt": "漢字「人」の意味はどれですか。",
+    "choices": [
+      "fire",
+      "person",
+      "mouth",
+      "day"
+    ],
+    "answers": [
+      "person"
+    ],
+    "explanation": "人 means person.",
+    "topic_id": "kanji_hito",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n5_grammar_01",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "これは私（　）かばんです。",
+    "choices": [
+      "の",
+      "を",
+      "で",
+      "に"
+    ],
+    "answers": [
+      "の"
+    ],
+    "explanation": "の connects a possessor to the thing possessed.",
+    "topic_id": "particle_no",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_02",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "毎朝、パン（　）食べます。",
+    "choices": [
+      "に",
+      "へ",
+      "が",
+      "を"
+    ],
+    "answers": [
+      "を"
+    ],
+    "explanation": "を marks the object of 食べます.",
+    "topic_id": "particle_wo",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_03",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "図書館（　）本を読みます。",
+    "choices": [
+      "へ",
+      "を",
+      "で",
+      "に"
+    ],
+    "answers": [
+      "で"
+    ],
+    "explanation": "で marks the location of the action of reading.",
+    "topic_id": "particle_de_location",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_04",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "日曜日、京都（　）行きます。",
+    "choices": [
+      "が",
+      "に",
+      "で",
+      "を"
+    ],
+    "answers": [
+      "に"
+    ],
+    "explanation": "に marks the destination of 行きます.",
+    "topic_id": "particle_ni_destination",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_05",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "今、おなかがすいています。何か食べ（　）です。",
+    "choices": [
+      "たい",
+      "た",
+      "て",
+      "ない"
+    ],
+    "answers": [
+      "たい"
+    ],
+    "explanation": "ます-stem + たい expresses what the speaker wants to do.",
+    "topic_id": "tai_form",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_06",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "昨日は寒かったです。でも、今日は（　）。",
+    "choices": [
+      "寒いないです",
+      "寒かったないです",
+      "寒くありませんでしたです",
+      "寒くないです"
+    ],
+    "answers": [
+      "寒くないです"
+    ],
+    "explanation": "寒くないです is the negative nonpast form of 寒い.",
+    "topic_id": "adjective_i_conjugation",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_07",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "昨日、映画を（　）。",
+    "choices": [
+      "見るです",
+      "見ませんです",
+      "見ました",
+      "見ますか"
+    ],
+    "answers": [
+      "見ました"
+    ],
+    "explanation": "見ました is the polite past form for an action yesterday.",
+    "topic_id": "verb_past_tense",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_08",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "この町は（　）町です。",
+    "choices": [
+      "静かでの",
+      "静かな",
+      "静かの",
+      "静かに"
+    ],
+    "answers": [
+      "静かな"
+    ],
+    "explanation": "A な-adjective uses な before a noun.",
+    "topic_id": "adjective_na_conjugation",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_09",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "明日は休みです。学校へ（　）。",
+    "choices": [
+      "行きません",
+      "行くません",
+      "行きないです",
+      "行かません"
+    ],
+    "answers": [
+      "行きません"
+    ],
+    "explanation": "行きません is the polite negative of 行きます.",
+    "topic_id": "verb_negative",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_grammar_10",
+    "level": "N5",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "これは本ですか。――いいえ、本（　）。",
+    "choices": [
+      "をありません",
+      "にありません",
+      "がではです",
+      "ではありません"
+    ],
+    "answers": [
+      "ではありません"
+    ],
+    "explanation": "ではありません is a polite negative of the copula です.",
+    "topic_id": "copula_desu",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n5_reading_01",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "どこで会いますか。",
+    "choices": [
+      "家の前",
+      "店の中",
+      "駅の前",
+      "学校の中"
+    ],
+    "answers": [
+      "駅の前"
+    ],
+    "explanation": "The message specifies 駅の前, in front of the station.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_01",
+    "passage_text": "あした、駅の前で会いましょう。時間は九時です。"
+  },
+  {
+    "id": "jlpt_n5_reading_02",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "店はいつ休みですか。",
+    "choices": [
+      "日曜日",
+      "月曜日",
+      "火曜日",
+      "金曜日"
+    ],
+    "answers": [
+      "月曜日"
+    ],
+    "explanation": "月曜日は休みです says the shop is closed on Monday.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_02",
+    "passage_text": "この店は十時に開きます。月曜日は休みです。"
+  },
+  {
+    "id": "jlpt_n5_reading_03",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "今日はどこで映画を見ますか。",
+    "choices": [
+      "家",
+      "映画館",
+      "学校",
+      "公園"
+    ],
+    "answers": [
+      "家"
+    ],
+    "explanation": "家で marks home as the viewing location.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_03",
+    "passage_text": "今日は雨です。私は家で映画を見ます。"
+  },
+  {
+    "id": "jlpt_n5_reading_04",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "パンはどこにありますか。",
+    "choices": [
+      "冷蔵庫の中",
+      "いすの下",
+      "かばんの中",
+      "テーブルの上"
+    ],
+    "answers": [
+      "テーブルの上"
+    ],
+    "explanation": "The bread is on the table; the milk is in the refrigerator.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_04",
+    "passage_text": "ゆきさんへ。パンはテーブルの上にあります。牛乳は冷蔵庫にあります。"
+  },
+  {
+    "id": "jlpt_n5_reading_05",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "何時に起きますか。",
+    "choices": [
+      "七時",
+      "八時",
+      "六時",
+      "五時"
+    ],
+    "answers": [
+      "六時"
+    ],
+    "explanation": "六時に起きます gives the waking time, not the breakfast time.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_05",
+    "passage_text": "私は毎朝六時に起きます。七時に朝ごはんを食べます。"
+  },
+  {
+    "id": "jlpt_n5_reading_06",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "このバスはどこへ行きますか。",
+    "choices": [
+      "図書館",
+      "駅",
+      "学校",
+      "病院"
+    ],
+    "answers": [
+      "駅"
+    ],
+    "explanation": "駅へ行きます states its destination; school is explicitly excluded.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_06",
+    "passage_text": "このバスは駅へ行きます。学校へは行きません。"
+  },
+  {
+    "id": "jlpt_n5_reading_07",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "りんご一つはいくらですか。",
+    "choices": [
+      "百円",
+      "八十円",
+      "百八十円",
+      "二百円"
+    ],
+    "answers": [
+      "百円"
+    ],
+    "explanation": "The stated price of one apple is 100 yen.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_07",
+    "passage_text": "りんごは一つ百円です。みかんは一つ八十円です。"
+  },
+  {
+    "id": "jlpt_n5_reading_08",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "日曜日は何をしますか。",
+    "choices": [
+      "公園へ行きます",
+      "店で働きます",
+      "駅で会います",
+      "家で勉強します"
+    ],
+    "answers": [
+      "家で勉強します"
+    ],
+    "explanation": "The Sunday sentence says study at home.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_08",
+    "passage_text": "土曜日は友達と公園へ行きます。日曜日は家で勉強します。"
+  },
+  {
+    "id": "jlpt_n5_reading_09",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "図書館でしてはいけないことは？",
+    "choices": [
+      "静かにすること",
+      "勉強すること",
+      "食べ物を食べること",
+      "本を読むこと"
+    ],
+    "answers": [
+      "食べ物を食べること"
+    ],
+    "explanation": "食べないでください asks visitors not to eat.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_09",
+    "passage_text": "図書館では静かにしてください。ここで食べ物を食べないでください。"
+  },
+  {
+    "id": "jlpt_n5_reading_10",
+    "level": "N5",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "妹は何が好きですか。",
+    "choices": [
+      "魚",
+      "猫",
+      "犬",
+      "鳥"
+    ],
+    "answers": [
+      "猫"
+    ],
+    "explanation": "妹は猫が好きです identifies the younger sister’s preference.",
+    "topic_id": "reading_meaning",
+    "difficulty": 2,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n5_passage_10",
+    "passage_text": "私は犬が好きです。妹は猫が好きです。家には犬が一匹います。"
+  }
+]

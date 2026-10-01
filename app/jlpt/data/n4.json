@@ -1,0 +1,935 @@
+[
+  {
+    "id": "jlpt_n4_vocabulary_01",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 予約（よやく）.",
+    "choices": [
+      "reservation",
+      "invitation",
+      "receipt",
+      "entrance"
+    ],
+    "answers": [
+      "reservation"
+    ],
+    "explanation": "予約（よやく）means reservation.",
+    "topic_id": "vocab_yoyaku",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_02",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 準備（じゅんび）.",
+    "choices": [
+      "repair",
+      "explanation",
+      "competition",
+      "preparation"
+    ],
+    "answers": [
+      "preparation"
+    ],
+    "explanation": "準備（じゅんび）means preparation.",
+    "topic_id": "vocab_junbi",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_03",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 約束（やくそく）.",
+    "choices": [
+      "schedule change",
+      "opinion",
+      "promise",
+      "experience"
+    ],
+    "answers": [
+      "promise"
+    ],
+    "explanation": "約束（やくそく）means promise.",
+    "topic_id": "vocab_yakusoku",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_04",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 連絡（れんらく）.",
+    "choices": [
+      "payment",
+      "contact or communication",
+      "exercise",
+      "departure"
+    ],
+    "answers": [
+      "contact or communication"
+    ],
+    "explanation": "連絡（れんらく）means contact or communication.",
+    "topic_id": "vocab_renraku",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_05",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 故障（こしょう）.",
+    "choices": [
+      "breakdown of a machine",
+      "construction",
+      "medicine",
+      "invitation"
+    ],
+    "answers": [
+      "breakdown of a machine"
+    ],
+    "explanation": "故障（こしょう）means breakdown of a machine.",
+    "topic_id": "vocab_koshou",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_06",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 必要（ひつよう）.",
+    "choices": [
+      "dangerous",
+      "free of charge",
+      "similar",
+      "necessary"
+    ],
+    "answers": [
+      "necessary"
+    ],
+    "explanation": "必要（ひつよう）means necessary.",
+    "topic_id": "vocab_hitsuyou",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_07",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 残念（ざんねん）.",
+    "choices": [
+      "peaceful",
+      "unusual",
+      "disappointing or unfortunate",
+      "convenient"
+    ],
+    "answers": [
+      "disappointing or unfortunate"
+    ],
+    "explanation": "残念（ざんねん）means disappointing or unfortunate.",
+    "topic_id": "vocab_zannen",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_08",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 会議（かいぎ）.",
+    "choices": [
+      "holiday",
+      "meeting",
+      "business trip",
+      "salary"
+    ],
+    "answers": [
+      "meeting"
+    ],
+    "explanation": "会議（かいぎ）means meeting.",
+    "topic_id": "vocab_kaigi",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_09",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_meaning",
+    "prompt": "Choose the meaning of 間に合う（まにあう）.",
+    "choices": [
+      "to be in time",
+      "to get lost",
+      "to wait in line",
+      "to forget"
+    ],
+    "answers": [
+      "to be in time"
+    ],
+    "explanation": "間に合う（まにあう）means to be in time.",
+    "topic_id": "vocab_maniau",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_vocabulary_10",
+    "level": "N4",
+    "section": "vocabulary",
+    "question_type": "vocabulary_usage",
+    "prompt": "ペンを忘れました。友達のペンを使って、あとで返します。ペンを（　）。",
+    "choices": [
+      "売ります",
+      "捨てます",
+      "運びます",
+      "借ります"
+    ],
+    "answers": [
+      "借ります"
+    ],
+    "explanation": "借ります means borrow: use something belonging to another person and return it.",
+    "topic_id": "vocab_kariru",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_kanji_01",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「会社」の「社」の部分の読み方は？",
+    "choices": [
+      "じゃ",
+      "やしろ",
+      "しゃ",
+      "かい"
+    ],
+    "answers": [
+      "しゃ"
+    ],
+    "explanation": "In 会社, 社 is read しゃ. Only that character is being asked for.",
+    "topic_id": "kanji_sha",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "会社",
+    "dimension": "on_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_02",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「飲みます」の「飲」の部分の読み方は？",
+    "choices": [
+      "か",
+      "の",
+      "た",
+      "よ"
+    ],
+    "answers": [
+      "の"
+    ],
+    "explanation": "In 飲みます, 飲 is read の. Only that character is being asked for.",
+    "topic_id": "kanji_nomu",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "飲みます",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_03",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「貸します」の「貸」の部分の読み方は？",
+    "choices": [
+      "か",
+      "や",
+      "け",
+      "さ"
+    ],
+    "answers": [
+      "か"
+    ],
+    "explanation": "In 貸します, 貸 is read か. Only that character is being asked for.",
+    "topic_id": "kanji_kasu",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "貸します",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_04",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「借ります」の「借」の部分の読み方は？",
+    "choices": [
+      "き",
+      "し",
+      "と",
+      "か"
+    ],
+    "answers": [
+      "か"
+    ],
+    "explanation": "In 借ります, 借 is read か. Only that character is being asked for.",
+    "topic_id": "kanji_kariru",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "借ります",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_05",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「旅行」の「旅」の部分の読み方は？",
+    "choices": [
+      "りょう",
+      "ろ",
+      "りょ",
+      "たび"
+    ],
+    "answers": [
+      "りょ"
+    ],
+    "explanation": "In 旅行, 旅 is read りょ. Only that character is being asked for.",
+    "topic_id": "kanji_tabi",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "旅行",
+    "dimension": "on_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_06",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「病院」の「病」の部分の読み方は？",
+    "choices": [
+      "びん",
+      "びょう",
+      "びょ",
+      "へい"
+    ],
+    "answers": [
+      "びょう"
+    ],
+    "explanation": "In 病院, 病 is read びょう. Only that character is being asked for.",
+    "topic_id": "kanji_byou",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "病院",
+    "dimension": "on_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_07",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「働きます」の「働」の部分の読み方を書いてください。",
+    "choices": [],
+    "answers": [
+      "はたら"
+    ],
+    "explanation": "In 働きます, 働 is read はたら. Only that character is being asked for.",
+    "topic_id": "kanji_hataraku",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "働きます",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_08",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_reading",
+    "prompt": "「道を歩きます」の「道」の部分の読み方は？",
+    "choices": [
+      "まち",
+      "はし",
+      "にわ",
+      "みち"
+    ],
+    "answers": [
+      "みち"
+    ],
+    "explanation": "In 道を歩きます, 道 is read みち. Only that character is being asked for.",
+    "topic_id": "kanji_michi",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "reading_context": "道を歩きます",
+    "dimension": "kun_reading"
+  },
+  {
+    "id": "jlpt_n4_kanji_09",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_meaning",
+    "prompt": "「借りる」と「貸す」の「貸」はどの動作を表しますか。",
+    "choices": [
+      "lose",
+      "break",
+      "lend",
+      "borrow"
+    ],
+    "answers": [
+      "lend"
+    ],
+    "explanation": "貸す means lend; 借りる means borrow.",
+    "topic_id": "kanji_kasu",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_kanji_10",
+    "level": "N4",
+    "section": "kanji",
+    "question_type": "kanji_meaning",
+    "prompt": "「病院」の「病」の意味はどれですか。",
+    "choices": [
+      "station",
+      "illness",
+      "garden",
+      "language"
+    ],
+    "answers": [
+      "illness"
+    ],
+    "explanation": "病 relates to illness; 病院 means hospital.",
+    "topic_id": "kanji_byou",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "meaning"
+  },
+  {
+    "id": "jlpt_n4_grammar_01",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_choice",
+    "prompt": "音楽を聞き（　）、料理をします。",
+    "choices": [
+      "ながら",
+      "まで",
+      "だけ",
+      "より"
+    ],
+    "answers": [
+      "ながら"
+    ],
+    "explanation": "ます-stem + ながら joins two actions performed by the same person at the same time.",
+    "topic_id": "grammar_nagara",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_02",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_choice",
+    "prompt": "日本に行った（　）があります。",
+    "choices": [
+      "もの",
+      "ところを",
+      "ためを",
+      "こと"
+    ],
+    "answers": [
+      "こと"
+    ],
+    "explanation": "た-form + ことがある expresses a past experience.",
+    "topic_id": "ta_koto",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_03",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "sentence_completion",
+    "prompt": "雨が（　）、出かけません。",
+    "choices": [
+      "降るでした",
+      "降りながらです",
+      "降ったら",
+      "降ってからです"
+    ],
+    "answers": [
+      "降ったら"
+    ],
+    "explanation": "たら introduces the condition: if it rains.",
+    "topic_id": "grammar_conditional",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_04",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_usage",
+    "prompt": "「私は漢字が読めます」の「読めます」は何を表しますか。",
+    "choices": [
+      "a wish",
+      "ability",
+      "a command",
+      "a past event"
+    ],
+    "answers": [
+      "ability"
+    ],
+    "explanation": "読めます is the potential form of 読む, expressing ability.",
+    "topic_id": "grammar_potential",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_05",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_choice",
+    "prompt": "弟は今、部屋で本を読んで（　）。",
+    "choices": [
+      "います",
+      "あります",
+      "なります",
+      "しまうでした"
+    ],
+    "answers": [
+      "います"
+    ],
+    "explanation": "ている describes an action currently in progress here.",
+    "topic_id": "te_iru",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_06",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_choice",
+    "prompt": "この道は、あの道（　）広いです。",
+    "choices": [
+      "ほどに",
+      "だけを",
+      "までに",
+      "より"
+    ],
+    "answers": [
+      "より"
+    ],
+    "explanation": "より marks the comparison standard.",
+    "topic_id": "grammar_comparison",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_07",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_usage",
+    "prompt": "窓を開けてほしいと頼みます。どれが合いますか。",
+    "choices": [
+      "窓を開けるください。",
+      "窓を開けたください。",
+      "窓を開けてください。",
+      "窓を開けますかでした。"
+    ],
+    "answers": [
+      "窓を開けてください。"
+    ],
+    "explanation": "て-form + ください makes a polite request.",
+    "topic_id": "te_kudasai",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_08",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_choice",
+    "prompt": "「書く」のて形はどれですか。",
+    "choices": [
+      "書んで",
+      "書いて",
+      "書って",
+      "書きて"
+    ],
+    "answers": [
+      "書いて"
+    ],
+    "explanation": "書く follows the く→いて pattern.",
+    "topic_id": "verb_te_form",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_09",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_usage",
+    "prompt": "「一人で駅まで行くことができます」と同じ意味は？",
+    "choices": [
+      "一人で駅まで行けます。",
+      "一人で駅まで行きたいです。",
+      "一人で駅まで行きました。",
+      "一人で駅まで行ってください。"
+    ],
+    "answers": [
+      "一人で駅まで行けます。"
+    ],
+    "explanation": "行けます expresses ability, equivalent here to 行くことができます.",
+    "topic_id": "grammar_potential",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_grammar_10",
+    "level": "N4",
+    "section": "grammar",
+    "question_type": "grammar_choice",
+    "prompt": "コーヒーより、お茶の（　）が好きです。",
+    "choices": [
+      "よう",
+      "ため",
+      "まま",
+      "ほう"
+    ],
+    "answers": [
+      "ほう"
+    ],
+    "explanation": "AよりBのほうが好きです expresses a preference for B over A.",
+    "topic_id": "grammar_comparison",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "dimension": "understanding"
+  },
+  {
+    "id": "jlpt_n4_reading_01",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "何が変わりましたか。",
+    "choices": [
+      "会議の日",
+      "会議の参加者",
+      "会議の開始時間",
+      "会議の場所"
+    ],
+    "answers": [
+      "会議の開始時間"
+    ],
+    "explanation": "The time moved from 2 p.m. to 3 p.m.; the room remains the usual one.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_01",
+    "passage_text": "明日の会議は午後二時から三時に変わりました。場所はいつもの二階の部屋です。"
+  },
+  {
+    "id": "jlpt_n4_reading_02",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "休館日に本を返すにはどうしますか。",
+    "choices": [
+      "郵便で送ります",
+      "入口の箱に入れます",
+      "来月まで持っています",
+      "二階へ持って行きます"
+    ],
+    "answers": [
+      "入口の箱に入れます"
+    ],
+    "explanation": "The notice directs returns to the box at the entrance.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_02",
+    "passage_text": "図書館からのお知らせです。来週の月曜日は掃除のため休館します。本は入口の返却箱に入れてください。"
+  },
+  {
+    "id": "jlpt_n4_reading_03",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "山田さんに何を頼んでいますか。",
+    "choices": [
+      "先に店に入ること",
+      "駅へ迎えに来ること",
+      "予約を取り消すこと",
+      "家へ帰ること"
+    ],
+    "answers": [
+      "先に店に入ること"
+    ],
+    "explanation": "The sender asks Yamada to go into the shop first.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_03",
+    "passage_text": "山田さんへ。電車が遅れているので、待ち合わせに十分ほど遅れそうです。先に店に入っていてください。"
+  },
+  {
+    "id": "jlpt_n4_reading_04",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "参加者が持ってくるものは何ですか。",
+    "choices": [
+      "材料",
+      "包丁",
+      "お皿",
+      "エプロン"
+    ],
+    "answers": [
+      "エプロン"
+    ],
+    "explanation": "Ingredients and tools are provided, but participants must bring an apron.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_04",
+    "passage_text": "この料理教室は初めての人も参加できます。材料と道具はこちらで用意しますが、エプロンは持ってきてください。"
+  },
+  {
+    "id": "jlpt_n4_reading_05",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "週末はどこへ行きますか。",
+    "choices": [
+      "山",
+      "図書館",
+      "美術館",
+      "海"
+    ],
+    "answers": [
+      "美術館"
+    ],
+    "explanation": "The plan changed from the sea to the art museum because of the weather.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_05",
+    "passage_text": "週末は海へ行く予定でしたが、天気が悪そうなので、美術館へ行くことにしました。"
+  },
+  {
+    "id": "jlpt_n4_reading_06",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "二千円の買い物を家へ送ってもらうと、送料はいくらですか。",
+    "choices": [
+      "三千円",
+      "五百円",
+      "無料",
+      "二千円"
+    ],
+    "answers": [
+      "五百円"
+    ],
+    "explanation": "A 2,000-yen purchase is below the free-shipping threshold, so shipping is 500 yen.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_06",
+    "passage_text": "この店では、三千円以上買うと、荷物を無料で家へ送ってもらえます。三千円未満の場合は五百円かかります。"
+  },
+  {
+    "id": "jlpt_n4_reading_07",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "新しい自転車で不便な点は何ですか。",
+    "choices": [
+      "かごが小さいこと",
+      "重いこと",
+      "駅まで遠いこと",
+      "乗れないこと"
+    ],
+    "answers": [
+      "かごが小さいこと"
+    ],
+    "explanation": "The writer says the small basket is inconvenient; the lighter weight is an advantage.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_07",
+    "passage_text": "新しい自転車を買いました。前の自転車より軽くて、駅まで行くのが楽になりました。でも、かごが小さいのは少し不便です。"
+  },
+  {
+    "id": "jlpt_n4_reading_08",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "どうして早く起きていますか。",
+    "choices": [
+      "仕事が朝早く始まるため",
+      "電車が混むため",
+      "朝ごはんを作るため",
+      "勉強する時間を作るため"
+    ],
+    "answers": [
+      "勉強する時間を作るため"
+    ],
+    "explanation": "The writer compensates for reduced evening study time by studying in the morning.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_08",
+    "passage_text": "アルバイトを始めてから、夜に勉強する時間が少なくなりました。それで、毎朝三十分早く起きて勉強しています。"
+  },
+  {
+    "id": "jlpt_n4_reading_09",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "ゆっくり写真を撮れた理由は何ですか。",
+    "choices": [
+      "花が少なかったから",
+      "カメラが新しかったから",
+      "人が少なかったから",
+      "晴れていたから"
+    ],
+    "answers": [
+      "人が少なかったから"
+    ],
+    "explanation": "The text explicitly attributes the relaxed photography to the small number of people.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_09",
+    "passage_text": "公園の花の写真を撮りに行きました。雨が降っていましたが、人が少なかったので、ゆっくり写真を撮ることができました。"
+  },
+  {
+    "id": "jlpt_n4_reading_10",
+    "level": "N4",
+    "section": "reading",
+    "question_type": "reading_comprehension",
+    "prompt": "午前中にホテルでできることは何ですか。",
+    "choices": [
+      "夕食を食べること",
+      "荷物を預けること",
+      "部屋に入ること",
+      "チェックアウトを延ばすこと"
+    ],
+    "answers": [
+      "荷物を預けること"
+    ],
+    "explanation": "Luggage can be left in the morning, whereas check-in starts at three.",
+    "topic_id": "reading_meaning",
+    "difficulty": 5,
+    "status": "approved",
+    "source_type": "application_authored",
+    "version": 1,
+    "passage_id": "jlpt_n4_passage_10",
+    "passage_text": "旅行の前にホテルへ電話しました。チェックインは三時からですが、荷物は午前中でも預けられるそうです。"
+  }
+]

@@ -16,6 +16,9 @@ from app.api.curriculum import router as curriculum_router
 from app.api.mastery import router as mastery_router
 from app.api.reviews import router as review_router
 from app.api.conversation import router as conversation_router
+from app.api.jlpt import router as jlpt_router
+from app.jlpt.bank import Bank as JLPTBank
+from app.jlpt.service import JLPTService
 from app.conversation.service import ConversationService
 from app.review.service import ReviewService
 from app.mastery.service import MasteryService
@@ -83,6 +86,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             app.state.learners = LearnerService(repository)
             app.state.mastery = MasteryService(repository)
             app.state.reviews = ReviewService(repository)
+            app.state.jlpt = JLPTService(repository, JLPTBank.load())
             app.state.saved_sessions = SessionService(repository)
             app.state.conversations = ConversationService(repository, app.state.saved_sessions)
             app.state.saved_sessions.conversations = app.state.conversations
@@ -154,6 +158,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(mastery_router)
     app.include_router(review_router)
     app.include_router(conversation_router)
+    app.include_router(jlpt_router)
     app.mount('/static', StaticFiles(directory=FRONTEND), name='static')
 
     @app.get('/health', include_in_schema=False)

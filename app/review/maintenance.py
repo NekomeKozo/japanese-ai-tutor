@@ -16,7 +16,7 @@ def main():
     if not args.database.is_file(): parser.error('Database must already exist')
     repo=AssessmentRepository(str(args.database))
     with repo.connection() as db:
-        if db.execute('PRAGMA user_version').fetchone()[0] not in (5,6): parser.error('Run the current app to migrate first')
+        if db.execute('PRAGMA user_version').fetchone()[0] not in (5,6,7): parser.error('Run the current app to migrate first')
         if not db.execute('SELECT 1 FROM review_schedules WHERE learner_id=? AND topic_id=?',(str(args.learner_id),args.topic)).fetchone():
             parser.error('No schedules found for this learner/topic')
     repo.ready=True; service=ReviewService(repo)

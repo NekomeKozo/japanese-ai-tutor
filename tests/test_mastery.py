@@ -291,7 +291,7 @@ def test_v3_migration_preserves_every_original_row_and_backfills(settings,provid
         with TestClient(create_app(settings,provider)) as c:
             assert c.app.state.mastery.get_topic_mastery(learner,'tai_form')['evidence_count']==1
         with sqlite3.connect(settings.assessment_db_path) as db:
-            assert db.execute('PRAGMA user_version').fetchone()[0]==6
+            assert db.execute('PRAGMA user_version').fetchone()[0]==7
             assert {t:db.execute(f'SELECT * FROM {t}').fetchall() for t in tables}==original
 
 

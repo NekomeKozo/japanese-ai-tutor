@@ -13,6 +13,10 @@ data/
 !app/assessment/data/
 app/assessment/data/*
 !app/assessment/data/questions.json
+!app/jlpt/data/
+app/jlpt/data/*
+!app/jlpt/data/n5.json
+!app/jlpt/data/n4.json
 *.db
 *.sqlite
 *.sqlite3
