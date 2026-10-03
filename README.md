@@ -1,4 +1,7 @@
-# Adaptive AI Japanese Tutor
+# GoiGrow — Japanese Tutor
+
+*A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
+practice, JLPT study, learning memory and daily review.
 
 **Current phase: Phase 9 — persistent N5/N4 JLPT-style practice.**
 

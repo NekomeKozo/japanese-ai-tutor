@@ -31,7 +31,7 @@ async function renderRoute() {
   routes.forEach(route => { $(`${route === 'progress' ? 'profile' : route}-panel`).hidden = route !== section || (!appReady && (section !== 'settings' || booting)); });
   document.querySelectorAll('.primary-nav a,.secondary-nav a').forEach(a => a.setAttribute('aria-current', a.hash === `#${section}` ? 'page' : 'false'));
   $('page-title').textContent = {home:'Home',study:'Today’s study',tutor:'Your Japanese tutor',progress:'Your progress',settings:'Settings',placement:'Your starting point'}[section];
-  document.title = `${$('page-title').textContent} · Japanese Tutor`;
+  document.title = 'GoiGrow — Japanese Tutor';
   $('reset').hidden = section !== 'tutor' || !appReady;
   if (!appReady && (section !== 'settings' || booting)) return;
   visibleFocus('page-title');

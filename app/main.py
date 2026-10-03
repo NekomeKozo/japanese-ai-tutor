@@ -99,7 +99,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             yield
             app.state.memory.sessions.clear()
 
-    app = FastAPI(title='Adaptive AI Japanese Tutor', version='0.6.5', lifespan=lifespan,
+    app = FastAPI(title='GoiGrow — Japanese Tutor', version='0.6.5', lifespan=lifespan,
                   dependencies=[Depends(protect_resources)],
                   docs_url=None if settings.environment == 'staging' else '/docs',
                   redoc_url=None if settings.environment == 'staging' else '/redoc',
