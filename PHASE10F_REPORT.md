@@ -86,7 +86,21 @@ frontend tests and README.
 
 ## Deployment and remaining limits
 
-Deployment/CI/live verification pending at this implementation checkpoint.
+Implementation `cafc506` (`Phase 10F - add listening and speaking progress tracking`)
+pushed normally to existing main/Render. [Tests run 37137024871](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37137024871)
+passed the full offline suite with the existing PostgreSQL CI service, all 106 frontend
+tests, JavaScript syntax checks and source/history privacy audit. Local source/history
+audit and whitespace checks also passed.
+
+The [live Progress page](https://japanese-ai-tutor.onrender.com/#progress) served the
+new section after its cold start. The existing learner correctly showed no tracked
+audio practice; previous unmarked activity was not invented. Existing Skills still
+displayed stored observations/topics. This live check was read-only: no real learner
+profile, transcript, conversation or mastery was changed. Live 390px emulation had
+matching document/scroll widths (375/375), reachable bottom navigation and wrapping
+empty state. Browser error/warning log was empty. Screenshot: task workspace
+`outputs/phase10f-live-progress.png`. Viewport reset and disposable preview stopped.
+This is live UI/database aggregation verification, not a live physical speech test.
 
 Actual physical microphone/codec behavior and real Groq Japanese recognition remain
 deferred from 10B–10E; mocked integration is not physical speech acceptance. Assistance
