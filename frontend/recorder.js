@@ -158,7 +158,7 @@ browserRecorder.subscribe(state => {
   $('recording-error').hidden = state.phase !== 'error'; recordingText($('recording-error'),state.phase === 'error' ? state.message : '');
 });
 japaneseAudio.subscribe(state => { if (state.owner) pauseRecordingPreview(); });
-$('recording-start').addEventListener('click',() => browserRecorder.start());
+$('recording-start').addEventListener('click',() => { if (voiceRecordingAllowed()) return browserRecorder.start(); });
 $('recording-stop').addEventListener('click',() => browserRecorder.stop());
 $('recording-cancel').addEventListener('click',() => browserRecorder.cancel());
 $('recording-discard').addEventListener('click',() => browserRecorder.cancel());

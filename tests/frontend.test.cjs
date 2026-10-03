@@ -652,3 +652,86 @@ test('leaving speaking cleans capture/transcripts and restores the Tutor confirm
   assert.equal(m.tracks[0].stops,1);assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('tutor-recording-slot'));
   assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');assert.equal(h.run('speakingState.index'),0);assert.equal(h.requests.length,0);
 });
+async function voiceHarness(config={}) {
+  const m=recordingMock(config),h=m.h;speechDecodeMock(h);
+  h.ctx.practiceFixture=practice;
+  h.run("placementLearnerId='learner';sessionId='practice';savedSession=true;appReady=true;$('tutor-panel').hidden=false;applyPractice(practiceFixture)");
+  h.ctx.location.hash='#tutor';h.elements.get('level').value='beginner';
+  const response={message:'かしこまりました。こちらへどうぞ。',evaluation:null,correction:null,explanation:null,examples:[],exercise:null};
+  respond(h,url=>url==='/api/speech/config'?{enabled:true}:url.includes('/speech/transcribe')?{language:'ja',provider:'groq',original_text:'一人です。'}:url==='/api/chat'?{response}:{conversation:practice});
+  await h.run('loadSpeechConfiguration()');return m;
+}
+async function voiceTranscript(m,text='二人です。') {
+  const h=m.h;await h.elements.get('recording-start').listeners.click();h.elements.get('recording-stop').listeners.click();m.recorders.at(-1).finish();
+  await h.elements.get('speech-transcribe').listeners.click();h.elements.get('speech-transcript').value=text;h.elements.get('speech-transcript').listeners.input();
+}
+const chatRequests=h=>h.requests.filter(r=>r.url==='/api/chat');
+
+test('voice is an optional active-scenario input; only confirmed edited text enters the same chat endpoint',async()=>{
+  const m=await voiceHarness(),h=m.h;assert.equal(h.elements.get('recording-start').textContent,'Record Reply');assert.equal(h.elements.get('speech-confirm').textContent,'Confirm and Send');
+  await voiceTranscript(m);assert.equal(chatRequests(h).length,0);assert.equal(h.run('speechTranscriber.state().original'),'一人です。');assert.equal(h.elements.get('message').value,'');
+  h.elements.get('speech-confirm').listeners.click();await h.run('voiceSendTask');
+  assert.equal(chatRequests(h).length,1);const payload=JSON.parse(chatRequests(h)[0].body);assert.equal(payload.message,'二人です。');assert.equal(payload.session_id,'practice');assert.equal(payload.learner_id,'learner');assert.ok(payload.request_id);
+  assert.equal(h.elements.get('conversation').children.filter(c=>c.className==='message learner').length,1);assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(h.run('browserRecorder.recording()'),null);assert.equal(h.run('practiceState.effective_level'),'N5');
+});
+
+test('double voice and text submissions while a reply is pending issue one generation request',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);let finish;
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});if(url==='/api/chat')await new Promise(resolve=>finish=resolve);return {ok:true,status:200,json:async()=>url==='/api/chat'?{response:{message:'どうぞ。',examples:[],exercise:null}}:{conversation:practice}};};
+  h.elements.get('speech-confirm').listeners.click();h.elements.get('speech-confirm').listeners.click();await h.run('submitChatMessage()');assert.equal(chatRequests(h).length,1);assert.equal(h.elements.get('recording-start').disabled,true);finish();await h.run('voiceSendTask');assert.equal(chatRequests(h).length,1);
+});
+
+test('voice generation failure retains transcript and retries the same request ID without retranscribing',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);let fail=true;const base=h.ctx.fetch;
+  h.ctx.fetch=async(url,options={})=>{if(url==='/api/chat'&&fail){h.requests.push({url,...options});throw new TypeError('lost response');}return base(url,options);};
+  h.elements.get('speech-confirm').listeners.click();await h.run('voiceSendTask');assert.equal(h.elements.get('message').value,'二人です。');assert.equal(h.run('speechTranscriber.state().edited'),'二人です。');assert.equal(h.run('browserRecorder.state().phase'),'preview');
+  fail=false;h.elements.get('speech-confirm').listeners.click();await h.run('voiceSendTask');assert.equal(JSON.parse(chatRequests(h)[0].body).request_id,JSON.parse(chatRequests(h)[1].body).request_id);assert.equal(h.requests.filter(r=>r.url.includes('/speech/transcribe')).length,1);
+});
+
+test('typed drafts are protected; switching to text preserves scenario and cancels old voice resources on success',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);h.elements.get('message').value='水をください。';h.elements.get('speech-confirm').listeners.click();assert.equal(chatRequests(h).length,0);assert.match(h.run('speechTranscriber.state().message'),/different reply/);
+  await h.run('submitChatMessage()');assert.equal(JSON.parse(chatRequests(h)[0].body).message,'水をください。');assert.equal(h.run('sessionId'),'practice');assert.equal(h.run('practiceState.correction_policy'),'balanced');assert.equal(h.run('browserRecorder.recording()'),null);
+  await voiceTranscript(m);h.elements.get('speech-confirm').listeners.click();await h.run('voiceSendTask');assert.equal(chatRequests(h).length,2);
+});
+
+test('stale transcription after a session change cannot send into the new conversation',async()=>{
+  const m=await voiceHarness(),h=m.h;let finish;const base=h.ctx.fetch;
+  h.ctx.fetch=async(url,options)=>url.includes('/speech/transcribe')?new Promise(resolve=>finish=()=>resolve({ok:true,status:200,json:async()=>({language:'ja',provider:'groq',original_text:'二人です。'})})):base(url,options);
+  await h.elements.get('recording-start').listeners.click();h.elements.get('recording-stop').listeners.click();m.recorders.at(-1).finish();const pending=h.elements.get('speech-transcribe').listeners.click();await new Promise(resolve=>setImmediate(resolve));
+  h.run("sessionId='other';applyPractice({...practiceFixture,session_id:'other'})");finish();await pending;assert.equal(h.run('speechTranscriber.state().original'),'');h.elements.get('speech-confirm').listeners.click();assert.equal(chatRequests(h).length,0);
+});
+
+test('navigation during transcription invalidates voice context; recorder tracks and local URLs are released',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);for(const fn of h.windowEvents.hashchange)fn();assert.equal(h.run('voiceReplyTarget'),null);assert.equal(h.run('browserRecorder.recording()'),null);assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(m.tracks[0].stops,1);assert.ok(m.revoked.length);
+});
+
+test('finish during recording releases the microphone and prevents sending to a completed scenario',async()=>{
+  const m=await voiceHarness(),h=m.h;await h.elements.get('recording-start').listeners.click();h.ctx.completed={...practice,status:'completed',recap:{turn_count:0,final_effective_level:'N5',topics:[],observations:0,recent_performance_average:null,scored_turns:0}};respond(h,()=>h.ctx.completed);
+  await h.elements.get('practice-finish').listeners.click();assert.equal(m.tracks[0].stops,1);assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.elements.get('recording-card').hidden,true);assert.equal(h.run("confirmVoiceReply('二人です。')").includes('no longer'),true);assert.equal(chatRequests(h).length,0);
+});
+
+test('voice permission denial and STT failure retain the active scenario and allow explicit retry',async()=>{
+  const denied=await voiceHarness({denied:'NotAllowedError'});await denied.h.elements.get('recording-start').listeners.click();assert.equal(denied.h.run('browserRecorder.state().phase'),'error');assert.equal(denied.h.run('practiceState.status'),'active');
+  const m=await voiceHarness(),h=m.h;let fail=true;const base=h.ctx.fetch;h.ctx.fetch=async(url,options)=>{if(url.includes('/speech/transcribe')&&fail)throw new TypeError('offline');return base(url,options);};
+  await voiceTranscript(m);assert.equal(h.run('speechTranscriber.state().phase'),'error');assert.equal(h.run('practiceState.status'),'active');assert.equal(chatRequests(h).length,0);fail=false;await h.elements.get('speech-transcribe').listeners.click();assert.equal(h.run('speechTranscriber.state().phase'),'editing');
+});
+
+test('reload restores a single authored opening and saved confirmed turns with playback but no generation',async()=>{
+  const speech=speechMock(),h=speech.h;h.ctx.saved={...practiceSaved,turns:[{message:'二人です。',response:{message:'こちらへどうぞ。',examples:[],exercise:null}}],interaction_count:1};h.run("placementLearnerId='learner';$('tutor-panel').hidden=false");respond(h,()=>h.ctx.saved);
+  await h.run("openSavedSession('practice')");assert.equal(h.elements.get('conversation').children.length,3);assert.equal(h.run('practiceState.status'),'active');assert.equal(h.elements.get('speech-confirm').textContent,'Confirm and Send');
+  h.elements.get('conversation').children[0].children.at(-1).children[0].children[0].listeners.click();assert.match(speech.spoken.at(-1).text,/何名様/);h.elements.get('conversation').children[2].children.at(-1).children[0].children[0].listeners.click();assert.match(speech.spoken.at(-1).text,/こちらへ/);assert.equal(chatRequests(h).length,0);
+});
+
+test('cancel voice keeps the typed draft and scenario; general Tutor and Study confirmation remain separate',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);h.elements.get('message').value='水をください。';h.elements.get('voice-reply-cancel').listeners.click();assert.equal(h.elements.get('message').value,'水をください。');assert.equal(h.run('sessionId'),'practice');assert.equal(h.run('voiceReplyTarget'),null);
+  h.run('applyPractice(null)');assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');assert.equal(h.elements.get('recording-summary').textContent,'Record spoken Japanese');
+});
+
+test('late chat response after a learner/session switch cannot populate the replacement conversation',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);let finish;h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});await new Promise(resolve=>finish=resolve);return {ok:true,status:200,json:async()=>({response:{message:'どうぞ。',examples:[],exercise:null}})};};
+  h.elements.get('speech-confirm').listeners.click();h.run("sessionId='replacement';placementLearnerId='other';applyPractice(null)");finish();await h.run('voiceSendTask');assert.equal(h.elements.get('conversation').children.length,0);assert.equal(h.run('voiceReplyTarget'),null);assert.equal(h.run('speechTranscriber.state().original'),'');
+});
+
+test('completed scenario does not block the separate Study speaking recorder',async()=>{
+  const m=await voiceHarness(),h=m.h;h.run("applyPractice({...practiceFixture,status:'completed'})");h.ctx.location.hash='#study/speaking';h.elements.get('speaking-level').value='Beginner';h.elements.get('speaking-mode').value='read';await h.run('renderRoute()');h.elements.get('speaking-start').listeners.click();await h.elements.get('recording-start').listeners.click();assert.equal(h.run('browserRecorder.state().phase'),'recording');assert.equal(h.elements.get('recording-card').hidden,false);assert.equal(h.elements.get('speech-confirm').textContent,'Confirm answer');assert.equal(chatRequests(h).length,0);
+});

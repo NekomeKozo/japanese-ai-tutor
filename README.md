@@ -3,7 +3,17 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 10D — Interactive Japanese speaking practice.**
+**Current phase: Phase 10E — Turn-based voice conversation integration.**
+
+In an active **Tutor → Conversation practice** scenario, optionally open **Record
+spoken reply**. Press **Record Reply**, Stop and preview, explicitly Transcribe,
+review/edit the Japanese text, then **Confirm and Send**. Only confirmed text enters
+the existing persistent conversation. Typing remains available in the same session.
+Play/replay the authored opening and Tutor Japanese replies with existing browser
+TTS. Failed Tutor requests retain the editor/transcript for safe retry without another
+transcription. Cancel, navigation, session changes and finishing release recordings.
+There is no continuous listening, pronunciation scoring or speaking dashboard.
+See [Phase 10E report](PHASE10E_REPORT.md) for verification and remaining device limits.
 
 Open **Study → Speaking Practice** and choose Beginner, N5 or Basic N4 plus
 Read Aloud, Spoken Answer or Repeat a Phrase. Each set has two original exercises.

@@ -23,6 +23,7 @@ function practiceControls() {
   $('mode-label').hidden = Boolean(active);
   $('chat-form').hidden = Boolean(completed);
   if (active) $('mode').value = 'chat';
+  voiceReplyControls();
 }
 function scenarioDescription() {
   const selected = scenarioCatalog.find(item => item.key === $('practice-scenario').value);
@@ -42,6 +43,7 @@ async function loadScenarioCatalog() {
   finally { practiceLoading = false; $('practice-loading').hidden = true; practiceControls(); }
 }
 function applyPractice(state) {
+  voicePracticeChanged(state);
   practiceState = state || null;
   if (state) {
     $('practice-title').textContent = state.scenario.title;
@@ -90,6 +92,7 @@ $('practice-start').addEventListener('click', async () => {
 });
 $('practice-finish').addEventListener('click', async () => {
   if (busy || practiceState?.status !== 'active') return;
+  japaneseAudio.stop(); clearVoiceReply();
   setBusy(true); $('practice-error').hidden = true;
   try {
     applyPractice(await api(`/api/learners/${placementLearnerId}/conversations/${sessionId}/finish`, {method:'POST'}));

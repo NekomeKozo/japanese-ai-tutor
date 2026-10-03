@@ -244,3 +244,52 @@ def test_groq_response_is_bounded(settings):
             with pytest.raises(TutorError, match='could not be read'):
                 await GroqSpeechProvider(settings, client).transcribe(wav())
     asyncio.run(run())
+
+def test_confirmed_voice_uses_existing_conversation_replay_without_duplicate_evidence(speech_client, provider):
+    from tests.test_conversation import start, body, reply
+    client, fake, learner = speech_client
+    provider.raw = reply(1)
+    state = start(client, learner).json()
+    fake.text = '一人です。'
+    transcript = upload(client, learner).json()
+    assert transcript['original_text'] == '一人です。'
+    assert not provider.calls
+    saved_url = f'/api/learners/{learner}/sessions/{state["session_id"]}'
+    assert client.get(saved_url).json()['interaction_count'] == 0
+    # The learner corrects recognition before the existing chat request is sent.
+    request = body(learner, state, '二人です。')
+    first = client.post('/api/chat', json=request)
+    assert first.status_code == 200
+    assert client.post('/api/chat', json=request).json() == first.json()
+    saved = client.get(saved_url).json()
+    assert len(saved['turns']) == saved['interaction_count'] == 1
+    assert saved['turns'][0]['message'] == '二人です。'
+    assert len(fake.calls) == len(provider.calls) == 1
+    with client.app.state.repository.connection() as db:
+        assert db.execute("SELECT COUNT(*) FROM learning_events WHERE session_id=? AND event_type='performance'", (state['session_id'],)).fetchone()[0] == 1
+    assert client.get(f'/api/learners/{learner}/conversations/active').json()['session_id'] == state['session_id']
+    result = client.post(f'/api/learners/{learner}/conversations/{state["session_id"]}/finish').json()
+    assert result['recap']['turn_count'] == 1
+    assert client.post('/api/chat', json=body(learner, state)).status_code == 409
+    assert len(provider.calls) == 1
+
+
+def test_transcription_failure_and_chat_failure_leave_persistent_scenario_retryable(speech_client, provider):
+    from tests.test_conversation import start, body, reply
+    client, fake, learner = speech_client
+    state = start(client, learner).json()
+    fake.error = TutorError('speech_provider_unavailable', 'Try transcription again.', 503)
+    assert upload(client, learner).status_code == 503
+    assert not provider.calls
+    fake.error = None
+    assert upload(client, learner).status_code == 200
+    request = body(learner, state)
+    provider.error = TutorError('provider_unavailable', 'Try the Tutor again.', 503)
+    assert client.post('/api/chat', json=request).status_code == 503
+    assert client.get(f'/api/learners/{learner}/sessions/{state["session_id"]}').json()['interaction_count'] == 0
+    provider.error = None
+    provider.raw = reply(1)
+    assert client.post('/api/chat', json=request).status_code == 200
+    assert client.post('/api/chat', json=request).status_code == 200
+    assert client.get(f'/api/learners/{learner}/sessions/{state["session_id"]}').json()['interaction_count'] == 1
+    assert len(fake.calls) == 2 and len(provider.calls) == 2

@@ -43,6 +43,7 @@ function mountSpeakingRecorder(active) {
   const slot=active?$('speaking-recording-slot'):$('tutor-recording-slot');
   if($('recording-card').parentElement!==slot)slot.append($('recording-card'));
   setSpeechConfirmation(active?{apply:confirmSpeakingAnswer,success:'Confirmed text checked for this exercise. No Tutor message or mastery result was saved.'}:null);
+  if(active)$('recording-card').hidden=false;
   if(active && !$('recording-card').open){$('recording-card').open=true;}
 }
 function renderSpeakingExercise() {

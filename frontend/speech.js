@@ -141,8 +141,8 @@ function confirmTutorTranscript(text) {
 let speechConfirmation={apply:confirmTutorTranscript,success:'Text copied to the message box. Review it and press Send message when ready.'};
 function setSpeechConfirmation(context=null) {
   speechConfirmation=context || {apply:confirmTutorTranscript,success:'Text copied to the message box. Review it and press Send message when ready.'};
-  $('speech-confirm').textContent=context?'Confirm answer':'Confirm text';
-  $('speech-help').textContent=context?'Confirm answer evaluates your edited text for this exercise only. It does not send a Tutor message or update mastery.':'Confirm text copies your edited text to the message box. Nothing is sent to the Tutor until you press Send message.';
+  $('speech-confirm').textContent=context?(context.label || 'Confirm answer'):'Confirm text';
+  $('speech-help').textContent=context?(context.help || 'Confirm answer evaluates your edited text for this exercise only. It does not send a Tutor message or update mastery.'):'Confirm text copies your edited text to the message box. Nothing is sent to the Tutor until you press Send message.';
 }
 $('speech-confirm').addEventListener('click',()=>speechTranscriber.confirm(speechConfirmation.apply,speechConfirmation.success));
 $('recording-card').addEventListener('toggle',()=>{if($('recording-card').open)loadSpeechConfiguration();else speechTranscriber.reset();});

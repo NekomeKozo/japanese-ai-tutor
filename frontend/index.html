@@ -19,6 +19,7 @@
   <script src="/static/jlpt.js" defer></script>
   <script src="/static/listening.js" defer></script>
   <script src="/static/speaking.js" defer></script>
+  <script src="/static/voice.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
   <script src="/static/shell.js" defer></script>
@@ -129,8 +130,10 @@
       <textarea id="message" rows="3" maxlength="4000" required placeholder="Try: 日本を行きたいです。 Or: explain 〜たい"></textarea>
       <div class="composer-footer"><span id="count">0 / 4,000 · Ctrl+Enter to send</span><button id="send" type="submit">Send message</button></div>
     </form>
-    <div id="tutor-recording-slot"><details id="recording-card" class="placement-card">
-      <summary>Record spoken Japanese</summary>
+    <p id="voice-reply-notice" class="small" role="status" hidden>Optional spoken reply: preview, transcribe, edit, then Confirm and Send. Only confirmed text joins this conversation; recognition is not pronunciation assessment.</p>
+        <button id="voice-reply-cancel" type="button" class="secondary" hidden>Cancel voice reply</button>
+        <div id="tutor-recording-slot"><details id="recording-card" class="placement-card">
+      <summary id="recording-summary">Record spoken Japanese</summary>
       <p>Record a short Japanese sentence and listen back. Recording and preview stay in this tab. Only <strong>Transcribe audio</strong> sends your recording to GoiGrow’s server and Groq for Japanese transcription. GoiGrow does not permanently store your audio.</p>
       <p class="small">Up to 60 seconds and 8 MB. Leaving this page or closing this panel discards the recording. Moving to another app stops an active recording.</p>
       <p id="recording-status" role="status">Microphone off. Press Record when you’re ready.</p>

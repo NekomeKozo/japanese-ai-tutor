@@ -103,6 +103,7 @@ async function refreshStatus() {
 async function resetSession() {
   if (practiceState?.status === 'active') { showError(new Error('Finish your active conversation first.')); return; }
   japaneseAudio.stop();
+  clearVoiceReply();
   setBusy(true);
   $('error').hidden = true;
   try {
@@ -128,12 +129,13 @@ async function resetSession() {
 
 function updateCount() { $('count').textContent = `${$('message').value.length} / 4,000 · Ctrl+Enter to send`; }
 
-$('chat-form').addEventListener('submit', async (event) => {
-  event.preventDefault();
+async function submitChatMessage() {
   if (busy) return;
   const message = $('message').value.trim();
   if (!message) { showError(new Error('Enter a message or topic first.')); return; }
   if (!sessionId) { showError(new Error('Start a new session to connect to the tutor.')); return; }
+  japaneseAudio.stop();
+  if(['requesting','recording','processing'].includes(browserRecorder.state().phase)) clearVoiceReply();
   setBusy(true);
   $('error').hidden = true;
   $('status').textContent = 'The tutor is thinking…';
@@ -144,6 +146,7 @@ $('chat-form').addEventListener('submit', async (event) => {
     if (savedSession) payload.request_id = pendingChat.id;
     const data = await api('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload) });
+    if (sessionId !== payload.session_id || placementLearnerId !== payload.learner_id) return false;
     pendingChat = null;
     addMessage('learner', message);
     renderReply(data.response);
@@ -152,12 +155,16 @@ $('chat-form').addEventListener('submit', async (event) => {
     updateCount();
     $('conversation').scrollTop = $('conversation').scrollHeight;
     $('status').textContent = 'Your turn · Take your time.';
+    voiceChatSucceeded();
     await refreshPractice();
+    return true;
   } catch (error) {
     showError(error);
     $('status').textContent = 'Your message is still in the editor. Retry, or start a new session if it expired.';
+    return false;
   } finally { setBusy(false); visibleFocus('message'); }
-});
+}
+$('chat-form').addEventListener('submit', async event => { event.preventDefault(); return submitChatMessage(); });
 $('reset').addEventListener('click', resetSession);
 $('message').addEventListener('input', updateCount);
 $('message').addEventListener('keydown', (event) => {

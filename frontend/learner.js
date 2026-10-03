@@ -14,6 +14,7 @@ const jsonOptions = (method, body) => ({method, headers: {'Content-Type': 'appli
 async function openSavedSession(id) {
   const saved = await api(`/api/learners/${placementLearnerId}/sessions/${id}`);
   japaneseAudio.stop();
+  clearVoiceReply();
   sessionId = saved.session_id;
   savedSession = true;
   pendingChat = null;

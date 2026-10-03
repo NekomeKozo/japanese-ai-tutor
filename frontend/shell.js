@@ -36,6 +36,7 @@ async function renderRoute() {
   if (!appReady && (section !== 'settings' || booting)) return;
   visibleFocus('page-title');
   speakingRoute(section === 'study' && detail === 'speaking');
+  voiceReplyControls();
   try {
     if (section === 'home') await renderHome();
     if (section === 'study') {
