@@ -1,7 +1,7 @@
 # Phase 9 — JLPT practice system
 
-Status on 2026-10-01: implementation deployed; local and CI checks passed, live
-acceptance in progress. Phase 10 has NOT started. No audio, accounts,
+Status on 2026-10-03: implementation deployed; local and CI checks passed, final live
+reference-retrieval confirmation pending. Phase 10 has NOT started. No audio, accounts,
 monetization, native mobile stack, or official-score claims were added.
 
 ## Initial audit and baseline
@@ -158,7 +158,8 @@ the original mock recovered its saved answer, completed at its 25-minute deadlin
 and returned 1/20 (5%) with the remaining 19 correctly marked unanswered. The N4
 borrow-word evidence was retained. A frontend regression also covers a history race:
 after expiry completes a session, history is refreshed so it cannot remain labeled
-in progress. Retry controls clear after a successful restoration.
+in progress. Retry controls clear after a successful restoration. UI repair commit
+`a0bee54` passed [GitHub Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/36880901172).
 
 Live N5 mixed quick practice completed with a deliberate grammar error: **4/5, 80%**,
 vocabulary 2/2, kanji 1/1, grammar 0/1 and reading 1/1. Reload restored the first
@@ -169,8 +170,33 @@ saved one answer without revealing feedback, restored question 2 and its decreas
 timer after reload, and later completed on expiry as described above. An explanation
 follow-up retained its draft and received a live Tutor response. The normal Daily
 Review flow selected the practiced possession topic, accepted a correct response,
-scheduled its next review and saved a completed session recap. Remaining conversation
-and final UI smoke checks are in progress.
+scheduled its next review and saved a completed session recap. Conversation practice
+started, accepted a Japanese reply, restored that reply two days later, answered an
+explicit teaching follow-up, and saved a two-turn recap with only the actual practice
+turn scored. The teaching request was not counted as performance. The final live
+reference-retrieval diagnostic has been requested; a visible model response alone
+does not prove references were retrieved. Ownership/isolation is regression-tested;
+the live check used the existing authorized browser, not a second signed-in identity.
+
+On October 3, both JLPT history rows remained completed (N5 quick 80%, N4 mock 5%);
+the N5 answer breakdown reopened unchanged. A screenshot of those persisted results
+was saved as `outputs/phase9-live-verified-results.png` in the task workspace, alongside
+the earlier phone mock/results captures. The final application commit remains
+`a0bee54`; subsequent report-only updates do not change runtime behavior.
+Progress showed the recovered 借りる topic with exactly one assessed encounter and
+one distinct context, recognition/meaning evidence, and reading/production still
+unassessed. Placement remained Beginner. This verifies live evidence recovery without
+duplicate attempts or an automatic proficiency promotion.
+
+### Final acceptance status
+
+Implementation, automated regression, PostgreSQL repair/recovery, live practice,
+timing/persistence, mock results, mastery, Daily Review, Tutor, conversation recap,
+history, and emulated phone checks have passed. The remaining sign-off item is the
+safe live `Knowledge retrieval status=` diagnostic for the October 3 grammar request.
+The unchanged RAG path and candidate-authoring safeguards pass automated tests, and
+the live teaching reply succeeded, but successful retrieval is not asserted without
+that diagnostic. No actual-device Phase 9 test or independent teacher review is claimed.
 
 ## Performance and limitations
 
@@ -178,6 +204,8 @@ Bank validation happens once on startup. Selection/scoring/restore/results make 
 model calls; history uses a bounded aggregate query. The UI caches the catalog, loads
 JLPT lazily and uses a local display timer without second-by-second server polling.
 No numerical load-test or production latency improvement is claimed.
+Render free-service cold starts showed the hosting startup page. Some requests made
+during auto-deployment disconnected; the saved/draft state was retained for retry.
 
 Bank size limits variety; independent editorial review and expanded coverage remain
 future improvements. Timings and levels are approximate study aids. History shows the
