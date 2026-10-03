@@ -36,7 +36,9 @@ Owner check on each available browser/device: Play → Stop → replay at all th
 
 ## Deployment
 
-Implementation will use the existing main-branch Render auto-deploy workflow. Live verification and CI outcome will be recorded after deployment; no service recreation or Supabase changes are required.
+Implementation commit `4e88516` was pushed using the existing main-branch Render auto-deploy workflow. [GitHub Actions Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37140744379) passed, including the existing PostgreSQL regression workflow.
+
+Verified the live frontend at `https://japanese-ai-tutor.onrender.com/`: new 1480px centered layout and cold-start copy are served; authenticated saved Home renders without overflow at all ten requested widths; mobile Tutor exposes recording and enabled Groq transcription controls; Japanese TTS discovers voices and reaches its finished UI state; Progress restores its audio summary. Live playback was exercised without submitting an answer or recording. Health returns 200; unauthenticated API/static requests remain protected (401). No service recreation, Supabase changes, billing changes or real audio uploads. Proof screenshots are saved in the task's outputs folder as `phase10g-live-desktop.png` and `phase10g-live-mobile.png`.
 
 ## Deferred work
 
