@@ -18,6 +18,7 @@
   <script src="/static/study.js" defer></script>
   <script src="/static/jlpt.js" defer></script>
   <script src="/static/listening.js" defer></script>
+  <script src="/static/speaking.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
   <script src="/static/shell.js" defer></script>
@@ -128,7 +129,7 @@
       <textarea id="message" rows="3" maxlength="4000" required placeholder="Try: 日本を行きたいです。 Or: explain 〜たい"></textarea>
       <div class="composer-footer"><span id="count">0 / 4,000 · Ctrl+Enter to send</span><button id="send" type="submit">Send message</button></div>
     </form>
-    <details id="recording-card" class="placement-card">
+    <div id="tutor-recording-slot"><details id="recording-card" class="placement-card">
       <summary>Record spoken Japanese</summary>
       <p>Record a short Japanese sentence and listen back. Recording and preview stay in this tab. Only <strong>Transcribe audio</strong> sends your recording to GoiGrow’s server and Groq for Japanese transcription. GoiGrow does not permanently store your audio.</p>
       <p class="small">Up to 60 seconds and 8 MB. Leaving this page or closing this panel discards the recording. Moving to another app stops an active recording.</p>
@@ -162,7 +163,7 @@
         </div>
         <p id="speech-error" role="alert" hidden></p>
       </div>
-    </details>
+    </details></div>
     </section>
     <section id="profile-panel" aria-label="Progress" hidden>
       <div class="placement-card">
@@ -204,7 +205,7 @@
       <details class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
     </section>
     <section id="study-panel" aria-label="Today's Study" hidden>
-      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a><a href="#study/listening">Listening</a></nav>
+      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a><a href="#study/listening">Listening</a><a href="#study/speaking">Speaking Practice</a></nav>
       <div id="personalized-study">
       <div id="daily-review" class="placement-card" hidden>
         <h2>Daily Review</h2>
@@ -250,6 +251,34 @@
         </div>
       </div>
       </div>
+      <section id="speaking-panel" aria-label="Speaking practice" hidden>
+        <div class="placement-card">
+          <p class="eyebrow">A little speaking, at your pace</p><h2>Speaking Practice</h2>
+          <p>Listen, record, preview and transcribe. Correct recognition mistakes before confirming. Feedback compares your confirmed text; it does not measure pronunciation, accent or fluency.</p>
+          <div class="jlpt-grid">
+            <div><label for="speaking-level">Speaking level</label><select id="speaking-level"><option value="Beginner">Beginner</option><option value="N5">N5</option><option value="N4">Basic N4</option></select></div>
+            <div><label for="speaking-mode">Speaking activity</label><select id="speaking-mode"><option value="read">Read Aloud</option><option value="answer">Spoken Answer</option><option value="repeat">Repeat a Phrase</option></select></div>
+          </div>
+          <p id="speaking-profile-note" hidden>Create or restore a learner profile in <a href="#placement">Placement</a> before transcription.</p>
+          <button id="speaking-start" type="button">Start speaking practice</button>
+          <p class="small">Two original exercises per level and activity. Practice stays in this tab; it does not update mastery, placement or JLPT results.</p>
+          <p id="speaking-notice" role="status"></p>
+        </div>
+        <div id="speaking-exercise" class="placement-card" hidden>
+          <h2 id="speaking-heading" tabindex="-1"></h2>
+          <p id="speaking-instruction"></p><p id="speaking-prompt" class="jlpt-passage" lang="ja"></p>
+          <div id="speaking-audio"></div><button id="speaking-reveal" type="button" class="secondary" hidden>Show reference phrase</button>
+          <p class="small">Play or replay the reference with the audio controls. Record stops playback. You can retry without changing the exercise.</p>
+          <div id="speaking-recording-slot"></div>
+          <div id="speaking-feedback" role="status" hidden>
+            <h3>Confirmed Japanese text</h3><p id="speaking-confirmed" class="jlpt-passage" lang="ja"></p>
+            <h3 id="speaking-reference-label">Reference text</h3><p id="speaking-reference" class="jlpt-passage" lang="ja"></p>
+            <h3>Language feedback</h3><p id="speaking-feedback-text"></p>
+            <p class="small">This feedback concerns your reviewed text, not the recording or your pronunciation. STT mistakes are not learner mistakes.</p>
+          </div>
+          <div class="assessment-actions"><button id="speaking-retry" type="button" class="secondary">Retry this exercise</button><button id="speaking-next" type="button" disabled>Next exercise</button><button id="speaking-end" type="button" class="secondary">End speaking practice</button></div>
+        </div>
+      </section>
       <section id="listening-panel" aria-label="Listening practice" hidden>
         <div id="listening-intro" class="placement-card">
           <p class="eyebrow">Listen, then understand</p><h2>Listening practice</h2>

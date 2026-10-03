@@ -82,12 +82,12 @@ function createSpeechTranscriber({recorder,prepare,send,newId,AbortType=AbortCon
     }
   }
   function edit(value){edited=String(value).slice(0,4000);notify();}
-  function confirm(apply) {
+  function confirm(apply,successMessage='Text copied to the message box. Review it and press Send message when ready.') {
     if(!original || ['preparing','uploading'].includes(phase))return;
     const text=edited.trim();
     if(!text){message='Enter the Japanese text you want to use.';notify();return;}
     const issue=apply(text);
-    message=issue || 'Text copied to the message box. Review it and press Send message when ready.';notify();
+    message=issue || successMessage;notify();
   }
   return {state,transcribe,cancel,reset,edit,confirm,subscribe(fn){listeners.add(fn);fn(state());return()=>listeners.delete(fn);}};
 }
@@ -133,11 +133,18 @@ $('speech-transcribe').addEventListener('click',()=>{if(speechEnabled)return spe
 $('speech-cancel').addEventListener('click',()=>speechTranscriber.cancel());
 $('speech-config-retry').addEventListener('click',loadSpeechConfiguration);
 $('speech-transcript').addEventListener('input',()=>speechTranscriber.edit($('speech-transcript').value));
-$('speech-confirm').addEventListener('click',()=>speechTranscriber.confirm(text=>{
+function confirmTutorTranscript(text) {
   if(busy)return 'Wait for the Tutor to finish, then confirm again.';
   if($('message').value.trim() && $('message').value!==text)return 'Your message box already contains text. Clear it first, then confirm again.';
   $('message').value=text;$('message').dispatchEvent(new Event('input'));$('message').focus();return '';
-}));
+}
+let speechConfirmation={apply:confirmTutorTranscript,success:'Text copied to the message box. Review it and press Send message when ready.'};
+function setSpeechConfirmation(context=null) {
+  speechConfirmation=context || {apply:confirmTutorTranscript,success:'Text copied to the message box. Review it and press Send message when ready.'};
+  $('speech-confirm').textContent=context?'Confirm answer':'Confirm text';
+  $('speech-help').textContent=context?'Confirm answer evaluates your edited text for this exercise only. It does not send a Tutor message or update mastery.':'Confirm text copies your edited text to the message box. Nothing is sent to the Tutor until you press Send message.';
+}
+$('speech-confirm').addEventListener('click',()=>speechTranscriber.confirm(speechConfirmation.apply,speechConfirmation.success));
 $('recording-card').addEventListener('toggle',()=>{if($('recording-card').open)loadSpeechConfiguration();else speechTranscriber.reset();});
 window.addEventListener('hashchange',()=>speechTranscriber.reset());
 window.addEventListener('pagehide',()=>speechTranscriber.reset());

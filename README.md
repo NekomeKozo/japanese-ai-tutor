@@ -3,7 +3,16 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 10C — Japanese speech transcription.**
+**Current phase: Phase 10D — Interactive Japanese speaking practice.**
+
+Open **Study → Speaking Practice** and choose Beginner, N5 or Basic N4 plus
+Read Aloud, Spoken Answer or Repeat a Phrase. Each set has two original exercises.
+Listen/replay, Record, Stop and preview, then explicitly Transcribe audio.
+Review/edit the transcript and **Confirm answer** for conservative text feedback;
+retry or continue to the next exercise. Original transcription, confirmed text,
+reference and feedback stay separate. This is not a pronunciation, accent or
+fluency assessment. Practice stays in this tab and does not create mastery or
+JLPT evidence. See [Phase 10D report](PHASE10D_REPORT.md) for verification limits.
 
 In **Tutor → Record spoken Japanese**, press Record to request microphone permission,
 then Stop to preview your recording. Discard or Record again when finished. Clips
@@ -12,7 +21,7 @@ through GoiGrow’s backend to Groq Whisper for Japanese transcription. Review/e
 the transcript and **Confirm text** to copy it into the Tutor message box; it is
 never automatically sent. Original transcription remains separately viewable.
 Raw audio is never permanently stored by GoiGrow. The recording limits
-are 60 seconds and 8 MB. Leaving Tutor, closing the panel or hiding the tab during
+are 60 seconds and 8 MB. Leaving the recording page, closing the panel or hiding the tab during
 recording releases the microphone; navigation discards the clip. HTTPS/localhost and
 a browser with microphone/MediaRecorder support are required. See the
 [Phase 10B report](PHASE10B_REPORT.md) for recording verification limits.

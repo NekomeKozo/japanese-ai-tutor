@@ -35,13 +35,14 @@ async function renderRoute() {
   $('reset').hidden = section !== 'tutor' || !appReady;
   if (!appReady && (section !== 'settings' || booting)) return;
   visibleFocus('page-title');
+  speakingRoute(section === 'study' && detail === 'speaking');
   try {
     if (section === 'home') await renderHome();
     if (section === 'study') {
-      const jlpt = detail === 'jlpt', listening = detail === 'listening';
-      $('personalized-study').hidden = jlpt || listening; $('jlpt-panel').hidden = !jlpt; $('listening-panel').hidden = !listening;
-      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : listening ? '#study/listening' : '#study') ? 'page' : 'false'));
-      if (jlpt) await loadJLPT(); else if (!listening) await loadStudy();
+      const jlpt = detail === 'jlpt', listening = detail === 'listening', speaking = detail === 'speaking';
+      $('personalized-study').hidden = jlpt || listening || speaking; $('jlpt-panel').hidden = !jlpt; $('listening-panel').hidden = !listening; $('speaking-panel').hidden = !speaking;
+      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : listening ? '#study/listening' : speaking ? '#study/speaking' : '#study') ? 'page' : 'false'));
+      if (jlpt) await loadJLPT(); else if (!listening && !speaking) await loadStudy();
     }
     if (section === 'progress') { progressSection(detail); await renderProfile(); }
     if (section === 'settings') await loadSettings();

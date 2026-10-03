@@ -10,7 +10,7 @@ function harness(audio = {}) {
   const elements = new Map(); const requests = []; const storage = new Map();
   class Element {
     constructor(tag = 'div') { this.tagName=tag; this.children=[]; this.listeners={}; this.hidden=false; this.value=''; this.textContent=''; this.attributes={}; }
-    append(...children) { this.children.push(...children); }
+    append(...children) { for(const child of children){if(child.parentElement)child.parentElement.children=child.parentElement.children.filter(c=>c!==child);child.parentElement=this;this.children.push(child);} }
     replaceChildren(...children) { this.children=children; this.textContent=''; }
     cloneNode() { return new Element(this.tagName); }
     get firstElementChild() { return this.children[0] || new Element(); }
@@ -344,7 +344,7 @@ function recordingMock(config={}) {
   const urls={createObjectURL(blob){created.push(blob);if(config.urlError)throw Error('url');return `blob:local-${created.length}`;},revokeObjectURL(url){revoked.push(url);}};
   const schedule=(fn,ms,interval=false)=>{const id=++sequence;timers.set(id,{fn,due:time+ms,ms,interval});return id;};
   const deps={secure:config.secure!==false,mediaDevices,Recorder,BlobType:Blob,urls,now:()=>time,schedule:(fn,ms)=>schedule(fn,ms),unschedule:id=>timers.delete(id),repeat:(fn,ms)=>schedule(fn,ms,true),unrepeat:id=>timers.delete(id),maxBytes:config.maxBytes || 8*1024*1024,beforeStart:config.beforeStart || (()=>{})};
-  const h=harness({isSecureContext:true,mediaDevices,MediaRecorder:Recorder,Blob,URL:urls,now:()=>time});h.ctx.recorderDeps=deps;
+  const h=harness({isSecureContext:true,mediaDevices,MediaRecorder:Recorder,Blob,URL:urls,now:()=>time,...config.audio});h.ctx.recorderDeps=deps;
   const recorder=h.run('createBrowserRecorder(recorderDeps)');
   function advance(ms){const target=time+ms;while(true){const entry=[...timers].filter(([,t])=>t.due<=target).sort((a,b)=>a[1].due-b[1].due)[0];if(!entry)break;const [id,t]=entry;time=t.due;if(t.interval)t.due+=t.ms;else timers.delete(id);t.fn();}time=target;}
   return {h,recorder,deps,tracks,recorders,revoked,created,requests,timers,stream,advance};
@@ -556,4 +556,99 @@ test('disabled configuration blocks uploads while local recorder remains usable'
   const m=recordingMock(),h=m.h;h.ctx.fetch=async()=>({ok:true,status:200,json:async()=>({enabled:false,setup_message:'Disabled'})});
   await h.run('loadSpeechConfiguration()');await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders[0].finish();
   assert.equal(h.elements.get('speech-transcribe').disabled,true);assert.equal(h.elements.get('recording-play').hidden,false);assert.equal(h.elements.get('speech-config-status').textContent,'Disabled');
+});
+
+async function speakingHarness(level='Beginner',mode='read',config={}) {
+  const m=recordingMock(config),h=m.h;speechDecodeMock(h);h.run("placementLearnerId='learner';appReady=true");h.ctx.location.hash='#study/speaking';
+  h.elements.get('speaking-level').value=level;h.elements.get('speaking-mode').value=mode;
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,status:200,json:async()=>url==='/api/speech/config'?{enabled:true}:{language:'ja',provider:'groq',original_text:'こんにちは。'}};};
+  await h.run('renderRoute()');h.elements.get('speaking-start').listeners.click();return m;
+}
+async function speakingTranscript(m,text='こんにちは。') {
+  const h=m.h;await h.run('loadSpeechConfiguration()');await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders.at(-1).finish();
+  await h.elements.get('speech-transcribe').listeners.click();h.elements.get('speech-transcript').value=text;h.elements.get('speech-transcript').listeners.input();
+}
+
+test('speaking catalog provides two original exercises for all three modes at each level',()=>{
+  const h=harness(),exercises=h.run('speakingExercises');assert.equal(exercises.length,18);assert.equal(new Set(exercises.map(e=>e.id)).size,18);
+  for(const level of ['Beginner','N5','N4'])for(const mode of ['read','answer','repeat']){
+    const set=exercises.filter(e=>e.level===level&&e.mode===mode);assert.equal(set.length,2);for(const exercise of set){assert.match(exercise.prompt,/[ぁ-んァ-ヶ一-龯]/);assert.ok(exercise.note);if(mode==='answer')assert.ok(exercise.sample);}
+  }
+});
+
+test('Study speaking loads without generation and moves the single recorder instead of duplicating it',async()=>{
+  const m=await speakingHarness(),h=m.h;assert.equal(h.elements.get('speaking-panel').hidden,false);assert.equal(h.elements.get('personalized-study').hidden,true);
+  assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('speaking-recording-slot'));assert.equal(h.elements.get('speech-confirm').textContent,'Confirm answer');
+  assert.equal(m.requests.length,0);assert.equal(h.requests.length,0);assert.equal(h.run('speakingState.exercises.length'),2);
+  assert.equal(h.elements.get('speaking-next').disabled,true);assert.equal(h.elements.get('speaking-feedback').hidden,true);
+});
+
+test('Read Aloud waits for explicit confirmation and keeps original, edited and reference text separate',async()=>{
+  const m=await speakingHarness(),h=m.h;await speakingTranscript(m,'こんにちは！');
+  assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.equal(h.run('speakingState.confirmed'),null);
+  h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,false);assert.match(h.elements.get('speaking-feedback-text').textContent,/matches the reference/);
+  assert.equal(h.run('speakingState.confirmed.original'),'こんにちは。');assert.equal(h.run('speakingState.confirmed.text'),'こんにちは！');assert.equal(h.run('speakingState.confirmed.reference'),'こんにちは。');
+  assert.equal(h.elements.get('message').value,'');assert.equal(h.requests.some(r=>r.url==='/api/chat'||r.url.includes('/mastery')),false);
+});
+
+test('duplicate confirmation reuses feedback; edits require fresh explicit confirmation',async()=>{
+  const m=await speakingHarness(),h=m.h;await speakingTranscript(m);h.elements.get('speech-confirm').listeners.click();const previous=h.run('speakingState.lastEvaluation');
+  const requests=h.requests.length;h.elements.get('speech-confirm').listeners.click();assert.equal(h.requests.length,requests);assert.equal(h.run('speakingState.lastEvaluation.feedback'),previous.feedback);
+  h.elements.get('speech-transcript').value='今日はいい天気ですね。';h.elements.get('speech-transcript').listeners.input();assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.equal(h.elements.get('speaking-next').disabled,true);
+  h.elements.get('speech-confirm').listeners.click();assert.match(h.elements.get('speaking-feedback-text').textContent,/differs from the reference/);assert.equal(h.elements.get('speaking-next').disabled,false);
+});
+
+test('Spoken Answer recognizes reviewed alternatives and unknown valid expressions stay neutral',async()=>{
+  const m=await speakingHarness('N5','answer'),h=m.h;await speakingTranscript(m,'ふたつです。');h.elements.get('speech-confirm').listeners.click();assert.match(h.elements.get('speaking-feedback-text').textContent,/matches a reviewed answer/);
+  const exercise=h.run('speakingCurrent()');h.ctx.exercise=exercise;
+  for(const text of exercise.accepted){h.ctx.text=text;assert.match(h.run('speakingFeedback(exercise,text)'),/matches a reviewed answer/);}
+  h.ctx.text='りんごは二個あります。';assert.match(h.run('speakingFeedback(exercise,text)'),/not marked wrong/);
+  assert.equal(h.elements.get('speaking-reference-label').textContent,'One possible answer');assert.equal(h.elements.get('message').value,'');
+});
+
+test('open Spoken Answers offer conservative pattern feedback rather than correctness verdicts',()=>{
+  const h=harness();
+  for(const [id,text,pattern] of [['beginner-answer-name','私の名前はミゲルです。',/self-introduction/],['n4-answer-yesterday','昨日は本を読みました。',/polite past ending/],['n4-answer-weekend','図書館に行くつもりです。',/planning expression/]]){
+    h.ctx.id=id;h.ctx.text=text;assert.match(h.run('speakingFeedback(speakingExercises.find(e=>e.id===id),text)'),pattern);
+  }
+});
+
+test('Repeat Phrase requires reference playback or assisted reveal; no pronunciation score is fabricated',async()=>{
+  const m=await speakingHarness('Beginner','repeat'),h=m.h;assert.equal(h.elements.get('speaking-prompt').hidden,true);
+  await speakingTranscript(m,'すみません。');h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.match(h.elements.get('speech-status').textContent,/Listen/);
+  h.elements.get('speaking-reveal').listeners.click();h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,false);assert.match(h.elements.get('speaking-feedback-text').textContent,/not a pronunciation score/);assert.doesNotMatch(h.elements.get('speaking-feedback-text').textContent,/\d+%/);
+});
+
+test('reference TTS uses the existing controller and stops before recording without losing the exercise',async()=>{
+  const speech=speechMock(),m=await speakingHarness('N5','repeat',{audio:{speechSynthesis:speech.synth,SpeechSynthesisUtterance:speech.Utterance}}),h=m.h;
+  const player=h.elements.get('speaking-audio').children[0];player.children[0].children[0].listeners.click();speech.spoken.at(-1).onstart();assert.equal(h.run('speakingState.heard'),true);
+  const id=h.run('speakingCurrent().id');await h.run('browserRecorder.start()');assert.equal(h.run('japaneseAudio.state().owner'),null);assert.equal(h.run('japaneseAudio.state().blocked'),true);assert.equal(h.run('speakingCurrent().id'),id);
+});
+
+test('exercise progression requires confirmation and releases recording resources on next/retry/end',async()=>{
+  const m=await speakingHarness('N4','read'),h=m.h;h.elements.get('speaking-next').listeners.click();assert.equal(h.run('speakingState.index'),0);
+  await speakingTranscript(m,h.run('speakingCurrent().prompt'));h.elements.get('speech-confirm').listeners.click();h.elements.get('speaking-next').listeners.click();
+  assert.equal(h.run('speakingState.index'),1);assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(m.revoked.length,1);
+  const exercise=h.run('speakingCurrent().id');h.elements.get('speaking-retry').listeners.click();assert.equal(h.run('speakingCurrent().id'),exercise);assert.equal(h.elements.get('speaking-next').disabled,true);
+  await speakingTranscript(m,h.run('speakingCurrent().prompt'));h.elements.get('speech-confirm').listeners.click();h.elements.get('speaking-next').listeners.click();assert.equal(h.run('speakingState'),null);assert.match(h.elements.get('speaking-notice').textContent,/finished/);
+  assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('tutor-recording-slot'));assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');
+});
+
+test('speaking microphone denial leaves the exercise and existing retry controls usable',async()=>{
+  const m=await speakingHarness('Beginner','read',{denied:'NotAllowedError'}),h=m.h;const id=h.run('speakingCurrent().id');await h.run('browserRecorder.start()');
+  assert.equal(h.run('browserRecorder.state().phase'),'error');assert.match(h.elements.get('recording-error').textContent,/permission was denied/);assert.equal(h.run('speakingCurrent().id'),id);assert.equal(h.elements.get('speaking-feedback').hidden,true);
+  h.elements.get('speaking-retry').listeners.click();assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.requests.length,0);
+});
+
+test('speaking transcription failures retain the preview and cannot evaluate unconfirmed output',async()=>{
+  const m=await speakingHarness(),h=m.h;await h.run('loadSpeechConfiguration()');h.ctx.fetch=async()=>{throw new TypeError('offline');};
+  await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders[0].finish();await h.elements.get('speech-transcribe').listeners.click();
+  assert.equal(h.run('browserRecorder.state().phase'),'preview');assert.equal(h.run('speechTranscriber.state().phase'),'error');assert.equal(h.elements.get('speaking-feedback').hidden,true);h.elements.get('speech-confirm').listeners.click();assert.equal(h.run('speakingState.confirmed'),null);
+});
+
+test('leaving speaking cleans capture/transcripts and restores the Tutor confirmation target',async()=>{
+  const m=await speakingHarness(),h=m.h;await h.run('browserRecorder.start()');
+  h.ctx.location.hash='#home';for(const fn of h.windowEvents.hashchange)if(fn.name!=='renderRoute')fn();h.run('speakingRoute(false)');
+  assert.equal(m.tracks[0].stops,1);assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('tutor-recording-slot'));
+  assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');assert.equal(h.run('speakingState.index'),0);assert.equal(h.requests.length,0);
 });
