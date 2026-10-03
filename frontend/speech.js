@@ -46,14 +46,14 @@ async function prepareSpeechAudio(recording,signal) {
 function createSpeechTranscriber({recorder,prepare,send,newId,AbortType=AbortController,
   schedule=setTimeout,unschedule=clearTimeout}) {
   let requestId=null;
-  let phase='idle',original='',edited='',message='',epoch=0,controller=null,timer=null,preparing=false;
+  let phase='idle',original='',edited='',message='',epoch=0,controller=null,timer=null,preparing=false,confirming=false;
   let clipUrl=recorder.state().url;
   const listeners=new Set();
-  const state=()=>({phase,original,edited,message,preparing,requestId});
+  const state=()=>({phase,original,edited,message,preparing,confirming,requestId});
   const notify=()=>{for(const fn of listeners)fn(state());};
   function cancel(note='Transcription cancelled. Your recording is still available.') {
     ++epoch;controller?.abort();controller=null;if(timer!==null)unschedule(timer);timer=null;
-    phase=original?'editing':'idle';message=note;notify();
+    confirming=false;phase=original?'editing':'idle';message=note;notify();
   }
   function reset() { cancel('');original=edited='';requestId=null;phase='idle';notify(); }
   recorder.subscribe(s=>{if(s.url!==clipUrl){clipUrl=s.url;reset();}});
@@ -86,14 +86,18 @@ function createSpeechTranscriber({recorder,prepare,send,newId,AbortType=AbortCon
   }
   function edit(value){edited=String(value).slice(0,4000);notify();}
   function confirm(apply,successMessage='Text copied to the message box. Review it and press Send message when ready.') {
-    if(!original || ['preparing','uploading'].includes(phase))return;
+    if(confirming || !original || ['preparing','uploading'].includes(phase))return;
     const text=edited.trim();
     if(!text){message='Enter the Japanese text you want to use.';notify();return;}
     const token=epoch;
-    const finish=issue=>{if(token!==epoch)return;message=issue || successMessage;notify();};
-    const issue=apply(text);
-    if(issue?.then)return issue.then(finish);
-    finish(issue);
+    confirming=true;notify();
+    const finish=issue=>{if(token!==epoch)return;confirming=false;message=issue || successMessage;notify();};
+    const fail=()=>finish('Confirmation could not finish. Your transcript is still here; please retry.');
+    try {
+      const issue=apply(text);
+      if(issue?.then)return Promise.resolve(issue).then(finish,fail);
+      finish(issue);
+    } catch { fail(); }
   }
   return {state,transcribe,cancel,reset,edit,confirm,subscribe(fn){listeners.add(fn);fn(state());return()=>listeners.delete(fn);}};
 }
@@ -108,12 +112,12 @@ async function sendSpeechAudio(learnerId,wav,id,signal) {
 }
 const speechTranscriber=createSpeechTranscriber({recorder:browserRecorder,prepare:prepareSpeechAudio,
   send:sendSpeechAudio,newId:()=>crypto.randomUUID(),AbortType:window.AbortController});
-let speechEnabled=false,speechConfigPending=false;
+let speechEnabled=false,speechConfigPending=false,speechConfigLoaded=false;
 async function loadSpeechConfiguration() {
-  if(speechConfigPending)return;
+  if(speechConfigPending || speechConfigLoaded)return;
   speechConfigPending=true;$('speech-config-status').textContent='Checking transcription availability…';
   try {
-    const config=await api('/api/speech/config');speechEnabled=config.enabled===true;
+    const config=await api('/api/speech/config');speechEnabled=config.enabled===true;speechConfigLoaded=speechEnabled;
     $('speech-config-status').textContent=speechEnabled?'Transcription sends your audio to Groq only when you press Transcribe audio.':config.setup_message || 'Transcription is not enabled yet. Local preview still works.';
     $('speech-config-retry').hidden=speechEnabled;
   } catch {
@@ -122,11 +126,11 @@ async function loadSpeechConfiguration() {
 }
 function renderSpeechControls() {
   const s=speechTranscriber.state(),preview=browserRecorder.state().phase==='preview';
-  const active=['preparing','uploading'].includes(s.phase);
+  const transcribing=['preparing','uploading'].includes(s.phase),active=s.confirming || transcribing;
   $('speech-controls').setAttribute('aria-busy',String(active));
   $('speech-transcribe').hidden=!preview;$('speech-transcribe').disabled=!speechEnabled || active || s.preparing || Boolean(s.original);
-  $('speech-transcribe').textContent=active?'Transcribing…':s.original?'Transcribed':s.phase==='error'?'Retry transcription':'Transcribe audio';
-  $('speech-cancel').hidden=!active;
+  $('speech-transcribe').textContent=transcribing?'Transcribing…':s.original?'Transcribed':s.phase==='error'?'Retry transcription':'Transcribe audio';
+  $('speech-cancel').hidden=!transcribing;
   $('speech-result').hidden=!s.original || !preview;
   $('speech-transcript').disabled=active;
   if($('speech-transcript').value!==s.edited)$('speech-transcript').value=s.edited;

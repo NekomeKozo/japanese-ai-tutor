@@ -38,7 +38,7 @@ function voiceReplyControls() {
     const r=browserRecorder.state();
     $('recording-start').textContent=r.phase==='preview'?'Record again':'Record Reply';
     $('recording-start').disabled=busy || r.availability!=='supported' || r.permissionPending || ['requesting','recording','processing'].includes(r.phase);
-    $('speech-confirm').disabled=busy || !speechTranscriber.state().edited.trim() || ['preparing','uploading'].includes(speechTranscriber.state().phase);
+    $('speech-confirm').disabled=busy || speechTranscriber.state().confirming || !speechTranscriber.state().edited.trim() || ['preparing','uploading'].includes(speechTranscriber.state().phase);
   }
 }
 function voiceChatSucceeded() {

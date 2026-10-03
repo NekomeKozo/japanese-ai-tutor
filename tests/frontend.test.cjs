@@ -787,3 +787,31 @@ test('voice marker requires confirmed draft; ordinary typed scenario turns stay 
   const m=await voiceHarness(),h=m.h;await voiceTranscript(m);h.elements.get('message').value='水をください。';await h.run('submitChatMessage()');assert.equal(JSON.parse(chatRequests(h)[0].body).transcription_id,undefined);
   await voiceTranscript(m);h.elements.get('speech-confirm').listeners.click();await h.run('voiceSendTask');assert.ok(JSON.parse(chatRequests(h)[1].body).transcription_id);
 });
+
+test('partial speech engines degrade gracefully and explicit play resumes a paused engine',()=>{
+  const m=speechMock();let resumed=0;m.synth.paused=true;m.synth.resume=()=>{resumed++;m.synth.paused=false;};
+  assert.equal(m.h.run("japaneseAudio.play('こんにちは。','test')"),true);assert.equal(resumed,1);
+  const h=harness({speechSynthesis:{getVoices(){return [];}},SpeechSynthesisUtterance:m.Utterance});
+  assert.equal(h.run('japaneseAudio.state().availability'),'unsupported');assert.equal(h.run("japaneseAudio.play('日本語','test')"),false);
+});
+
+test('confirmation blocks duplicate work, recovers failures and ignores stale completion',async()=>{
+  const m=speechControllerMock();await m.preview();await m.controller.transcribe('learner');let finish,calls=0;
+  const pending=m.controller.confirm(()=>{calls++;return new Promise(resolve=>finish=resolve);});
+  m.controller.confirm(()=>calls++);assert.equal(calls,1);assert.equal(m.controller.state().confirming,true);
+  finish('');await pending;assert.equal(m.controller.state().confirming,false);
+  await m.controller.confirm(()=>Promise.reject(new Error('offline')));assert.match(m.controller.state().message,/please retry/);assert.equal(m.controller.state().original,'こんにちは。');
+  const stale=m.controller.confirm(()=>new Promise(resolve=>finish=resolve));m.controller.reset();finish('late');await stale;
+  assert.equal(m.controller.state().original,'');assert.equal(m.controller.state().message,'');
+});
+
+test('enabled transcription configuration is cached, failed checks remain retryable',async()=>{
+  const h=harness();h.ctx.fetch=async()=>{throw new TypeError('offline');};await h.run('loadSpeechConfiguration()');assert.equal(h.elements.get('speech-config-retry').hidden,false);
+  respond(h,()=>({enabled:true}));await h.run('loadSpeechConfiguration()');await h.run('loadSpeechConfiguration()');assert.equal(h.requests.length,1);
+});
+
+test('prefixed Web Audio decoding works without autoplay or permanent recording storage',async()=>{
+  const h=harness({Blob});const closes=speechDecodeMock(h);h.ctx.window.webkitAudioContext=h.ctx.window.AudioContext;h.ctx.window.webkitOfflineAudioContext=h.ctx.window.OfflineAudioContext;delete h.ctx.window.AudioContext;delete h.ctx.window.OfflineAudioContext;
+  h.ctx.clip={blob:new Blob(['recording'],{type:'audio/mp4'})};h.ctx.signal=new AbortController().signal;
+  const wav=await h.run('prepareSpeechAudio(clip,signal)');assert.equal(wav.type,'audio/wav');assert.equal(closes(),1);assert.equal(h.storage.size,0);
+});

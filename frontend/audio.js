@@ -2,7 +2,7 @@
 
 // One speech queue for the whole page. Never sends requests to the tutor backend.
 function createJapaneseAudio({synth, Utterance, schedule = setTimeout, unschedule = clearTimeout}) {
-  const supported = Boolean(synth && Utterance && typeof synth.getVoices === 'function');
+  const supported = Boolean(synth && typeof Utterance === 'function' && ['getVoices','speak','cancel'].every(method=>typeof synth[method] === 'function'));
   let voices = [], selected = '', rate = 1, phase = 'idle', availability = supported ? 'loading' : 'unsupported';
   let owner = null, utterance = null, generation = 0, watchdog = null, voiceTimer = null, message = '';
   const listeners = new Set();
@@ -65,6 +65,7 @@ function createJapaneseAudio({synth, Utterance, schedule = setTimeout, unschedul
         };
         utterance.onend = next; utterance.onerror = () => fail(token);
         watchdog = schedule(() => fail(token), 10000);
+        if(synth.paused && typeof synth.resume === 'function')synth.resume();
         synth.speak(utterance); notify();
       } catch { fail(token); }
     }
