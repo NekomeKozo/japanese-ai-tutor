@@ -70,7 +70,9 @@ frame and authentication restrictions remain unchanged. Dynamic messages use tex
 - The user chose to test on their actual device later. Chrome/Edge/Safari physical
   recording, denied permission UI and mobile microphone-indicator checks remain
   unverified. API/MIME support does not guarantee a working device or playable codec.
-- Existing Japanese speech playback and Listening will be checked live after deployment.
+- Live Tutor and Study → Listening both reached the native Playing Japanese audio
+  state after deployment. The new panel and enabled Record button were visible
+  below Send message. No physical microphone capture was claimed.
 
 References: [getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia),
 [MediaRecorder](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder),
@@ -78,7 +80,12 @@ References: [getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/Medi
 
 ## Deployment
 
-Pending existing GitHub/Render workflow and live verification; update follows.
+Published implementation commit `d0aeba0` as `Phase 10B - add browser microphone recording`
+through the existing main/Render workflow. GitHub Tests passed (run 37115758651).
+Verified the live HTTPS Tutor recording panel, microphone-off notice and Record
+button, plus existing Tutor and Listening playback. Source/history privacy audit
+passed. Actual-device microphone testing remains deferred at the user's request.
+No Phase 10C work began.
 
 ## Handover for Phase 10C
 
