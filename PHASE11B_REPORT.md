@@ -31,7 +31,7 @@ Files: `frontend/styles.css`, `frontend/index.html`, `frontend/access.html`, thi
 - Long Japanese Tutor draft survived navigation; Settings save succeeded. Existing frontend tests cover restoration and recording cleanup.
 - Desktop sidebar, Home grid and spacing visually checked at 1440px; all existing views included in the larger-width matrix. Desktop CSS unchanged.
 
-Deployment and CI: pending checkpoint below.
+Implementation checkpoint: `3d66e73` (main), pushed through the existing Render auto-deploy workflow. [GitHub Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37145348904) passed. Live authenticated Home and Tutor restored the existing learner/session; mobile Home padding/full-width action, two-column Study links, short-height navigation and recording disclosure/transcription configuration verified. The live viewport tag confirms the new release. Public `/health` returns 200; unauthenticated `/api/health` and protected static assets remain 401. No live provider requests or recordings were needed for this CSS-only deployment.
 
 ## Physical devices and limitations
 
@@ -40,3 +40,4 @@ The user agreed to test after deployment. **Actual Android/iPhone, on-screen key
 ## Handover
 
 Phase 11B only. Preserve the current desktop baseline and existing discovery work. A shared-component cleanup belongs to Phase 11C and requires explicit authorization. No Phase 11C work begun.
+
