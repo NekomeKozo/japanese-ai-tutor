@@ -6,8 +6,9 @@ function createJapaneseAudio({synth, Utterance, schedule = setTimeout, unschedul
   let voices = [], selected = '', rate = 1, phase = 'idle', availability = supported ? 'loading' : 'unsupported';
   let owner = null, utterance = null, generation = 0, watchdog = null, voiceTimer = null, message = '';
   const listeners = new Set();
+  let blocked = false;
   const key = voice => `${voice.voiceURI || voice.name}|${voice.lang}|${voice.name}`;
-  const state = () => ({voices: voices.map(v => ({id:key(v), name:v.name, lang:v.lang})), selected, rate, phase, availability, owner, message});
+  const state = () => ({voices: voices.map(v => ({id:key(v), name:v.name, lang:v.lang})), selected, rate, phase, availability, owner, message, blocked});
   function notify() { for (const listener of [...listeners]) listener(state()); }
   function detach() {
     if (watchdog !== null) unschedule(watchdog);
@@ -37,6 +38,7 @@ function createJapaneseAudio({synth, Utterance, schedule = setTimeout, unschedul
     stop(); phase = 'error'; message = 'Audio could not play. Check your device’s Japanese voice or try Play again.'; notify();
   }
   function play(text, id) {
+    if (blocked) return false;
     refresh();
     if (!selected || !String(text).trim()) return false;
     if (text.length > 12000) { stop('Choose a shorter Japanese passage to play.'); return false; }
@@ -75,6 +77,7 @@ function createJapaneseAudio({synth, Utterance, schedule = setTimeout, unschedul
   }
   return {
     state, play, stop, refresh,
+    setBlocked(value) { if (blocked === Boolean(value)) return; blocked = Boolean(value); if (blocked) stop(); else notify(); },
     setVoice(id) { if (!voices.some(v => key(v) === id)) return; stop('Voice changed. Press Play to hear it.'); selected = id; notify(); },
     setRate(value) { const next = Number(value); if (![0.75,1,1.25].includes(next)) return; stop('Speed changed. Press Play to hear it.'); rate = next; notify(); },
     subscribe(listener) { listeners.add(listener); listener(state()); return () => listeners.delete(listener); },
@@ -115,11 +118,11 @@ function attachJapaneseAudio(container, text, label = 'Japanese text', onStarted
       signature = next; voiceSelect.replaceChildren();
       for (const voice of state.voices) { const option = audioElement('option',`${voice.name} (${voice.lang})`); option.value = voice.id; voiceSelect.append(option); }
     }
-    voiceSelect.value = state.selected; voiceSelect.disabled = state.availability !== 'ready'; speed.value = String(state.rate);
-    play.disabled = state.availability !== 'ready';
+    voiceSelect.value = state.selected; voiceSelect.disabled = state.availability !== 'ready' || state.blocked; speed.value = String(state.rate); speed.disabled = state.blocked;
+    play.disabled = state.availability !== 'ready' || state.blocked;
     const active = state.owner === id; stop.disabled = !active;
     play.textContent = active ? 'Replay audio' : 'Play audio';
-    status.textContent = {
+    status.textContent = state.blocked ? 'Finish or cancel microphone recording to play Japanese audio.' : {
       unsupported:'Audio is unavailable in this browser. Try a browser with Japanese text-to-speech support.',
       loading:'Looking for Japanese voices…',
       missing:'No Japanese voice is available. Enable a Japanese speech voice in your device settings, then reload. Listening transcripts remain available.'

@@ -16,6 +16,10 @@ function harness(audio = {}) {
     get firstElementChild() { return this.children[0] || new Element(); }
     get childElementCount() { return this.children.length; }
     setAttribute(k,v) { this.attributes[k]=v; }
+    removeAttribute(k) { delete this.attributes[k]; if(k==='src')this.src=''; }
+    pause() { this.paused=true; }
+    play() { this.paused=false; return Promise.resolve(); }
+    load() { this.loaded=true; }
     addEventListener(type, fn) { this.listeners[type]=fn; }
     querySelectorAll() { return []; }
     querySelector() { return this.selected || null; }
@@ -27,7 +31,7 @@ function harness(audio = {}) {
   const windowEvents = {}, documentEvents = {};
   const ctx = vm.createContext({console, Event, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, setTimeout:()=>1, clearTimeout(){}, crypto:require('node:crypto').webcrypto,
     document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(type,fn){(documentEvents[type] ||= []).push(fn);},dispatchEvent(event){for(const fn of documentEvents[event.type] || []) fn(event);}},
-    window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true},
+    window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true,mediaDevices:audio.mediaDevices},performance:{now:audio.now || (()=>0)},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     sessionStorage:{getItem:()=>null,setItem(){}},
     fetch:async (url, options={})=>{ requests.push({url,...options}); throw new TypeError('offline'); }
@@ -322,4 +326,123 @@ test('listening navigation retains answer and attempt without API calls or hidde
   h.ctx.location.hash='#placement';await h.run('renderRoute()');h.ctx.location.hash='#study/listening';await h.run('renderRoute()');
   assert.equal(h.elements.get('listening-choices').selected.value,'1');assert.equal(h.elements.get('listening-transcript').hidden,true);
   assert.equal(h.elements.get('jlpt-panel').hidden,true);assert.equal(h.elements.get('personalized-study').hidden,true);assert.equal(h.elements.get('listening-panel').hidden,false);assert.equal(h.requests.length,0);
+});
+
+function recordingMock(config={}) {
+  const tracks=[],recorders=[],revoked=[],created=[],requests=[],timers=new Map();let time=0,sequence=0;
+  function stream(){const listeners=new Map();const track={readyState:'live',stops:0,stop(){this.stops++;this.readyState='ended';},addEventListener(n,fn){listeners.set(n,fn);},removeEventListener(n){listeners.delete(n);},end(){this.readyState='ended';listeners.get('ended')?.();}};tracks.push(track);return {getTracks:()=>[track],getAudioTracks:()=>[track]};}
+  class Recorder {
+    static isTypeSupported(type){return (config.formats || ['audio/webm;codecs=opus']).includes(type);}
+    constructor(source,options){if(config.initError && (!config.optionsOnly || options))throw {name:config.initError};this.stream=source;this.options=options;this.mimeType=options?.mimeType || config.defaultMime || 'audio/webm';this.state='inactive';recorders.push(this);}
+    start(slice){if(config.startError)throw Error('start');this.slice=slice;this.state='recording';}
+    stop(){this.state='inactive';this.stops=(this.stops||0)+1;if(config.stopError)throw Error('stop');}
+    data(size=5,type=this.mimeType){this.ondataavailable?.({data:new Blob(['a'.repeat(size)],{type})});}
+    finish(size=5){this.data(size);this.onstop?.();}
+  }
+  const mediaDevices={getUserMedia(options){requests.push(options);return config.permission ? config.permission(stream) : config.denied ? Promise.reject({name:config.denied}) : Promise.resolve(stream());}};
+  const urls={createObjectURL(blob){created.push(blob);if(config.urlError)throw Error('url');return `blob:local-${created.length}`;},revokeObjectURL(url){revoked.push(url);}};
+  const schedule=(fn,ms,interval=false)=>{const id=++sequence;timers.set(id,{fn,due:time+ms,ms,interval});return id;};
+  const deps={secure:config.secure!==false,mediaDevices,Recorder,BlobType:Blob,urls,now:()=>time,schedule:(fn,ms)=>schedule(fn,ms),unschedule:id=>timers.delete(id),repeat:(fn,ms)=>schedule(fn,ms,true),unrepeat:id=>timers.delete(id),maxBytes:config.maxBytes || 8*1024*1024,beforeStart:config.beforeStart || (()=>{})};
+  const h=harness({isSecureContext:true,mediaDevices,MediaRecorder:Recorder,Blob,URL:urls,now:()=>time});h.ctx.recorderDeps=deps;
+  const recorder=h.run('createBrowserRecorder(recorderDeps)');
+  function advance(ms){const target=time+ms;while(true){const entry=[...timers].filter(([,t])=>t.due<=target).sort((a,b)=>a[1].due-b[1].due)[0];if(!entry)break;const [id,t]=entry;time=t.due;if(t.interval)t.due+=t.ms;else timers.delete(id);t.fn();}time=target;}
+  return {h,recorder,deps,tracks,recorders,revoked,created,requests,timers,stream,advance};
+}
+test('recorder detects support and secure context without requesting a microphone at load',()=>{
+  const m=recordingMock();assert.equal(m.recorder.state().availability,'supported');assert.equal(m.requests.length,0);
+  m.h.ctx.noSupport={secure:true};assert.equal(m.h.run('createBrowserRecorder(noSupport).state().availability'),'unsupported');
+  assert.equal(recordingMock({secure:false}).recorder.state().availability,'insecure');
+});
+test('granted recording follows start, stop, processing and local preview with actual MIME',async()=>{
+  const m=recordingMock();await m.recorder.start();assert.equal(m.recorder.state().phase,'recording');assert.deepEqual(JSON.parse(JSON.stringify(m.requests[0])),{audio:true,video:false});assert.equal(m.recorders[0].slice,250);
+  m.advance(1500);assert.equal(m.recorder.state().elapsedMs,1500);m.recorder.stop();assert.equal(m.recorder.state().phase,'processing');assert.equal(m.tracks[0].stops,1);
+  m.recorders[0].finish();assert.equal(m.recorder.state().phase,'preview');assert.equal(m.recorder.recording().mimeType,'audio/webm;codecs=opus');assert.equal(m.recorder.recording().blob.size,5);assert.equal(m.timers.size,0);
+});
+test('microphone permission and device errors give useful messages and allow explicit retry',async()=>{
+  for(const [name,pattern] of [['NotAllowedError',/denied/],['NotFoundError',/No microphone/],['NotReadableError',/in use/],['SecurityError',/blocked/],['AbortError',/interrupted/]]){
+    const m=recordingMock({denied:name});await m.recorder.start();assert.equal(m.recorder.state().phase,'error');assert.match(m.recorder.state().message,pattern);assert.equal(m.recorder.state().permissionPending,false);assert.equal(m.timers.size,0);assert.equal(m.requests.length,1);
+    await m.recorder.start();assert.equal(m.requests.length,2);
+  }
+});
+test('cancel releases tracks/timers and stale recording events cannot create a preview',async()=>{
+  const m=recordingMock();await m.recorder.start();const lateData=m.recorders[0].ondataavailable,lateStop=m.recorders[0].onstop;
+  m.recorder.cancel();lateData({data:new Blob(['late'])});lateStop();assert.equal(m.tracks[0].stops,1);assert.equal(m.timers.size,0);assert.equal(m.recorder.state().phase,'idle');assert.equal(m.created.length,0);
+});
+test('cancelled permission requests release late streams and never request twice concurrently',async()=>{
+  let grant;const m=recordingMock({permission:stream=>new Promise(resolve=>{grant=()=>resolve(stream());})});
+  const pending=m.recorder.start();assert.equal(m.recorder.state().phase,'requesting');await m.recorder.start();assert.equal(m.requests.length,1);
+  m.recorder.cancel();await m.recorder.start();assert.equal(m.requests.length,1);assert.equal(m.recorder.state().permissionPending,true);
+  grant();await pending;assert.equal(m.tracks[0].stops,1);assert.equal(m.recorders.length,0);assert.equal(m.recorder.state().permissionPending,false);
+});
+test('record again and discard revoke old object URLs and keep no stored clip',async()=>{
+  const m=recordingMock();await m.recorder.start();m.recorder.stop();m.recorders[0].finish();assert.equal(m.recorder.state().url,'blob:local-1');
+  await m.recorder.start();assert.deepEqual(m.revoked,['blob:local-1']);assert.equal(m.recorder.recording(),null);
+  m.recorder.stop();m.recorders[1].finish();m.recorder.cancel();assert.deepEqual(m.revoked,['blob:local-1','blob:local-2']);assert.equal(m.recorder.recording(),null);
+});
+test('duration deadline automatically stops at sixty seconds and releases the microphone',async()=>{
+  const m=recordingMock();await m.recorder.start();m.advance(60000);assert.equal(m.recorder.state().phase,'processing');assert.equal(m.tracks[0].stops,1);assert.equal(m.recorder.state().elapsedMs,60000);
+  m.recorders[0].finish();assert.match(m.recorder.state().message,/60-second limit/);assert.equal(m.timers.size,0);
+});
+test('size guard discards oversized buffers including the final chunk',async()=>{
+  const m=recordingMock({maxBytes:8});await m.recorder.start();m.recorders[0].data(5);m.recorder.stop();m.recorders[0].data(4);
+  assert.equal(m.recorder.state().phase,'error');assert.match(m.recorder.state().message,/size limit/);assert.equal(m.recorder.recording(),null);assert.equal(m.created.length,0);assert.equal(m.recorder.state().bytes,0);assert.equal(m.tracks[0].stops,1);
+});
+test('empty recordings and object URL failures recover with no active resources',async()=>{
+  for(const config of [{},{urlError:true}]){const m=recordingMock(config);await m.recorder.start();m.recorder.stop();m.recorders[0].finish(config.urlError?5:0);assert.equal(m.recorder.state().phase,'error');assert.equal(m.recorder.recording(),null);assert.equal(m.recorder.state().url,'');assert.equal(m.timers.size,0);assert.equal(m.tracks[0].stops,1);}
+});
+test('recorder initialization, start, stop and interrupted-stream failures release capture',async()=>{
+  for(const config of [{initError:'NotReadableError'},{startError:true},{stopError:true},{}]){
+    const m=recordingMock(config);await m.recorder.start();if(config.stopError)m.recorder.stop();else if(!config.initError&&!config.startError)m.tracks[0].end();
+    assert.equal(m.recorder.state().phase,'error');assert.equal(m.tracks[0].stops,1);assert.equal(m.recorder.recording(),null);assert.equal(m.timers.size,0);
+  }
+});
+test('recording error and missing finalization event do not leave an active recorder',async()=>{
+  const m=recordingMock();await m.recorder.start();m.recorders[0].onerror({error:Error('failure')});assert.equal(m.recorder.state().phase,'error');assert.equal(m.tracks[0].stops,1);
+  await m.recorder.start();m.recorder.stop();m.advance(5000);assert.equal(m.recorder.state().phase,'error');assert.match(m.recorder.state().message,/could not finish/);assert.equal(m.timers.size,0);
+});
+test('MIME negotiation checks WebM/MP4 and uses the native default when necessary',async()=>{
+  for(const [config,expected] of [[{formats:['audio/mp4']},'audio/mp4'],[{formats:[],defaultMime:'audio/ogg'},'audio/ogg']]){
+    const m=recordingMock(config);await m.recorder.start();assert.equal(m.recorders[0].options?.mimeType,config.formats[0]);m.recorder.stop();m.recorders[0].finish();assert.equal(m.recorder.recording().blob.type,expected);
+  }
+});
+test('an advertised but failing MIME option falls back to the browser default',async()=>{
+  const m=recordingMock({initError:'NotSupportedError',optionsOnly:true,defaultMime:'audio/mp4'});await m.recorder.start();assert.equal(m.recorder.state().phase,'recording');assert.equal(m.recorders[0].options,undefined);m.recorder.stop();m.recorders[0].finish();assert.equal(m.recorder.recording().mimeType,'audio/mp4');
+});
+test('navigation, panel close, hidden tabs and learner changes cancel UI recording',async()=>{
+  for(const trigger of ['hashchange','pagehide','visibilitychange','learner-changed','toggle']){
+    const m=recordingMock(),h=m.h;await h.run('browserRecorder.start()');
+    if(trigger==='hashchange'||trigger==='pagehide'){for(const fn of h.windowEvents[trigger])if(fn.name!=='renderRoute')fn();}
+    else if(trigger==='visibilitychange'){h.ctx.document.hidden=true;for(const fn of h.documentEvents[trigger])fn();}
+    else if(trigger==='toggle'){h.elements.get('recording-card').open=false;h.elements.get('recording-card').listeners.toggle();}
+    else h.run("document.dispatchEvent(new Event('learner-changed'))");
+    assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(m.tracks[0].stops,1);assert.equal(h.requests.length,0);
+  }
+});
+test('recorder UI supports preview/retry/discard without sending chat or storing audio',async()=>{
+  const m=recordingMock(),h=m.h;await h.elements.get('recording-start').listeners.click();assert.equal(h.elements.get('recording-stop').hidden,false);
+  h.elements.get('recording-stop').listeners.click();m.recorders[0].finish();assert.equal(h.elements.get('recording-play').hidden,false);assert.equal(h.elements.get('recording-start').textContent,'Record again');
+  await h.elements.get('recording-play').listeners.click();assert.equal(h.elements.get('recording-preview').paused,false);
+  h.elements.get('recording-discard').listeners.click();assert.equal(h.elements.get('recording-preview').src,'');assert.equal(h.elements.get('recording-preview').paused,true);assert.deepEqual(m.revoked,['blob:local-1']);assert.equal(h.requests.length,0);assert.equal(h.storage.size,0);
+});
+test('TTS stops before microphone use and cannot start during permission/recording',async()=>{
+  const m=recordingMock(),speech=speechMock();
+  m.h.ctx.speechDeps={synth:speech.synth,Utterance:speech.Utterance};m.h.run('japaneseAudio.destroy()');
+  // Exercise the production UI listeners with both native API stubs in one harness.
+  const h=harness({isSecureContext:true,mediaDevices:m.deps.mediaDevices,MediaRecorder:m.deps.Recorder,Blob,URL:m.deps.urls,speechSynthesis:speech.synth,SpeechSynthesisUtterance:speech.Utterance});
+  h.run("japaneseAudio.play('こんにちは','tutor')");assert.equal(speech.spoken.length,1);await h.run('browserRecorder.start()');assert.equal(h.run('japaneseAudio.state().owner'),null);assert.equal(h.run('japaneseAudio.state().blocked'),true);
+  assert.equal(h.run("japaneseAudio.play('こんにちは','tutor')"),false);assert.equal(speech.spoken.length,1);
+  h.run('browserRecorder.stop()');m.recorders[0].finish();assert.equal(h.run('japaneseAudio.state().blocked'),false);
+  await h.elements.get('recording-play').listeners.click();h.run("japaneseAudio.play('こんにちは','tutor')");assert.equal(h.elements.get('recording-preview').paused,true);assert.equal(h.requests.length,0);
+});
+test('cancelled permission requests restore TTS while late microphone grants are released',async()=>{
+  let grant;const m=recordingMock({permission:stream=>new Promise(resolve=>{grant=()=>resolve(stream());})}),speech=speechMock();
+  const h=harness({isSecureContext:true,mediaDevices:m.deps.mediaDevices,MediaRecorder:m.deps.Recorder,Blob,URL:m.deps.urls,speechSynthesis:speech.synth,SpeechSynthesisUtterance:speech.Utterance});
+  const pending=h.run('browserRecorder.start()');assert.equal(h.run('japaneseAudio.state().blocked'),true);h.run('browserRecorder.cancel()');assert.equal(h.run('japaneseAudio.state().blocked'),false);
+  h.run("japaneseAudio.play('こんにちは','tutor')");grant();await pending;assert.equal(m.tracks[0].stops,1);assert.equal(m.recorders.length,0);assert.equal(speech.spoken.length,1);
+});
+test('preview playback failures are helpful and stale promises cannot resurrect a discarded preview',async()=>{
+  const m=recordingMock(),h=m.h;await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders[0].finish();
+  h.elements.get('recording-preview').play=()=>Promise.reject(Error('codec'));await h.elements.get('recording-play').listeners.click();assert.equal(h.elements.get('recording-preview-error').hidden,false);
+  let reject;h.elements.get('recording-preview').play=()=>new Promise((_,fail)=>{reject=fail;});const pending=h.elements.get('recording-play').listeners.click();h.run('browserRecorder.cancel()');reject(Error('discarded'));await pending;
+  assert.equal(h.elements.get('recording-preview-error').hidden,true);assert.equal(h.elements.get('recording-preview').hidden,true);assert.equal(h.requests.length,0);
 });

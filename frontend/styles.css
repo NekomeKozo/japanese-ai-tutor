@@ -209,3 +209,11 @@ button,textarea,input,select { scroll-margin-bottom:100px; }
 #listening-level { margin:8px 0 16px; }
 #listening-panel .assessment-actions { margin-top:16px; }
 @media(max-width:540px) { .audio-player { padding:10px; gap:10px; } .audio-actions { width:100%; } .audio-actions button { flex:1; } }
+
+#recording-card { margin-top:24px; }
+.recording-actions { flex-wrap:wrap; margin:16px 0; }
+#recording-preview { display:block; width:100%; max-width:100%; margin:16px 0; }
+#recording-status[data-recording="true"] { color:#9a2935; font-weight:700; }
+#recording-status[data-recording="true"]::before { content:'● '; }
+#recording-timer { font-variant-numeric:tabular-nums; font-weight:700; }
+#recording-error,#recording-preview-error { color:#9a2935; overflow-wrap:anywhere; }

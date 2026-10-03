@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="/static/styles.css">
   <script src="/static/audio.js" defer></script>
   <script src="/static/app.js" defer></script>
+  <script src="/static/recorder.js" defer></script>
   <script src="/static/assessment.js" defer></script>
   <script src="/static/learner.js" defer></script>
   <script src="/static/conversation.js" defer></script>
@@ -126,6 +127,22 @@
       <textarea id="message" rows="3" maxlength="4000" required placeholder="Try: 日本を行きたいです。 Or: explain 〜たい"></textarea>
       <div class="composer-footer"><span id="count">0 / 4,000 · Ctrl+Enter to send</span><button id="send" type="submit">Send message</button></div>
     </form>
+    <details id="recording-card" class="placement-card">
+      <summary>Record spoken Japanese</summary>
+      <p>Record a short Japanese sentence and listen back. Audio stays in this browser tab. It is not uploaded, saved on the server, transcribed or sent to AI.</p>
+      <p class="small">Up to 60 seconds and 8 MB. Leaving this page or closing this panel discards the recording. Moving to another app stops an active recording.</p>
+      <p id="recording-status" role="status">Microphone off. Press Record when you’re ready.</p>
+      <p id="recording-timer" role="timer" aria-live="off" hidden>0:00 / 1:00</p>
+      <div class="assessment-actions recording-actions">
+        <button id="recording-start" type="button">Record</button>
+        <button id="recording-stop" type="button" hidden>Stop recording</button>
+        <button id="recording-cancel" type="button" class="secondary" hidden>Cancel recording</button>
+        <button id="recording-play" type="button" hidden>Play preview</button>
+        <button id="recording-discard" type="button" class="secondary" hidden>Discard recording</button>
+      </div>
+      <audio id="recording-preview" aria-label="Your local recording" controls controlslist="nodownload" disableremoteplayback preload="metadata" hidden></audio>
+      <p id="recording-error" role="alert" hidden></p><p id="recording-preview-error" role="alert" hidden></p>
+    </details>
     </section>
     <section id="profile-panel" aria-label="Progress" hidden>
       <div class="placement-card">

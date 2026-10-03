@@ -3,7 +3,15 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 10A — Japanese playback and listening foundation.**
+**Current phase: Phase 10B — local browser microphone recording.**
+
+In **Tutor → Record spoken Japanese**, press Record to request microphone permission,
+then Stop to preview your recording. Discard or Record again when finished. Clips
+stay only in this tab’s memory: no upload, transcription or AI processing. The limits
+are 60 seconds and 8 MB. Leaving Tutor, closing the panel or hiding the tab during
+recording releases the microphone; navigation discards the clip. HTTPS/localhost and
+a browser with microphone/MediaRecorder support are required. See the
+[Phase 10B report](PHASE10B_REPORT.md) for format support and verification limits.
 
 Japanese playback is available on Tutor replies and in **Study → Listening**.
 Choose an installed Japanese voice and 0.75×, 1.0× or 1.25× speed; press Play,

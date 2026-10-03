@@ -16,6 +16,10 @@ def test_frontend_and_health(client):
     assert client.get('/static/styles.css').status_code == 200
     assert client.get('/api/health').json()['provider_configured'] is False
     assert client.get('/').headers['cache-control'] == 'no-store'
+    csp = client.get('/').headers['content-security-policy']
+    assert "media-src blob:" in csp
+    assert "script-src 'self'" in csp and "connect-src 'self'" in csp
+    assert "frame-ancestors 'none'" in csp
     assert client.get('/openapi.json').status_code == 200
 
 

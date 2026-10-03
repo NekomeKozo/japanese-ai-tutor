@@ -121,7 +121,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         response.headers['Referrer-Policy'] = 'no-referrer'
         # Keep Swagger /docs functional; the tutor UI needs no external scripts.
         if not request.url.path.startswith(('/docs', '/redoc')):
-            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self'"
+            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; media-src blob:; frame-ancestors 'none'; base-uri 'self'"
         return response
 
     @app.exception_handler(TutorError)
