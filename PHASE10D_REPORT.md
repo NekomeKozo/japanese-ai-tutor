@@ -52,7 +52,22 @@ mastery or JLPT evidence. Current set/feedback are tab-local and do not survive 
   to Tutor were exercised. Mock fixture is not shipped and did not transmit to Groq.
 - Emulated 390×844 and 320×740 layouts had matching document/scroll widths
   (368/368 and 299/299). Japanese text and controls wrap without horizontal overflow.
-- Deployment/CI/live verification pending checkpoint below.
+- Source and available Git history safety audit passed. Implementation commit
+  `ccf96bc` (`Phase 10D - add interactive Japanese speaking practice`) pushed normally
+  through existing GitHub/Render. [Tests run 37120160202](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37120160202)
+  passed, including the PostgreSQL regression suite and all 86 frontend tests.
+- Live HTTPS Study → Speaking Practice displays all level/mode selectors, the
+  original exercise, shared recorder and Groq privacy notices. Native Japanese
+  reference playback reached Playing Japanese audio and completed. Transcription
+  controls load from the existing enabled server configuration; no real recording
+  was uploaded during this check. Live 390px layout matched scroll/document width
+  (375/375); desktop sidebar/theme remain intact. No browser error/warning logs.
+  Screenshot: task workspace outputs/phase10d-live-speaking.png. Local mock preview
+  stopped, temporary tab closed and viewport reset. No service/database recreation.
+
+Implementation, mocked integration, automated regressions and live availability
+are complete. Physical-device recording/transcription acceptance remains deferred,
+as detailed below; this report does not claim that test passed.
 
 ## Remaining acceptance limits and Phase 10E handover
 
