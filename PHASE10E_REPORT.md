@@ -86,7 +86,24 @@ cannot accept a voice reply; separate Study speaking remains usable afterward.
 - Emulated 390×844 and 320×740 layouts matched document/scroll widths (368/368 and
   299/299). Japanese text, existing composer and recording controls remained reachable.
   This is browser emulation, not actual-phone microphone/keyboard acceptance.
-- Deployment, full PostgreSQL CI and live verification recorded in final checkpoint.
+- Source and available Git history privacy audit and whitespace checks passed.
+  Implementation `4a9f97f` (`Phase 10E - integrate voice with adaptive conversations`)
+  pushed normally through the existing GitHub/Render workflow. [Tests run 37131572914](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37131572914)
+  passed, including the full PostgreSQL suite and all 98 frontend tests.
+- Live HTTPS release shows the optional Record spoken reply panel, Record Reply,
+  text composer and configured Groq disclosure. A new restaurant scenario played
+  its authored Japanese opening. The typed test reply 二人です。 used the SAME chat
+  submission path and received かしこまりました。こちらへどうぞ。メニューをどうぞ。
+  Reply TTS reached Playing Japanese audio. Reload restored one opening and exactly
+  one saved exchange with balanced policy/beginner difficulty. This is a live text
+  generation/persistence check, not a real spoken/transcription claim. The new
+  test restaurant is left active for the deferred device test; no pre-existing
+  active scenario was finished or replaced. No browser errors/warnings observed.
+  Proof: task workspace outputs/phase10e-live-voice.png. Temporary local preview
+  and tab stopped/closed, viewport reset. No service/Supabase/domain changes.
+
+Implementation, automated regressions, mocked audio integration and live availability
+are verified. Physical-device/Groq speech acceptance remains pending below.
 
 ## Known limits and Phase 10F handover
 
