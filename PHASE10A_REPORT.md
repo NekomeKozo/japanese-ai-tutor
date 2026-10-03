@@ -65,6 +65,7 @@ Extremely long passages (over 12,000 characters) are rejected rather than queued
   cleanup, safe public-text extraction, zero extra requests, all bank answers,
   transcript reveal, single scoring, assisted summaries and route retention.
 - JavaScript syntax and whitespace checks passed.
+- Source/history deployment audit passed; no secret candidates or private files found.
 - Targeted existing API/JLPT regression: 67 passed, 5 PostgreSQL-dependent checks
   skipped locally. Existing CI runs the full suite with PostgreSQL.
 - Local Windows in-app browser discovered four Microsoft Japanese voices. Native
@@ -75,13 +76,29 @@ Extremely long passages (over 12,000 characters) are rejected rather than queued
 - Desktop and emulated 390×844 / 320×740 layouts checked. Observed content/scroll
   widths matched (368/368 and 299/299), controls wrapped, mobile navigation remained
   available, assisted feedback rendered and saved Tutor text gained controls.
-- Actual-phone testing has been requested; not yet performed/claimed. Safari/iOS,
-  Android, Firefox and screen-reader audio interaction remain device checks.
+- User confirmed on their actual phone: “Playback and all three speeds work.” The
+  phone model/browser were not supplied. This is user-reported verification, not an
+  agent-operated physical-device test; a broader Safari/iOS, Android, Firefox and
+  screen-reader matrix remains unverified.
 
 ## Deployment
 
-Pending final push, existing GitHub Actions/Render verification and live screenshots.
-This section will be updated with the observed result.
+Implementation checkpoint `be0967b` was pushed normally to existing `main`; repository
+and Render service names are unchanged. The existing
+[Tests workflow](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37113860120)
+passed, including the full backend suite with PostgreSQL and all 44 frontend tests.
+The existing [Render site](https://japanese-ai-tutor.onrender.com/#study/listening)
+served the new Listening tab and controls after its normal cold start; `/health`
+returned 200 and unauthenticated protected paths still returned 401.
+
+Live N5 playback produced native start/end events. A four-question run completed with
+two correct unassisted and two correct assisted answers, displayed separately in the
+summary. Transcript timing, feedback and navigation were checked. The live desktop
+screenshot is saved in the task workspace at `outputs/phase10a-live-listening.png`.
+No tutor generation was requested for this listening verification.
+Saved Tutor conversation/recap restored and its displayed Japanese examples played
+at normal speed without requesting a new reply. JLPT history remained unchanged
+(completed N5 quick 80%, completed N4 mock 5%).
 
 ## Phase 10B
 
