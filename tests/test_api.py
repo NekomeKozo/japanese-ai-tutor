@@ -11,7 +11,7 @@ from tests.conftest import sample_response
 
 def test_frontend_and_health(client):
     assert client.get('/').status_code == 200
-    assert 'AI Japanese Tutor' in client.get('/').text
+    assert '<title>GoiGrow — Japanese Tutor</title>' in client.get('/').text
     assert client.get('/static/app.js').status_code == 200
     assert client.get('/static/styles.css').status_code == 200
     assert client.get('/api/health').json()['provider_configured'] is False
