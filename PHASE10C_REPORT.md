@@ -117,7 +117,16 @@ transcription accuracy is never treated as proficiency evidence.
   alone will not be reported as successful transcription. Physical microphone,
   Chrome/Edge/Safari compressed-codec recording and Japanese accuracy still need
   that device test; automated silent/failure cases passed.
-- Deployment/CI/live availability checks pending; update below after publication.
+- Implementation commit `923659d` (`Phase 10C - add Japanese speech transcription`)
+  pushed normally through existing GitHub/Render. [Tests run 37118031642](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37118031642)
+  passed, including PostgreSQL and all 74 frontend tests; source/history audit
+  passed. No service/database recreation or billing changes.
+- Live HTTPS Tutor shows the new transmission/privacy notices and confirms Groq
+  transcription is enabled using server configuration. Native Tutor TTS reached
+  Playing Japanese audio. Local recorder fixture was stopped; viewport override
+  reset. Screenshot: task workspace `outputs/phase10c-live-recording.png`. Live
+  availability is verified; successful real-provider transcription remains pending
+  the user's deferred physical-device test, not represented as a passed smoke test.
 
 ## Phase 10D handover — not begun
 
