@@ -22,5 +22,6 @@ async def transcribe(learner_id: UUID, request: Request, x_transcription_id: UUI
     identity = getattr(request.state, 'staging_identity', None) or request.client.host
     result = await request.app.state.speech.transcribe(identity=identity, request_id=x_transcription_id,
         audio=await request.body(), content_type=request.headers.get('content-type', ''))
+    request.app.state.audio_progress.receipt(learner_id, result.request_id)
     logging.getLogger('uvicorn.error').info('STT success provider=groq duration_ms=%d', round(result.duration_seconds * 1000))
     return result

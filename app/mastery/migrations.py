@@ -18,7 +18,7 @@ DDL = [
 
 
 def migrate(db):
-    if db.execute('PRAGMA user_version').fetchone()[0] in (4,5,6,7):
+    if db.execute('PRAGMA user_version').fetchone()[0] in (4,5,6,7,8):
         return
     from app.learner.catalog import TOPICS
     from app.mastery.service import process_stored_event, recompute_topic

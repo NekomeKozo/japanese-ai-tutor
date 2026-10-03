@@ -660,3 +660,5 @@ Mastery confidence still needs calibration, especially for sparsely tested dimen
 Phase 7 may polish the product experience; it has not begun.
 
 The original adapter follows the official [Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+Listening and speaking activity appears in Progress → Overview: server-checked listening accuracy separates assisted answers; speaking counts describe confirmed practice, not pronunciation. Confirmed spoken scenario turns reuse saved conversations. No raw audio or original STT text is stored for analytics.

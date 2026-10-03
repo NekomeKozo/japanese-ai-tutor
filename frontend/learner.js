@@ -109,7 +109,7 @@ async function renderProfile() {
     row.append(button); history.append(row);
   });
   resultList(history, 'Recent activity', activity.map(event => `${dateLabel(event.created_at)} · ${event.event_type.replaceAll('_', ' ')}${event.topic ? ': ' + event.topic : ''}`), 'No activity recorded yet.');
-  await renderMastery();
+  await Promise.all([renderMastery(), renderAudioProgress(id)]);
   if (id === placementLearnerId && sequence === profileRequest) profileLoadedFor = id;
 }
 

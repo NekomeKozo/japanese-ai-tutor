@@ -225,3 +225,6 @@ button,textarea,input,select { scroll-margin-bottom:100px; }
 #speaking-feedback { border-top:1px solid var(--border); margin-top:20px; padding-top:16px; }
 #speaking-prompt,#speaking-confirmed,#speaking-reference { line-height:1.9; overflow-wrap:anywhere; }
 #speaking-notice,#speaking-feedback-text { overflow-wrap:anywhere; }
+
+.audio-progress-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:1rem;}
+#audio-progress li {overflow-wrap:anywhere;margin-bottom:.5rem;}

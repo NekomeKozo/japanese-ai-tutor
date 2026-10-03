@@ -1,0 +1,200 @@
+{
+  "listening": [
+    {
+      "id": "n5-time",
+      "level": "N5",
+      "text": "明日は九時に学校へ行きます。授業は九時半からです。",
+      "question": "When does the class start?",
+      "choices": [
+        "At 9:00",
+        "At 9:30",
+        "At 10:30"
+      ],
+      "answer": 1,
+      "feedback": "九時半 means half past nine. Going to school and starting class happen at different times."
+    },
+    {
+      "id": "n5-order",
+      "level": "N5",
+      "text": "パンを二つください。コーヒーは一つお願いします。",
+      "question": "How many pieces of bread does the speaker want?",
+      "choices": [
+        "One",
+        "Two",
+        "Three"
+      ],
+      "answer": 1,
+      "feedback": "パンを二つ means two pieces of bread. 一つ refers to the coffee."
+    },
+    {
+      "id": "n5-place",
+      "level": "N5",
+      "text": "本は机の上にあります。かばんは机の下にあります。",
+      "question": "Where is the bag?",
+      "choices": [
+        "On the desk",
+        "Beside the desk",
+        "Under the desk"
+      ],
+      "answer": 2,
+      "feedback": "かばんは机の下にあります means the bag is under the desk. The book is on top."
+    },
+    {
+      "id": "n5-day",
+      "level": "N5",
+      "text": "今日は月曜日です。水曜日に友達と映画を見ます。",
+      "question": "On which day will the speaker watch a movie?",
+      "choices": [
+        "Monday",
+        "Wednesday",
+        "Friday"
+      ],
+      "answer": 1,
+      "feedback": "水曜日 is Wednesday. 月曜日 describes today, not the movie day."
+    },
+    {
+      "id": "n4-rain",
+      "level": "N4",
+      "text": "雨が降っているので、今日は自転車に乗りません。バスで駅まで行きます。",
+      "question": "How will the speaker get to the station today?",
+      "choices": [
+        "By bicycle",
+        "By train",
+        "By bus"
+      ],
+      "answer": 2,
+      "feedback": "バスで駅まで行きます means going to the station by bus. ので gives the reason: it is raining."
+    },
+    {
+      "id": "n4-before",
+      "level": "N4",
+      "text": "買い物に行く前に、図書館で本を返します。それから、スーパーに行きます。",
+      "question": "What will the speaker do first?",
+      "choices": [
+        "Return a library book",
+        "Buy a book",
+        "Shop at the supermarket"
+      ],
+      "answer": 0,
+      "feedback": "行く前に means before going. The speaker returns a book at the library before shopping."
+    },
+    {
+      "id": "n4-request",
+      "level": "N4",
+      "text": "窓を開けてもいいですか。すみません、外が寒いので、開けないでください。",
+      "question": "What is the reply asking the first speaker to do?",
+      "choices": [
+        "Open the window",
+        "Keep the window closed",
+        "Go outside"
+      ],
+      "answer": 1,
+      "feedback": "開けないでください means please do not open it. The reason is that it is cold outside."
+    },
+    {
+      "id": "n4-change",
+      "level": "N4",
+      "text": "昨日は忙しくて、料理ができませんでした。今日は早く帰って、夕ご飯を作るつもりです。",
+      "question": "What does the speaker plan to do today?",
+      "choices": [
+        "Eat at a restaurant",
+        "Work late",
+        "Return home early and cook"
+      ],
+      "answer": 2,
+      "feedback": "作るつもりです expresses an intention to cook. 昨日は describes yesterday, when the speaker could not cook."
+    }
+  ],
+  "speaking": [
+    {
+      "id": "beginner-read-hello",
+      "level": "Beginner",
+      "mode": "read"
+    },
+    {
+      "id": "beginner-read-thanks",
+      "level": "Beginner",
+      "mode": "read"
+    },
+    {
+      "id": "beginner-repeat-excuse",
+      "level": "Beginner",
+      "mode": "repeat"
+    },
+    {
+      "id": "beginner-repeat-request",
+      "level": "Beginner",
+      "mode": "repeat"
+    },
+    {
+      "id": "beginner-answer-name",
+      "level": "Beginner",
+      "mode": "answer"
+    },
+    {
+      "id": "beginner-answer-greeting",
+      "level": "Beginner",
+      "mode": "answer"
+    },
+    {
+      "id": "n5-read-weather",
+      "level": "N5",
+      "mode": "read"
+    },
+    {
+      "id": "n5-read-school",
+      "level": "N5",
+      "mode": "read"
+    },
+    {
+      "id": "n5-repeat-shop",
+      "level": "N5",
+      "mode": "repeat"
+    },
+    {
+      "id": "n5-repeat-order",
+      "level": "N5",
+      "mode": "repeat"
+    },
+    {
+      "id": "n5-answer-count",
+      "level": "N5",
+      "mode": "answer"
+    },
+    {
+      "id": "n5-answer-day",
+      "level": "N5",
+      "mode": "answer"
+    },
+    {
+      "id": "n4-read-plan",
+      "level": "N4",
+      "mode": "read"
+    },
+    {
+      "id": "n4-read-reason",
+      "level": "N4",
+      "mode": "read"
+    },
+    {
+      "id": "n4-repeat-permission",
+      "level": "N4",
+      "mode": "repeat"
+    },
+    {
+      "id": "n4-repeat-directions",
+      "level": "N4",
+      "mode": "repeat"
+    },
+    {
+      "id": "n4-answer-yesterday",
+      "level": "N4",
+      "mode": "answer"
+    },
+    {
+      "id": "n4-answer-weekend",
+      "level": "N4",
+      "mode": "answer"
+    }
+  ]
+}

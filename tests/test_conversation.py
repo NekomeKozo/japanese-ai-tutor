@@ -258,6 +258,9 @@ def test_v5_migration_preserves_data_and_rolls_back(storage_settings, monkeypatc
     original = migrations.migrate
     from app.jlpt import migrations as jlpt_migrations
     jlpt_original = jlpt_migrations.migrate
+    from app.audio_progress import migrations as audio_migrations
+    audio_original=audio_migrations.migrate
+    monkeypatch.setattr(audio_migrations,'migrate',lambda db:None)
     monkeypatch.setattr(jlpt_migrations, 'migrate', lambda db: None)
     monkeypatch.setattr(migrations,'migrate',lambda db: None)
     with TestClient(create_app(storage_settings, MockProvider())) as client:
@@ -282,8 +285,9 @@ def test_v5_migration_preserves_data_and_rolls_back(storage_settings, monkeypatc
         assert not db.execute("SELECT 1 FROM sqlite_master WHERE name='conversation_states'").fetchone()
     monkeypatch.setattr(migrations,'migrate',original)
     monkeypatch.setattr(jlpt_migrations, 'migrate', jlpt_original)
+    monkeypatch.setattr(audio_migrations,'migrate',audio_original)
     for _ in range(2):
         repo.initialize(QuestionBank.load())
         with repo.connection() as db:
-            assert db.execute('PRAGMA user_version').fetchone()[0] == 7
+            assert db.execute('PRAGMA user_version').fetchone()[0] == 8
             assert {t:db.execute(f'SELECT * FROM {t}').fetchall() for t in tables} == before

@@ -42,7 +42,7 @@ function clearSpeakingFeedback(){
 function mountSpeakingRecorder(active) {
   const slot=active?$('speaking-recording-slot'):$('tutor-recording-slot');
   if($('recording-card').parentElement!==slot)slot.append($('recording-card'));
-  setSpeechConfirmation(active?{apply:confirmSpeakingAnswer,success:'Confirmed text checked for this exercise. No Tutor message or mastery result was saved.'}:null);
+  setSpeechConfirmation(active?{apply:confirmSpeakingAnswer,success:'Confirmed exercise saved to your audio progress. No pronunciation score was created.'}:null);
   if(active)$('recording-card').hidden=false;
   if(active && !$('recording-card').open){$('recording-card').open=true;}
 }
@@ -50,6 +50,7 @@ function renderSpeakingExercise() {
   const state=speakingState,exercise=speakingCurrent();$('speaking-exercise').hidden=!exercise;
   speakingPlayer?.destroy();speakingPlayer=null;
   if(!exercise)return;
+  if(!state.audioAttempt || state.audioAttempt.exercise!==exercise.id)prepareAudioAttempt(state,exercise);
   $('speaking-heading').textContent=`${exercise.level==='N4'?'Basic N4':exercise.level} · ${speakingModes[exercise.mode]} · ${state.index+1} of ${state.exercises.length}`;
   $('speaking-instruction').textContent={read:'Read this sentence aloud, then review and confirm your transcript.',answer:'Answer the question in Japanese. Review your transcript before confirming.',repeat:'Listen and repeat the phrase. If audio is unavailable, show the phrase for assisted practice.'}[exercise.mode];
   $('speaking-prompt').textContent=exercise.prompt;$('speaking-prompt').hidden=exercise.mode==='repeat' && !state.revealed;
@@ -74,10 +75,19 @@ function startSpeakingPractice() {
   clearSpeakingFeedback();$('speaking-notice').textContent='Review/edit the transcript and explicitly confirm each answer.';
   renderSpeakingExercise();$('speaking-heading').focus();
 }
-function confirmSpeakingAnswer(text) {
+async function confirmSpeakingAnswer(text) {
   const state=speakingState,exercise=speakingCurrent();
   if(!speakingVisible || !exercise || browserRecorder.state().phase!=='preview')return 'Open the speaking exercise and transcribe your recording first.';
   if(exercise.mode==='repeat' && !state.heard && !state.revealed)return 'Listen to the reference first, or show the phrase for assisted practice.';
+  if(state.saving)return 'Wait for your exercise to finish saving.';
+  const transcription=speechTranscriber.state().requestId;
+  if(!transcription)return 'Transcribe your recording successfully before confirming.';
+  const attempt=state.audioAttempt,clip=browserRecorder.state().url;
+  state.saving=true;
+  try{await completeAudioAttempt(state,{transcription_id:transcription,assisted:state.revealed});}
+  catch(error){return 'Your exercise was not saved. '+error.message;}
+  finally{state.saving=false;}
+  if(speakingState!==state || state.audioAttempt!==attempt || browserRecorder.state().url!==clip || speechTranscriber.state().edited.trim()!==text || !speakingVisible)return 'Practice changed before confirmation finished.';
   const feedback=state.lastEvaluation?.text===text?state.lastEvaluation.feedback:speakingFeedback(exercise,text);
   state.lastEvaluation={text,feedback};state.confirmed={original:speechTranscriber.state().original,text,reference:exercise.sample || exercise.prompt,feedback};
   $('speaking-confirmed').textContent=text;$('speaking-reference').textContent=state.confirmed.reference;
@@ -88,7 +98,7 @@ function confirmSpeakingAnswer(text) {
 }
 $('speaking-start').addEventListener('click',startSpeakingPractice);
 $('speaking-reveal').addEventListener('click',()=>{if(!speakingState)return;speakingState.revealed=true;$('speaking-prompt').hidden=false;$('speaking-reveal').hidden=true;});
-$('speaking-retry').addEventListener('click',()=>{japaneseAudio.stop();browserRecorder.cancel('Ready to retry this exercise.');speechTranscriber.reset();clearSpeakingFeedback();});
+$('speaking-retry').addEventListener('click',()=>{japaneseAudio.stop();browserRecorder.cancel('Ready to retry this exercise.');speechTranscriber.reset();clearSpeakingFeedback();if(speakingState)prepareAudioAttempt(speakingState,speakingCurrent());});
 function endSpeakingPractice(note='Speaking practice ended. Choose another set when ready.') {
   japaneseAudio.stop();browserRecorder.cancel('');speechTranscriber.reset();speakingPlayer?.destroy();speakingPlayer=null;
   clearSpeakingFeedback();speakingState=null;$('speaking-exercise').hidden=true;mountSpeakingRecorder(false);$('speaking-notice').textContent=note;
@@ -96,7 +106,7 @@ function endSpeakingPractice(note='Speaking practice ended. Choose another set w
 $('speaking-end').addEventListener('click',()=>endSpeakingPractice());
 $('speaking-next').addEventListener('click',()=>{
   if(!speakingState?.confirmed)return;
-  if(speakingState.index+1===speakingState.exercises.length){endSpeakingPractice('This speaking set is finished. No pronunciation score or mastery result was saved.');return;}
+  if(speakingState.index+1===speakingState.exercises.length){endSpeakingPractice('This speaking set is finished. Your confirmed exercises are saved in Progress. No pronunciation score was created.');return;}
   japaneseAudio.stop();browserRecorder.cancel('');speechTranscriber.reset();
   ++speakingState.index;speakingState.heard=false;speakingState.revealed=false;clearSpeakingFeedback();renderSpeakingExercise();$('speaking-heading').focus();
 });

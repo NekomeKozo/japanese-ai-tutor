@@ -1,3 +1,5 @@
+from app.api.audio_progress import router as audio_progress_router
+from app.audio_progress.service import AudioProgressService
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -91,6 +93,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             app.state.assessment = AssessmentEngine(repository, bank,
                 AnswerEvaluator(llm, settings.llm_timeout_seconds), settings.assessment_ttl_seconds)
             app.state.learners = LearnerService(repository)
+            app.state.audio_progress = AudioProgressService(repository)
             app.state.mastery = MasteryService(repository)
             app.state.reviews = ReviewService(repository)
             app.state.jlpt = JLPTService(repository, JLPTBank.load())
@@ -177,6 +180,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(conversation_router)
     app.include_router(jlpt_router)
     app.include_router(speech_router)
+    app.include_router(audio_progress_router)
     app.mount('/static', StaticFiles(directory=FRONTEND), name='static')
 
     @app.get('/health', include_in_schema=False)

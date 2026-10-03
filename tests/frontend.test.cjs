@@ -579,27 +579,27 @@ test('speaking catalog provides two original exercises for all three modes at ea
 test('Study speaking loads without generation and moves the single recorder instead of duplicating it',async()=>{
   const m=await speakingHarness(),h=m.h;assert.equal(h.elements.get('speaking-panel').hidden,false);assert.equal(h.elements.get('personalized-study').hidden,true);
   assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('speaking-recording-slot'));assert.equal(h.elements.get('speech-confirm').textContent,'Confirm answer');
-  assert.equal(m.requests.length,0);assert.equal(h.requests.length,0);assert.equal(h.run('speakingState.exercises.length'),2);
+  assert.equal(m.requests.length,0);assert.equal(h.requests.filter(r=>!r.url.includes('/audio/attempts')).length,0);assert.equal(h.run('speakingState.exercises.length'),2);
   assert.equal(h.elements.get('speaking-next').disabled,true);assert.equal(h.elements.get('speaking-feedback').hidden,true);
 });
 
 test('Read Aloud waits for explicit confirmation and keeps original, edited and reference text separate',async()=>{
   const m=await speakingHarness(),h=m.h;await speakingTranscript(m,'こんにちは！');
   assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.equal(h.run('speakingState.confirmed'),null);
-  h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,false);assert.match(h.elements.get('speaking-feedback-text').textContent,/matches the reference/);
+  await h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,false);assert.match(h.elements.get('speaking-feedback-text').textContent,/matches the reference/);
   assert.equal(h.run('speakingState.confirmed.original'),'こんにちは。');assert.equal(h.run('speakingState.confirmed.text'),'こんにちは！');assert.equal(h.run('speakingState.confirmed.reference'),'こんにちは。');
   assert.equal(h.elements.get('message').value,'');assert.equal(h.requests.some(r=>r.url==='/api/chat'||r.url.includes('/mastery')),false);
 });
 
 test('duplicate confirmation reuses feedback; edits require fresh explicit confirmation',async()=>{
-  const m=await speakingHarness(),h=m.h;await speakingTranscript(m);h.elements.get('speech-confirm').listeners.click();const previous=h.run('speakingState.lastEvaluation');
-  const requests=h.requests.length;h.elements.get('speech-confirm').listeners.click();assert.equal(h.requests.length,requests);assert.equal(h.run('speakingState.lastEvaluation.feedback'),previous.feedback);
+  const m=await speakingHarness(),h=m.h;await speakingTranscript(m);await h.elements.get('speech-confirm').listeners.click();const previous=h.run('speakingState.lastEvaluation');
+  const requests=h.requests.length;await h.elements.get('speech-confirm').listeners.click();assert.equal(h.requests.length,requests);assert.equal(h.run('speakingState.lastEvaluation.feedback'),previous.feedback);
   h.elements.get('speech-transcript').value='今日はいい天気ですね。';h.elements.get('speech-transcript').listeners.input();assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.equal(h.elements.get('speaking-next').disabled,true);
-  h.elements.get('speech-confirm').listeners.click();assert.match(h.elements.get('speaking-feedback-text').textContent,/differs from the reference/);assert.equal(h.elements.get('speaking-next').disabled,false);
+  await h.elements.get('speech-confirm').listeners.click();assert.match(h.elements.get('speaking-feedback-text').textContent,/differs from the reference/);assert.equal(h.elements.get('speaking-next').disabled,false);
 });
 
 test('Spoken Answer recognizes reviewed alternatives and unknown valid expressions stay neutral',async()=>{
-  const m=await speakingHarness('N5','answer'),h=m.h;await speakingTranscript(m,'ふたつです。');h.elements.get('speech-confirm').listeners.click();assert.match(h.elements.get('speaking-feedback-text').textContent,/matches a reviewed answer/);
+  const m=await speakingHarness('N5','answer'),h=m.h;await speakingTranscript(m,'ふたつです。');await h.elements.get('speech-confirm').listeners.click();assert.match(h.elements.get('speaking-feedback-text').textContent,/matches a reviewed answer/);
   const exercise=h.run('speakingCurrent()');h.ctx.exercise=exercise;
   for(const text of exercise.accepted){h.ctx.text=text;assert.match(h.run('speakingFeedback(exercise,text)'),/matches a reviewed answer/);}
   h.ctx.text='りんごは二個あります。';assert.match(h.run('speakingFeedback(exercise,text)'),/not marked wrong/);
@@ -615,8 +615,8 @@ test('open Spoken Answers offer conservative pattern feedback rather than correc
 
 test('Repeat Phrase requires reference playback or assisted reveal; no pronunciation score is fabricated',async()=>{
   const m=await speakingHarness('Beginner','repeat'),h=m.h;assert.equal(h.elements.get('speaking-prompt').hidden,true);
-  await speakingTranscript(m,'すみません。');h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.match(h.elements.get('speech-status').textContent,/Listen/);
-  h.elements.get('speaking-reveal').listeners.click();h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,false);assert.match(h.elements.get('speaking-feedback-text').textContent,/not a pronunciation score/);assert.doesNotMatch(h.elements.get('speaking-feedback-text').textContent,/\d+%/);
+  await speakingTranscript(m,'すみません。');await h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,true);assert.match(h.elements.get('speech-status').textContent,/Listen/);
+  h.elements.get('speaking-reveal').listeners.click();await h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('speaking-feedback').hidden,false);assert.match(h.elements.get('speaking-feedback-text').textContent,/not a pronunciation score/);assert.doesNotMatch(h.elements.get('speaking-feedback-text').textContent,/\d+%/);
 });
 
 test('reference TTS uses the existing controller and stops before recording without losing the exercise',async()=>{
@@ -627,30 +627,30 @@ test('reference TTS uses the existing controller and stops before recording with
 
 test('exercise progression requires confirmation and releases recording resources on next/retry/end',async()=>{
   const m=await speakingHarness('N4','read'),h=m.h;h.elements.get('speaking-next').listeners.click();assert.equal(h.run('speakingState.index'),0);
-  await speakingTranscript(m,h.run('speakingCurrent().prompt'));h.elements.get('speech-confirm').listeners.click();h.elements.get('speaking-next').listeners.click();
+  await speakingTranscript(m,h.run('speakingCurrent().prompt'));await h.elements.get('speech-confirm').listeners.click();h.elements.get('speaking-next').listeners.click();
   assert.equal(h.run('speakingState.index'),1);assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(m.revoked.length,1);
   const exercise=h.run('speakingCurrent().id');h.elements.get('speaking-retry').listeners.click();assert.equal(h.run('speakingCurrent().id'),exercise);assert.equal(h.elements.get('speaking-next').disabled,true);
-  await speakingTranscript(m,h.run('speakingCurrent().prompt'));h.elements.get('speech-confirm').listeners.click();h.elements.get('speaking-next').listeners.click();assert.equal(h.run('speakingState'),null);assert.match(h.elements.get('speaking-notice').textContent,/finished/);
+  await speakingTranscript(m,h.run('speakingCurrent().prompt'));await h.elements.get('speech-confirm').listeners.click();h.elements.get('speaking-next').listeners.click();assert.equal(h.run('speakingState'),null);assert.match(h.elements.get('speaking-notice').textContent,/finished/);
   assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('tutor-recording-slot'));assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');
 });
 
 test('speaking microphone denial leaves the exercise and existing retry controls usable',async()=>{
   const m=await speakingHarness('Beginner','read',{denied:'NotAllowedError'}),h=m.h;const id=h.run('speakingCurrent().id');await h.run('browserRecorder.start()');
   assert.equal(h.run('browserRecorder.state().phase'),'error');assert.match(h.elements.get('recording-error').textContent,/permission was denied/);assert.equal(h.run('speakingCurrent().id'),id);assert.equal(h.elements.get('speaking-feedback').hidden,true);
-  h.elements.get('speaking-retry').listeners.click();assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.requests.length,0);
+  h.elements.get('speaking-retry').listeners.click();assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.requests.filter(r=>!r.url.includes('/audio/attempts')).length,0);
 });
 
 test('speaking transcription failures retain the preview and cannot evaluate unconfirmed output',async()=>{
   const m=await speakingHarness(),h=m.h;await h.run('loadSpeechConfiguration()');h.ctx.fetch=async()=>{throw new TypeError('offline');};
   await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders[0].finish();await h.elements.get('speech-transcribe').listeners.click();
-  assert.equal(h.run('browserRecorder.state().phase'),'preview');assert.equal(h.run('speechTranscriber.state().phase'),'error');assert.equal(h.elements.get('speaking-feedback').hidden,true);h.elements.get('speech-confirm').listeners.click();assert.equal(h.run('speakingState.confirmed'),null);
+  assert.equal(h.run('browserRecorder.state().phase'),'preview');assert.equal(h.run('speechTranscriber.state().phase'),'error');assert.equal(h.elements.get('speaking-feedback').hidden,true);await h.elements.get('speech-confirm').listeners.click();assert.equal(h.run('speakingState.confirmed'),null);
 });
 
 test('leaving speaking cleans capture/transcripts and restores the Tutor confirmation target',async()=>{
   const m=await speakingHarness(),h=m.h;await h.run('browserRecorder.start()');
   h.ctx.location.hash='#home';for(const fn of h.windowEvents.hashchange)if(fn.name!=='renderRoute')fn();h.run('speakingRoute(false)');
   assert.equal(m.tracks[0].stops,1);assert.equal(h.run('browserRecorder.state().phase'),'idle');assert.equal(h.run('speechTranscriber.state().original'),'');assert.equal(h.elements.get('recording-card').parentElement,h.elements.get('tutor-recording-slot'));
-  assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');assert.equal(h.run('speakingState.index'),0);assert.equal(h.requests.length,0);
+  assert.equal(h.elements.get('speech-confirm').textContent,'Confirm text');assert.equal(h.run('speakingState.index'),0);assert.equal(h.requests.filter(r=>!r.url.includes('/audio/attempts')).length,0);
 });
 async function voiceHarness(config={}) {
   const m=recordingMock(config),h=m.h;speechDecodeMock(h);
@@ -734,4 +734,56 @@ test('late chat response after a learner/session switch cannot populate the repl
 
 test('completed scenario does not block the separate Study speaking recorder',async()=>{
   const m=await voiceHarness(),h=m.h;h.run("applyPractice({...practiceFixture,status:'completed'})");h.ctx.location.hash='#study/speaking';h.elements.get('speaking-level').value='Beginner';h.elements.get('speaking-mode').value='read';await h.run('renderRoute()');h.elements.get('speaking-start').listeners.click();await h.elements.get('recording-start').listeners.click();assert.equal(h.run('browserRecorder.state().phase'),'recording');assert.equal(h.elements.get('recording-card').hidden,false);assert.equal(h.elements.get('speech-confirm').textContent,'Confirm answer');assert.equal(chatRequests(h).length,0);
+});
+
+test('audio server catalog matches authored frontend exercises',()=>{
+  const h=harness(),catalog=JSON.parse(fs.readFileSync(path.join(root,'..','app','audio_progress','catalog.json'),'utf8'));
+  assert.deepEqual(JSON.parse(JSON.stringify(h.run('listeningExercises'))),catalog.listening);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.run('speakingExercises.map(({id,level,mode})=>({id,level,mode}))'))),catalog.speaking);
+});
+test('listening playback alone creates no completed activity; server determines saved correctness',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");respond(h,url=>url.endsWith('/complete')?{correct:false}:{});
+  h.elements.get('listening-level').value='N5';h.elements.get('listening-start').listeners.click();
+  assert.equal(h.requests.filter(r=>r.url.endsWith('/complete')).length,0);
+  h.run('listeningState.heard=true');h.elements.get('listening-choices').selected={value:'1'};
+  await h.elements.get('listening-answer-form').listeners.submit({preventDefault(){}});
+  assert.equal(h.run('listeningState.results[0].correct'),false);assert.match(h.elements.get('listening-feedback').textContent,/Answer/);
+  await h.elements.get('listening-answer-form').listeners.submit({preventDefault(){}});
+  assert.equal(h.requests.filter(r=>r.url.endsWith('/complete')).length,1);
+});
+test('uncertain listening save retains attempt ID and first answer across retry',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");let fail=true;respond(h,()=>({}));const base=h.ctx.fetch;
+  h.ctx.fetch=async(url,options)=>{if(url.endsWith('/complete')&&fail){h.requests.push({url,...options});throw new TypeError('offline');}return base(url,options);};
+  h.elements.get('listening-level').value='N5';h.elements.get('listening-start').listeners.click();h.run('listeningState.heard=true');h.elements.get('listening-choices').selected={value:'1'};
+  await h.elements.get('listening-answer-form').listeners.submit({preventDefault(){}});assert.equal(h.run('listeningState.answered'),false);
+  h.elements.get('listening-choices').selected={value:'0'};fail=false;await h.elements.get('listening-answer-form').listeners.submit({preventDefault(){}});
+  const saves=h.requests.filter(r=>r.url.endsWith('/complete'));assert.equal(saves[0].url,saves[1].url);assert.equal(saves[0].body,saves[1].body);
+});
+test('speaking saves confirmed metadata only, never original or edited transcript',async()=>{
+  const m=await speakingHarness(),h=m.h;await speakingTranscript(m,'ミゲルです。');await h.elements.get('speech-confirm').listeners.click();
+  const saves=h.requests.filter(r=>r.url.endsWith('/complete'));assert.equal(saves.length,1);const payload=JSON.parse(saves[0].body);assert.ok(payload.transcription_id);assert.equal(payload.assisted,false);assert.doesNotMatch(saves[0].body,/ミゲル|こんにちは/);
+  await h.elements.get('speech-confirm').listeners.click();assert.equal(h.requests.filter(r=>r.url.endsWith('/complete')).length,1);
+});
+test('failed speaking save retains confirmation controls and retries the same identity',async()=>{
+  const m=await speakingHarness(),h=m.h;await speakingTranscript(m);let fail=true;const base=h.ctx.fetch;
+  h.ctx.fetch=async(url,options)=>{if(url.endsWith('/complete')&&fail){h.requests.push({url,...options});throw new TypeError('offline');}return base(url,options);};
+  await h.elements.get('speech-confirm').listeners.click();assert.equal(h.run('speakingState.confirmed'),null);assert.equal(h.elements.get('speaking-next').disabled,true);
+  fail=false;await h.elements.get('speech-confirm').listeners.click();const saves=h.requests.filter(r=>r.url.endsWith('/complete'));assert.equal(saves[0].url,saves[1].url);assert.equal(h.elements.get('speaking-next').disabled,false);
+});
+const audioData={listening:{attempts:2,unassisted:{completed:2,correct:1,accuracy:50},assisted:{completed:0,correct:0,accuracy:null}},speaking:{read:{attempts:1,completed:1},answer:{attempts:0,completed:0},repeat:{attempts:0,completed:0}},voice:{completed_conversations:1,confirmed_turns:2},recent:[]};
+function allText(element){return [element.textContent,...element.children.map(allText)].join(' ');}
+test('audio progress renders separate activity and listening accuracy without provider requests',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");respond(h,()=>audioData);await h.run("renderAudioProgress('learner')");
+  const text=allText(h.elements.get('audio-progress'));assert.match(text,/50%/);assert.match(text,/Assisted: 0 correct/);assert.match(text,/Read Aloud: 1 attempts/);assert.match(text,/Completed conversations: 1/);assert.equal(h.requests.length,1);assert.equal(h.requests[0].url,'/api/learners/learner/audio/progress');
+  h.run("progressSection('skills')");assert.equal(h.elements.get('audio-progress').hidden,true);h.run("progressSection('overview')");assert.equal(h.elements.get('audio-progress').hidden,false);
+});
+test('audio progress empty, error, retry and stale learner states are safe',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");const empty=JSON.parse(JSON.stringify(audioData));empty.listening.attempts=0;for(const m of Object.values(empty.speaking)){m.attempts=0;m.completed=0;}empty.voice.confirmed_turns=0;respond(h,()=>empty);
+  await h.run("renderAudioProgress('learner')");assert.match(allText(h.elements.get('audio-progress')),/after your first practice session/);
+  h.ctx.fetch=async()=>{throw new TypeError('offline');};await h.run("renderAudioProgress('learner')");assert.match(allText(h.elements.get('audio-progress')),/other progress is still available/);
+  respond(h,()=>audioData);await h.elements.get('audio-progress').children.at(-1).listeners.click();assert.match(allText(h.elements.get('audio-progress')),/50%/);
+});
+test('voice marker requires confirmed draft; ordinary typed scenario turns stay text',async()=>{
+  const m=await voiceHarness(),h=m.h;await voiceTranscript(m);h.elements.get('message').value='水をください。';await h.run('submitChatMessage()');assert.equal(JSON.parse(chatRequests(h)[0].body).transcription_id,undefined);
+  await voiceTranscript(m);h.elements.get('speech-confirm').listeners.click();await h.run('voiceSendTask');assert.ok(JSON.parse(chatRequests(h)[1].body).transcription_id);
 });

@@ -1,7 +1,8 @@
 'use strict';
 
 // Voice is a transient input method for the existing persistent conversation.
-let voiceReplyTarget=null,voiceSendTask=null;
+let voiceReplyTarget=null,voiceSendTask=null,confirmedVoiceDraft=null;
+function voiceTranscriptionFor(message){return sameVoiceTarget(voiceReplyTarget) && confirmedVoiceDraft?.text===message?confirmedVoiceDraft.transcription:null;}
 function activeVoiceConversation() {
   return !$('tutor-panel').hidden && practiceState?.status==='active' && savedSession &&
     sessionId===practiceState.session_id && Boolean(placementLearnerId);
@@ -10,7 +11,7 @@ function sameVoiceTarget(target) {
   return target && activeVoiceConversation() && target.session===sessionId && target.learner===placementLearnerId;
 }
 function clearVoiceReply() {
-  voiceReplyTarget=null;
+  voiceReplyTarget=null;confirmedVoiceDraft=null;
   browserRecorder.cancel('');speechTranscriber.reset();
 }
 function voicePracticeChanged(state) {
@@ -21,7 +22,7 @@ function voicePracticeChanged(state) {
 function voiceRecordingAllowed() {
   if(!activeVoiceConversation())return $('tutor-panel').hidden || practiceState?.status!=='completed';
   if(busy){$('voice-reply-notice').textContent='Wait for the current reply before recording.';return false;}
-  voiceReplyTarget={learner:placementLearnerId,session:sessionId};return true;
+  confirmedVoiceDraft=null;voiceReplyTarget={learner:placementLearnerId,session:sessionId};return true;
 }
 function voiceReplyControls() {
   const active=activeVoiceConversation(),inTutor=!$('tutor-panel').hidden;
@@ -48,6 +49,8 @@ function confirmVoiceReply(text) {
   const target=voiceReplyTarget;
   if(!sameVoiceTarget(target) || browserRecorder.state().phase!=='preview')return 'This recording no longer belongs to the active conversation. Record your reply again.';
   if($('message').value.trim() && $('message').value.trim()!==text)return 'Your text editor already contains a different reply. Send or clear it before confirming this recording.';
+  if(!speechTranscriber.state().requestId)return 'Transcribe your reply successfully before sending.';
+  confirmedVoiceDraft={text,transcription:speechTranscriber.state().requestId};
   $('message').value=text;updateCount();
   // submitChatMessage sets busy synchronously and reuses pendingChat.request_id.
   // Failed generation retains this transcript and the editor for an explicit retry.
@@ -59,6 +62,6 @@ function confirmVoiceReply(text) {
 }
 $('voice-reply-cancel').addEventListener('click',()=>{clearVoiceReply();$('voice-reply-notice').textContent='Voice reply cancelled. Your typed draft and conversation are unchanged.';voiceReplyControls();});
 browserRecorder.subscribe(voiceReplyControls);speechTranscriber.subscribe(voiceReplyControls);
-window.addEventListener('hashchange',()=>{voiceReplyTarget=null;});
-window.addEventListener('pagehide',()=>{voiceReplyTarget=null;});
-document.addEventListener('learner-changed',()=>{voiceReplyTarget=null;});
+window.addEventListener('hashchange',()=>{voiceReplyTarget=null;confirmedVoiceDraft=null;});
+window.addEventListener('pagehide',()=>{voiceReplyTarget=null;confirmedVoiceDraft=null;});
+document.addEventListener('learner-changed',()=>{voiceReplyTarget=null;confirmedVoiceDraft=null;});

@@ -132,4 +132,8 @@ class ConversationService:
                 self.sessions.close_in(db, learner_id, session_id)
                 now = now_iso()
                 db.execute("UPDATE conversation_states SET status='completed',updated_at=?,ended_at=? WHERE session_id=?", (now, now, str(session_id)))
+            if db.execute("SELECT 1 FROM learning_events WHERE learner_id=? AND source='voice_conversation' AND event_type='voice_turn_completed' AND session_id=? LIMIT 1", (str(learner_id), str(session_id))).fetchone():
+                from app.audio_progress.service import event_key, write_event
+                write_event(db, event_key(session_id, 'voice_finished'), learner_id, 'voice_conversation_completed',
+                            'voice_conversation', {'scenario': state['scenario']['key'], 'level': state['starting_level']}, session=session_id)
             return self.read(db, learner_id, session_id)

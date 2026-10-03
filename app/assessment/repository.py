@@ -50,7 +50,7 @@ class AssessmentRepository:
             raise TutorError('assessment_storage', 'Cannot create assessment storage. Check ASSESSMENT_DB_PATH.', 503) from exc
         with self.connection(initialize=True) as db:
             version = db.execute('PRAGMA user_version').fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
                 raise TutorError('database_version', 'This assessment database version is not supported by this app.', 503)
             # First additive migration. Phase 1 has no database or migration framework.
             if version == 0:
@@ -83,6 +83,8 @@ class AssessmentRepository:
             migrate_conversation(db)
             from app.jlpt.migrations import migrate as migrate_jlpt
             migrate_jlpt(db)
+            from app.audio_progress.migrations import migrate as migrate_audio
+            migrate_audio(db)
             for question in bank.items:
                 db.execute('INSERT OR IGNORE INTO assessment_questions VALUES (?, ?, ?)',
                            (BANK_VERSION, question.id, question.model_dump_json()))

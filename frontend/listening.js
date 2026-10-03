@@ -1,6 +1,6 @@
 'use strict';
 
-// Original short passages; answers are validated locally, never sent to a model.
+// Original passages; saved answers are checked against the matching server catalog, never a model.
 const listeningExercises = Object.freeze([
   {id:'n5-time',level:'N5',text:'明日は九時に学校へ行きます。授業は九時半からです。',question:'When does the class start?',choices:['At 9:00','At 9:30','At 10:30'],answer:1,feedback:'九時半 means half past nine. Going to school and starting class happen at different times.'},
   {id:'n5-order',level:'N5',text:'パンを二つください。コーヒーは一つお願いします。',question:'How many pieces of bread does the speaker want?',choices:['One','Two','Three'],answer:1,feedback:'パンを二つ means two pieces of bread. 一つ refers to the coffee.'},
@@ -22,6 +22,7 @@ function renderListening() {
   $('listening-summary').hidden = true; $('listening-error').hidden = true;
   if (!listeningState) return;
   const state = listeningState, exercise = state.exercises[state.index];
+  prepareAudioAttempt(state,exercise);
   $('listening-heading').textContent = `${exercise.level} · Question ${state.index + 1} of ${state.exercises.length}`;
   $('listening-question').textContent = exercise.question;
   $('listening-transcript').textContent = ''; $('listening-transcript').hidden = true;
@@ -43,27 +44,35 @@ $('listening-start').addEventListener('click', () => {
   renderListening();
 });
 $('listening-reveal').addEventListener('click', () => {
-  if (!listeningState || listeningState.answered) return;
+  if (!listeningState || listeningState.answered || listeningState.saving || listeningState.audioAttempt.completion) return;
   listeningState.assisted = true;
   $('listening-transcript').textContent = listeningState.exercises[listeningState.index].text;
   $('listening-transcript').hidden = false; $('listening-reveal').hidden = true;
   $('listening-feedback').textContent = 'Transcript revealed · this is assisted practice.';
 });
-$('listening-answer-form').addEventListener('submit', event => {
-  event.preventDefault(); const state = listeningState; if (!state || state.answered) return;
+$('listening-answer-form').addEventListener('submit', async event => {
+  event.preventDefault(); const state = listeningState; if (!state || state.answered || state.saving) return;
   $('listening-error').hidden = true;
   try {
     if (!state.heard && !state.assisted) throw new Error('Play the passage first, or reveal the transcript for assisted practice.');
     const selected = $('listening-choices').querySelector('input:checked');
     if (!selected) throw new Error('Choose one answer first.');
-    const exercise = state.exercises[state.index], correct = listeningCheck(exercise,Number(selected.value));
+    const exercise = state.exercises[state.index];
+    let correct=listeningCheck(exercise,Number(selected.value));
+    state.saving=true;
+    if(state.audioAttempt.owner){
+      const result=await completeAudioAttempt(state,{choice:Number(selected.value),assisted:state.assisted});
+      if(listeningState!==state)return;
+      correct=result.correct;
+    }
+
     state.answered = true; state.results.push({correct,assisted:state.assisted}); japaneseAudio.stop();
     $('listening-feedback').textContent = `${correct ? 'Correct.' : `Answer: ${exercise.choices[exercise.answer]}.`} ${exercise.feedback}${state.assisted ? ' · Assisted practice.' : ''}`;
     $('listening-transcript').textContent = exercise.text; $('listening-transcript').hidden = false; $('listening-reveal').hidden = true;
     $('listening-answer-form').hidden = true; $('listening-next').hidden = false;
     $('listening-next').textContent = state.index + 1 === state.exercises.length ? 'See practice summary' : 'Next question';
     $('listening-next').focus();
-  } catch (error) { $('listening-error').textContent = error.message; $('listening-error').hidden = false; }
+  } catch (error) { if(listeningState===state){$('listening-error').textContent = error.message; $('listening-error').hidden = false;} } finally {state.saving=false;}
 });
 $('listening-next').addEventListener('click', () => {
   const state = listeningState; if (!state?.answered) return;

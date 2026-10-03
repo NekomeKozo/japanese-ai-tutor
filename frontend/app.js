@@ -141,6 +141,8 @@ async function submitChatMessage() {
   $('status').textContent = 'The tutor is thinking…';
   try {
     const payload = { session_id: sessionId, message, mode: $('mode').value, level: $('level').value, learner_id: placementLearnerId };
+    const transcription=voiceTranscriptionFor(message);
+    if(transcription)payload.transcription_id=transcription;
     const signature = JSON.stringify(payload);
     if (!pendingChat || pendingChat.signature !== signature) pendingChat = { signature, id: crypto.randomUUID() };
     if (savedSession) payload.request_id = pendingChat.id;

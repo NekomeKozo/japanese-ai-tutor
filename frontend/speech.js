@@ -45,16 +45,17 @@ async function prepareSpeechAudio(recording,signal) {
 
 function createSpeechTranscriber({recorder,prepare,send,newId,AbortType=AbortController,
   schedule=setTimeout,unschedule=clearTimeout}) {
+  let requestId=null;
   let phase='idle',original='',edited='',message='',epoch=0,controller=null,timer=null,preparing=false;
   let clipUrl=recorder.state().url;
   const listeners=new Set();
-  const state=()=>({phase,original,edited,message,preparing});
+  const state=()=>({phase,original,edited,message,preparing,requestId});
   const notify=()=>{for(const fn of listeners)fn(state());};
   function cancel(note='Transcription cancelled. Your recording is still available.') {
     ++epoch;controller?.abort();controller=null;if(timer!==null)unschedule(timer);timer=null;
     phase=original?'editing':'idle';message=note;notify();
   }
-  function reset() { cancel('');original=edited='';phase='idle';notify(); }
+  function reset() { cancel('');original=edited='';requestId=null;phase='idle';notify(); }
   recorder.subscribe(s=>{if(s.url!==clipUrl){clipUrl=s.url;reset();}});
   async function transcribe(learnerId) {
     if (preparing || ['preparing','uploading'].includes(phase)) return;
@@ -68,9 +69,11 @@ function createSpeechTranscriber({recorder,prepare,send,newId,AbortType=AbortCon
       const wav=await prepare(recording,signal);
       if(token!==epoch)return;
       phase='uploading';message='Transcribing with Groq…';notify();
-      const result=await send(learnerId,wav,newId(),signal);
+      const submittedId=newId();
+      const result=await send(learnerId,wav,submittedId,signal);
       if(token!==epoch)return;
       if(result?.language!=='ja' || result?.provider!=='groq' || typeof result.original_text!=='string' || !result.original_text.trim() || result.original_text.length>4000) throw new Error('The transcript could not be read. Please retry.');
+      requestId=result.request_id || submittedId;
       original=edited=result.original_text;phase='editing';message='Review and edit the Japanese transcript, then confirm text.';
     } catch(error) {
       if(token!==epoch)return;
@@ -86,8 +89,11 @@ function createSpeechTranscriber({recorder,prepare,send,newId,AbortType=AbortCon
     if(!original || ['preparing','uploading'].includes(phase))return;
     const text=edited.trim();
     if(!text){message='Enter the Japanese text you want to use.';notify();return;}
+    const token=epoch;
+    const finish=issue=>{if(token!==epoch)return;message=issue || successMessage;notify();};
     const issue=apply(text);
-    message=issue || successMessage;notify();
+    if(issue?.then)return issue.then(finish);
+    finish(issue);
   }
   return {state,transcribe,cancel,reset,edit,confirm,subscribe(fn){listeners.add(fn);fn(state());return()=>listeners.delete(fn);}};
 }

@@ -77,6 +77,12 @@ class TutorService:
                 return ChatResponse(session_id=request.session_id, response=replay)
             if saved['ended_at'] is not None:
                 raise TutorError('session_closed', 'This saved conversation has ended. Start a new conversation.', 409)
+            if request.transcription_id is not None:
+                if not practice:
+                    raise TutorError('audio_conversation', 'Voice progress requires an active saved scenario.', 422)
+                from app.audio_progress.service import require_receipt
+                with self.saved_sessions.repository.connection() as db:
+                    require_receipt(db, request.learner_id, request.transcription_id, 'voice:'+str(request.request_id))
             messages = self.saved_sessions.history(saved, self.settings.max_history_turns)
             if practice and not messages:
                 messages.append(Message('assistant', practice['scenario']['opening_line']))
@@ -114,6 +120,8 @@ class TutorService:
     async def chat(self, request: ChatRequest) -> ChatResponse:
         if request.learner_id is not None and self.saved_sessions is not None and self.saved_sessions.exists(request.session_id):
             return await self.persistent_chat(request)
+        if request.transcription_id is not None:
+            raise TutorError('audio_conversation', 'Voice progress requires an active saved scenario.', 422)
         with self.memory.use(request.session_id) as session:
             if request.learner_id is not None:
                 if session.learner_id is not None and session.learner_id != request.learner_id:

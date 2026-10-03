@@ -181,6 +181,9 @@ def test_schema_6_migration_is_additive_and_atomic(storage_settings, monkeypatch
     from app.jlpt import migrations
     from app.assessment.questions import QuestionBank
     original=migrations.migrate
+    from app.audio_progress import migrations as audio_migrations
+    audio_original=audio_migrations.migrate
+    monkeypatch.setattr(audio_migrations,'migrate',lambda db:None)
     monkeypatch.setattr(migrations,'migrate',lambda db:None)
     with TestClient(create_app(storage_settings,MockProvider())) as client:
         learner=create(client); repo=client.app.state.repository
@@ -203,10 +206,11 @@ def test_schema_6_migration_is_additive_and_atomic(storage_settings, monkeypatch
         assert not db.execute("SELECT 1 FROM sqlite_master WHERE name='jlpt_sessions'").fetchone()
         assert not db.execute("SELECT 1 FROM learning_topics WHERE topic_key='vocab_kariru'").fetchone()
     monkeypatch.setattr(migrations,'migrate',original)
+    monkeypatch.setattr(audio_migrations,'migrate',audio_original)
     for _ in range(2):
         repo.initialize(QuestionBank.load())
         with repo.connection() as db:
-            assert db.execute('PRAGMA user_version').fetchone()[0]==7
+            assert db.execute('PRAGMA user_version').fetchone()[0]==8
             assert {table:db.execute(f'SELECT * FROM {table}').fetchall() for table in tables}==before
             assert db.execute("SELECT 1 FROM learning_topics WHERE topic_key='vocab_kariru'").fetchone()
 
@@ -237,7 +241,7 @@ def test_schema_7_repairs_missing_topics_and_preserves_saved_mock(storage_settin
         assert counts(client,learner).get('performance',0)==0
         for _ in range(2): repo.initialize(QuestionBank.load())
         with repo.connection() as db:
-            assert db.execute('PRAGMA user_version').fetchone()[0]==7
+            assert db.execute('PRAGMA user_version').fetchone()[0]==8
             assert db.execute("SELECT * FROM learning_topics WHERE topic_key='particle_ni_destination'").fetchall()==old
         restored=client.get(url).json()
         assert restored['answered_count']==5 and restored['deadline_at']==state['deadline_at']

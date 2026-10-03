@@ -55,6 +55,7 @@ class ChatRequest(BaseModel):
     level: Level = 'beginner'
     learner_id: UUID | None = None
     request_id: UUID | None = None
+    transcription_id: UUID | None = None
 
     @field_validator('message')
     @classmethod

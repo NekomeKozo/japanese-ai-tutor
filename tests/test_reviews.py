@@ -297,7 +297,7 @@ def test_v4_real_migration_and_rollback(settings,provider,monkeypatch):
         with TestClient(create_app(settings,provider)) as c:
             assert c.get(f'/api/learners/{learner}/reviews/due').status_code==200
         with sqlite3.connect(settings.assessment_db_path) as db:
-            assert db.execute('PRAGMA user_version').fetchone()[0]==7
+            assert db.execute('PRAGMA user_version').fetchone()[0]==8
             assert {t:db.execute(f'SELECT * FROM {t}').fetchall() for t in tables}==before
             assert db.execute('SELECT count(*) FROM review_schedules').fetchone()[0]==1
 

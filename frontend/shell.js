@@ -21,6 +21,7 @@ function currentRoute() {
 }
 function progressSection(detail) {
   const selected = ['overview','skills','knowledge','history'].includes(detail) ? detail : 'overview';
+  $('audio-progress').hidden=selected!=='overview';
   const ids = {overview:'progress-overview', skills:'profile-evidence', knowledge:'progress-knowledge', history:'learning-history'};
   Object.entries(ids).forEach(([key, id]) => { $(id).hidden = key !== selected; });
   document.querySelectorAll('.section-nav a').forEach(a => a.setAttribute('aria-current', a.hash === `#progress/${selected}` ? 'page' : 'false'));

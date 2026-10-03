@@ -89,7 +89,7 @@ class LearnerService:
         with self.repository.connection() as db:
             if not db.execute('SELECT 1 FROM learner_state WHERE learner_id=?', (str(learner_id),)).fetchone():
                 raise TutorError('learner_not_found', 'Learner not found.', 404)
-            rows = db.execute('SELECT event_type,topic_key,source,created_at FROM learning_events WHERE learner_id=? ORDER BY created_at DESC,event_id DESC LIMIT ? OFFSET ?',
+            rows = db.execute("SELECT event_type,topic_key,source,created_at FROM learning_events WHERE learner_id=? AND source<>'speech_receipt' ORDER BY created_at DESC,event_id DESC LIMIT ? OFFSET ?",
                 (str(learner_id), limit, offset)).fetchall()
         return [{'event_type': kind, 'topic': TOPICS[topic].label if topic in TOPICS else None,
                  'source': source, 'created_at': created} for kind, topic, source, created in rows]

@@ -17,6 +17,7 @@
   <script src="/static/conversation.js" defer></script>
   <script src="/static/study.js" defer></script>
   <script src="/static/jlpt.js" defer></script>
+  <script src="/static/audio-progress.js" defer></script>
   <script src="/static/listening.js" defer></script>
   <script src="/static/speaking.js" defer></script>
   <script src="/static/voice.js" defer></script>
@@ -188,7 +189,7 @@
           <div class="mastery-pagination"><button id="mastery-prev" type="button" class="secondary">Previous topics</button><button id="mastery-next" type="button" class="secondary">More topics</button></div>
           <div id="mastery-detail" aria-live="polite"></div>
         </section>
-        <div id="progress-overview" class="placement-card"></div><div id="profile-evidence" class="placement-card" hidden></div>
+        <div id="audio-progress" class="placement-card"></div><div id="progress-overview" class="placement-card"></div><div id="profile-evidence" class="placement-card" hidden></div>
         <div id="learning-history" class="placement-card" hidden></div>
       </div>
     </section>
@@ -264,7 +265,7 @@
           </div>
           <p id="speaking-profile-note" hidden>Create or restore a learner profile in <a href="#placement">Placement</a> before transcription.</p>
           <button id="speaking-start" type="button">Start speaking practice</button>
-          <p class="small">Two original exercises per level and activity. Practice stays in this tab; it does not update mastery, placement or JLPT results.</p>
+          <p class="small">Two original exercises per level and activity. Confirmed exercises are saved to Progress. The current set stays in this tab; activity does not update mastery, placement or JLPT results.</p>
           <p id="speaking-notice" role="status"></p>
         </div>
         <div id="speaking-exercise" class="placement-card" hidden>
@@ -288,7 +289,7 @@
           <p>Four short, original passages per level. Press Play when you’re ready, then choose what you understood.</p>
           <label for="listening-level">Listening level</label><select id="listening-level"><option>N5</option><option>N4</option></select>
           <button id="listening-start" type="button">Start listening</button>
-          <p class="small">Practice stays in this tab until you reload. It does not change your saved mastery or JLPT scores.</p>
+          <p class="small">With a learner profile, completed answers are saved to Progress. Without a profile, this is temporary practice. It does not change mastery or JLPT scores.</p>
         </div>
         <div id="listening-exercise" class="placement-card" hidden>
           <h2 id="listening-heading" tabindex="-1"></h2><div id="listening-audio"></div>

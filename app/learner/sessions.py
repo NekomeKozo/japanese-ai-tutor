@@ -15,7 +15,7 @@ MAX_HISTORY_CHARS = 12000
 
 
 def request_fingerprint(request):
-    return hashlib.sha256(request.model_dump_json(exclude={'request_id'}).encode()).hexdigest()
+    return hashlib.sha256(request.model_dump_json(exclude={'request_id'} | ({'transcription_id'} if request.transcription_id is None else set())).encode()).hexdigest()
 
 
 class SessionService:
@@ -143,6 +143,15 @@ class SessionService:
             db.execute('INSERT INTO conversation_turns VALUES (?,?,?,?,?,?,?,?)',
                 (str(request.request_id), str(request.session_id), count, request_fingerprint(request), request.message,
                  request.mode, reply.model_dump_json(), now))
+            if request.transcription_id is not None:
+                from app.audio_progress.service import consume_receipt, event_key, write_event
+                practice = db.execute("SELECT scenario_key,starting_level FROM conversation_states WHERE session_id=? AND learner_id=? AND status='active'",
+                                      (str(request.session_id), str(request.learner_id))).fetchone()
+                if not practice:
+                    raise TutorError('audio_conversation', 'Confirmed voice replies require an active saved scenario.', 422)
+                consume_receipt(db, request.learner_id, request.transcription_id, 'voice:'+str(request.request_id))
+                write_event(db, event_key(request.request_id, 'voice_turn'), request.learner_id,
+                            'voice_turn_completed', 'voice_conversation', {'scenario': practice[0], 'level': practice[1]}, session=request.session_id)
             by_skill = {}
             for observation in observations:
                 key, known = normalize_topic(observation.topic_key, observation.skill)
