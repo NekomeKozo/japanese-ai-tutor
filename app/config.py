@@ -41,6 +41,12 @@ class Settings(BaseSettings):
     llm_fallback_provider: str = 'groq'
     groq_api_key: SecretStr = SecretStr('')
     groq_model: str = ''
+    # Owner approved existing Free-plan key + ZDR for Phase 10C. Server opt-out.
+    stt_enabled: bool = True
+    stt_timeout_seconds: float = Field(default=30, ge=1, le=60)
+    stt_rate_limit_per_hour: int = Field(default=6, ge=1, le=20)
+    stt_global_rate_limit_per_hour: int = Field(default=30, ge=1, le=60)
+    stt_global_rate_limit_per_day: int = Field(default=300, ge=1, le=400)
     knowledge_enabled: bool = False
     knowledge_top_k: int = Field(default=3, ge=1, le=8)
     knowledge_context_limit: int = Field(default=6000, ge=1000, le=12000)

@@ -20,7 +20,8 @@ function harness(audio = {}) {
     pause() { this.paused=true; }
     play() { this.paused=false; return Promise.resolve(); }
     load() { this.loaded=true; }
-    addEventListener(type, fn) { this.listeners[type]=fn; }
+    addEventListener(type, fn) { const previous=this.listeners[type];this.listeners[type]=previous ? (...args)=>{previous(...args);return fn(...args);} : fn; }
+    dispatchEvent(event) { return this.listeners[event.type]?.(event); }
     querySelectorAll() { return []; }
     querySelector() { return this.selected || null; }
     closest() { return null; }
@@ -29,7 +30,7 @@ function harness(audio = {}) {
   for (const m of html.matchAll(/<([\w-]+)\b[^>]*\bid="([^"]+)"[^>]*>/g)) { const e=new Element(m[1]); e.hidden=/\bhidden\b/.test(m[0]); elements.set(m[2],e); }
   elements.get('review-minutes').value='10'; elements.get('onboarding-goal-select').value='general';
   const windowEvents = {}, documentEvents = {};
-  const ctx = vm.createContext({console, Event, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, setTimeout:()=>1, clearTimeout(){}, crypto:require('node:crypto').webcrypto,
+  const ctx = vm.createContext({console, Event, AbortController, Blob, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, setTimeout:()=>1, clearTimeout(){}, crypto:require('node:crypto').webcrypto,
     document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(type,fn){(documentEvents[type] ||= []).push(fn);},dispatchEvent(event){for(const fn of documentEvents[event.type] || []) fn(event);}},
     window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true,mediaDevices:audio.mediaDevices},performance:{now:audio.now || (()=>0)},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
@@ -445,4 +446,114 @@ test('preview playback failures are helpful and stale promises cannot resurrect 
   h.elements.get('recording-preview').play=()=>Promise.reject(Error('codec'));await h.elements.get('recording-play').listeners.click();assert.equal(h.elements.get('recording-preview-error').hidden,false);
   let reject;h.elements.get('recording-preview').play=()=>new Promise((_,fail)=>{reject=fail;});const pending=h.elements.get('recording-play').listeners.click();h.run('browserRecorder.cancel()');reject(Error('discarded'));await pending;
   assert.equal(h.elements.get('recording-preview-error').hidden,true);assert.equal(h.elements.get('recording-preview').hidden,true);assert.equal(h.requests.length,0);
+});
+
+function speechControllerMock(options={}) {
+  const m=recordingMock(),uploads=[],timers=new Map();let sequence=0;
+  const deps={recorder:m.recorder,prepare:options.prepare || (async()=>new Blob(['wav'],{type:'audio/wav'})),
+    send:async(...args)=>{uploads.push(args);return options.send ? options.send(...args) : {language:'ja',provider:'groq',original_text:'こんにちは。'};},
+    newId:()=>`request-${uploads.length+1}`,AbortType:AbortController,
+    schedule:(fn)=>{timers.set(++sequence,fn);return sequence;},unschedule:id=>timers.delete(id)};
+  m.h.ctx.speechDeps=deps;const controller=m.h.run('createSpeechTranscriber(speechDeps)');
+  const preview=async()=>{await m.recorder.start();m.recorder.stop();m.recorders.at(-1).finish();};
+  return {...m,controller,uploads,speechTimers:timers,preview};
+}
+
+test('speech WAV encoder emits bounded mono PCM16 with real frame duration',async()=>{
+  const h=harness();h.ctx.samples=new Float32Array([-1,0,1,.5]);
+  const wav=h.run('encodeSpeechWav(samples)');const data=new DataView(await wav.arrayBuffer());
+  assert.equal(wav.type,'audio/wav');assert.equal(wav.size,52);assert.equal(data.getUint32(24,true),16000);assert.equal(data.getUint16(22,true),1);
+  assert.equal(data.getInt16(44,true),-32768);assert.equal(data.getInt16(48,true),32767);assert.equal(data.getUint32(40,true),8);
+  h.ctx.samples=new Float32Array(960001);assert.throws(()=>h.run('encodeSpeechWav(samples)'),/60 seconds/);
+  h.ctx.samples=new Float32Array([NaN]);assert.throws(()=>h.run('encodeSpeechWav(samples)'),/could not be prepared/);
+});
+
+test('explicit transcription yields editable original and never sends a Tutor request',async()=>{
+  const m=speechControllerMock();await m.preview();assert.equal(m.uploads.length,0);
+  await m.controller.transcribe('learner');assert.equal(m.controller.state().original,'こんにちは。');
+  m.controller.edit('こんにちは。ミゲルです。');let confirmed;
+  m.controller.confirm(text=>{confirmed=text;});assert.equal(confirmed,'こんにちは。ミゲルです。');
+  assert.equal(m.controller.state().original,'こんにちは。');assert.equal(m.uploads.length,1);assert.equal(m.h.requests.length,0);assert.equal(m.h.storage.size,0);
+});
+
+test('transcription requires a learner and a completed recording',async()=>{
+  const m=speechControllerMock();await m.controller.transcribe('learner');assert.equal(m.uploads.length,0);
+  await m.preview();await m.controller.transcribe(null);assert.match(m.controller.state().message,/learner profile/);assert.equal(m.uploads.length,0);
+});
+
+test('duplicate transcription clicks produce only one upload and failure retains preview for retry',async()=>{
+  let finish;const m=speechControllerMock({send:()=>new Promise(resolve=>{finish=resolve;})});await m.preview();
+  const first=m.controller.transcribe('learner');await Promise.resolve();await m.controller.transcribe('learner');assert.equal(m.uploads.length,1);
+  finish({language:'ja',provider:'groq',original_text:'こんにちは。'});await first;assert.equal(m.recorder.state().phase,'preview');
+  const n=speechControllerMock({send:async()=>{throw new TypeError('offline');}});await n.preview();await n.controller.transcribe('learner');
+  assert.equal(n.controller.state().phase,'error');assert.match(n.controller.state().message,/still here/);assert.equal(n.recorder.state().phase,'preview');
+  await n.controller.transcribe('learner');assert.equal(n.uploads.length,2);assert.equal(n.uploads[0][2],'request-1');assert.equal(n.uploads[1][2],'request-2');
+});
+
+test('discard during preparation prevents uploads and late completion cannot restore transcript',async()=>{
+  let complete;const m=speechControllerMock({prepare:()=>new Promise(resolve=>{complete=resolve;})});await m.preview();
+  const pending=m.controller.transcribe('learner');m.recorder.cancel();complete(new Blob(['wav']));await pending;
+  assert.equal(m.uploads.length,0);assert.equal(m.controller.state().original,'');assert.equal(m.controller.state().phase,'idle');assert.equal(m.speechTimers.size,0);
+});
+
+test('cancel aborts upload and stale provider replies cannot populate a transcript',async()=>{
+  let complete;const m=speechControllerMock({send:()=>new Promise(resolve=>{complete=resolve;})});await m.preview();
+  const pending=m.controller.transcribe('learner');await new Promise(setImmediate);const signal=m.uploads[0][3];
+  m.controller.cancel();assert.equal(signal.aborted,true);complete({language:'ja',provider:'groq',original_text:'こんにちは。'});await pending;
+  assert.equal(m.controller.state().original,'');assert.equal(m.recorder.state().phase,'preview');assert.equal(m.speechTimers.size,0);
+});
+
+test('transcription deadline aborts the request but keeps the recording',async()=>{
+  let complete;const m=speechControllerMock({send:()=>new Promise(resolve=>{complete=resolve;})});await m.preview();
+  const pending=m.controller.transcribe('learner');await new Promise(setImmediate);[...m.speechTimers.values()][0]();
+  assert.equal(m.controller.state().phase,'error');assert.equal(m.uploads[0][3].aborted,true);assert.equal(m.recorder.state().phase,'preview');
+  complete({});await pending;assert.match(m.controller.state().message,/too long/);
+});
+
+test('bad provider responses are rejected and confirmation cannot erase a draft',async()=>{
+  for(const result of [{language:'en',provider:'groq',original_text:'hello'},null,{language:'ja',provider:'groq',original_text:''}]){
+    const m=speechControllerMock({send:async()=>result});await m.preview();await m.controller.transcribe('learner');assert.equal(m.controller.state().phase,'error');assert.equal(m.recorder.state().phase,'preview');
+  }
+  const m=speechControllerMock();await m.preview();await m.controller.transcribe('learner');m.controller.edit('');let applied=false;m.controller.confirm(()=>{applied=true;});assert.equal(applied,false);
+});
+
+function speechDecodeMock(h,{duration=.1,decodeFailure=null}={}) {
+  let closed=0;const decoded={duration,numberOfChannels:1};
+  class Context {constructor(){this.state='running';} async decodeAudioData(){if(decodeFailure)throw {name:decodeFailure};return decoded;} async close(){this.state='closed';closed++;}}
+  class Offline {constructor(channels,frames,rate){assert.equal(channels,1);assert.equal(rate,16000);this.frames=frames;} createBufferSource(){return {connect(){},start(){}};} async startRendering(){return {getChannelData:()=>new Float32Array(this.frames).fill(.1)};}}
+  h.ctx.window.AudioContext=Context;h.ctx.window.OfflineAudioContext=Offline;return ()=>closed;
+}
+
+test('browser normalization accepts native WebM, MP4 and Ogg recordings and closes decoding resources',async()=>{
+  for(const mimeType of ['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus']){
+    const h=harness({Blob});const closes=speechDecodeMock(h);h.ctx.clip={blob:new Blob(['recording'],{type:mimeType}),durationMs:1};h.ctx.signal=new AbortController().signal;
+    const wav=await h.run('prepareSpeechAudio(clip,signal)');assert.equal(wav.type,'audio/wav');assert.equal(wav.size,3244);assert.equal(closes(),1);
+  }
+});
+
+test('normalization rejects undecodable, oversized or longer-than-sixty-second audio before upload',async()=>{
+  const h=harness({Blob});h.ctx.clip={blob:new Blob(['recording']),durationMs:1};h.ctx.signal=new AbortController().signal;
+  let closes=speechDecodeMock(h,{duration:61});await assert.rejects(h.run('prepareSpeechAudio(clip,signal)'),/60 seconds/);assert.equal(closes(),1);
+  closes=speechDecodeMock(h,{decodeFailure:'EncodingError'});await assert.rejects(h.run('prepareSpeechAudio(clip,signal)'),/cannot decode/);assert.equal(closes(),1);
+  h.ctx.clip={blob:new Blob(['x'.repeat(8*1024*1024+1)])};await assert.rejects(h.run('prepareSpeechAudio(clip,signal)'),/shorter/);assert.equal(h.requests.length,0);
+});
+
+test('real transcription UI copies edited text only on confirm and preserves composer drafts',async()=>{
+  const m=recordingMock(),h=m.h;speechDecodeMock(h);h.run("placementLearnerId='learner'");
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,status:200,json:async()=>url==='/api/speech/config'?{enabled:true}:{language:'ja',provider:'groq',original_text:'こんにちは。'}};};
+  await h.run('loadSpeechConfiguration()');await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders[0].finish();
+  assert.equal(h.elements.get('speech-transcribe').disabled,false);await h.elements.get('speech-transcribe').listeners.click();
+  assert.equal(h.elements.get('speech-transcript').value,'こんにちは。');assert.equal(h.elements.get('message').value,'');
+  assert.equal(h.elements.get('speech-transcribe').disabled,true);assert.equal(h.elements.get('speech-transcribe').textContent,'Transcribed');
+  h.elements.get('speech-transcript').value='ミゲルです。';h.elements.get('speech-transcript').listeners.input();
+  h.elements.get('message').value='Existing draft';h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('message').value,'Existing draft');
+  h.elements.get('message').value='';h.elements.get('speech-confirm').listeners.click();assert.equal(h.elements.get('message').value,'ミゲルです。');assert.equal(h.elements.get('speech-original').textContent,'こんにちは。');
+  assert.equal(h.requests.filter(r=>r.url.endsWith('/speech/transcribe')).length,1);assert.equal(h.requests.some(r=>r.url==='/api/chat'),false);assert.equal(h.storage.size,0);
+  h.run('browserRecorder.cancel()');assert.equal(h.elements.get('speech-result').hidden,true);assert.equal(h.elements.get('speech-transcript').value,'');
+});
+
+test('disabled configuration blocks uploads while local recorder remains usable',async()=>{
+  const m=recordingMock(),h=m.h;h.ctx.fetch=async()=>({ok:true,status:200,json:async()=>({enabled:false,setup_message:'Disabled'})});
+  await h.run('loadSpeechConfiguration()');await h.run('browserRecorder.start()');h.run('browserRecorder.stop()');m.recorders[0].finish();
+  assert.equal(h.elements.get('speech-transcribe').disabled,true);assert.equal(h.elements.get('recording-play').hidden,false);assert.equal(h.elements.get('speech-config-status').textContent,'Disabled');
 });

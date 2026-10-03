@@ -3,15 +3,26 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 10B — local browser microphone recording.**
+**Current phase: Phase 10C — Japanese speech transcription.**
 
 In **Tutor → Record spoken Japanese**, press Record to request microphone permission,
 then Stop to preview your recording. Discard or Record again when finished. Clips
-stay only in this tab’s memory: no upload, transcription or AI processing. The limits
+stay in this tab until you explicitly press **Transcribe audio**, which sends audio
+through GoiGrow’s backend to Groq Whisper for Japanese transcription. Review/edit
+the transcript and **Confirm text** to copy it into the Tutor message box; it is
+never automatically sent. Original transcription remains separately viewable.
+Raw audio is never permanently stored by GoiGrow. The recording limits
 are 60 seconds and 8 MB. Leaving Tutor, closing the panel or hiding the tab during
 recording releases the microphone; navigation discards the clip. HTTPS/localhost and
 a browser with microphone/MediaRecorder support are required. See the
-[Phase 10B report](PHASE10B_REPORT.md) for format support and verification limits.
+[Phase 10B report](PHASE10B_REPORT.md) for recording verification limits.
+Transcription uses the existing backend-only `GROQ_API_KEY` and a dedicated Whisper
+model, independently of the chat model. Set `STT_ENABLED=false` to disable uploads
+without disabling local recording. The owner confirmed Free billing and Zero Data
+Retention before live testing; never enable paid billing automatically. Browser
+Web Audio normalizes recordings to mono PCM WAV so the server can verify duration
+and file contents. No FFmpeg/conversion service is required. See the
+[Phase 10C report](PHASE10C_REPORT.md) for quotas, privacy and test status.
 
 Japanese playback is available on Tutor replies and in **Study → Listening**.
 Choose an installed Japanese voice and 0.75×, 1.0× or 1.25× speed; press Play,

@@ -17,6 +17,9 @@ from app.api.mastery import router as mastery_router
 from app.api.reviews import router as review_router
 from app.api.conversation import router as conversation_router
 from app.api.jlpt import router as jlpt_router
+from app.api.speech import router as speech_router
+from app.speech.provider import GroqSpeechProvider, SpeechProvider
+from app.speech.service import SpeechService
 from app.jlpt.bank import Bank as JLPTBank
 from app.jlpt.service import JLPTService
 from app.conversation.service import ConversationService
@@ -45,7 +48,8 @@ FRONTEND = Path(__file__).resolve().parent.parent / 'frontend'
 logger = logging.getLogger(__name__)
 
 
-def create_app(settings: Settings | None = None, provider: LLMProvider | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, provider: LLMProvider | None = None,
+               speech_provider: SpeechProvider | None = None) -> FastAPI:
     settings = settings or Settings()
 
     @asynccontextmanager
@@ -81,6 +85,9 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             app.state.global_limiter = WindowLimiter()
             app.state.login_limiter = WindowLimiter()
             app.state.login_client_limiter = WindowLimiter()
+            app.state.speech_upload_limiter = WindowLimiter()
+            app.state.speech_uploads = 0
+            app.state.speech = SpeechService(settings, speech_provider or GroqSpeechProvider(settings, client))
             app.state.assessment = AssessmentEngine(repository, bank,
                 AnswerEvaluator(llm, settings.llm_timeout_seconds), settings.assessment_ttl_seconds)
             app.state.learners = LearnerService(repository)
@@ -110,12 +117,20 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         # Route templates exclude query strings, learner IDs and user-supplied paths.
         # Routing populates this scope before the service calls its provider.
         token = request_path.set(request.scope)
+        speech_upload = request.method == 'POST' and request.url.path.endswith('/speech/transcribe')
+        if speech_upload and request.app.state.speech_uploads >= 2:
+            request_path.reset(token)
+            return JSONResponse({'error': {'code': 'stt_busy', 'message': 'Transcription is busy. Please retry shortly.'}}, status_code=429)
+        if speech_upload:
+            request.app.state.speech_uploads += 1
         try:
             response = await before_request(request)
             if response is None:
                 response = await call_next(request)
         finally:
             request_path.reset(token)
+            if speech_upload:
+                request.app.state.speech_uploads -= 1
         response.headers['Cache-Control'] = 'no-store'
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
@@ -135,6 +150,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             'Send a nonempty message of up to 4,000 characters, a valid session, learning mode and level.')
         if request.url.path.startswith('/api/learners'):
             message = 'Check the learner/session identifiers and supported preference values.'
+        if request.url.path.endswith('/speech/transcribe'):
+            message = 'Send a valid learner identifier and transcription request identifier.'
         if request.url.path.startswith('/api/curriculum') or '/study/' in request.url.path:
             message = 'Check the learner/session/activity identifiers, study time (5–60 minutes), focus and answer.'
         return JSONResponse(status_code=422, content={'error': {'code': 'invalid_request',
@@ -159,6 +176,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(review_router)
     app.include_router(conversation_router)
     app.include_router(jlpt_router)
+    app.include_router(speech_router)
     app.mount('/static', StaticFiles(directory=FRONTEND), name='static')
 
     @app.get('/health', include_in_schema=False)

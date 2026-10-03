@@ -1,5 +1,6 @@
 """Small private-alpha controls; not production account authentication."""
 import hashlib
+import asyncio
 import hmac
 import json
 import logging
@@ -155,13 +156,41 @@ def study_guard(request, text=None, *, study_answer=False):
 
 async def before_request(request):
     settings = request.app.state.settings
-    # Bound the real received body, including chunked requests and false lengths.
+    speech_upload = request.method == 'POST' and bool(re.fullmatch(r'/api/learners/[^/]+/speech/transcribe', request.url.path))
+    # Authenticate speech uploads before buffering their larger body. Retain the
+    # existing origin policy and learner ownership check, now before audio reads.
+    if speech_upload and settings.staging_access_enabled:
+        identity = read_session(request.cookies.get(COOKIE), settings)
+        request.state.staging_identity = identity
+        if not identity:
+            return JSONResponse({'error': {'code': 'staging_access_required', 'message': 'Sign in to continue.'}}, status_code=401)
+        origin = request.headers.get('origin')
+        expected_origin = settings.frontend_url or str(request.base_url)
+        if request.headers.get('sec-fetch-site') == 'cross-site' or (origin and origin.rstrip('/') != expected_origin.rstrip('/')):
+            return JSONResponse({'error': {'code': 'origin_rejected', 'message': 'Open the staging website to continue.'}}, status_code=403)
+        try:
+            owned(request, 'learner', request.url.path.split('/')[3])
+        except TutorError as error:
+            return JSONResponse({'error': {'code': error.code, 'message': error.message}}, status_code=error.status)
+    if speech_upload:
+        try:
+            identity = getattr(request.state, 'staging_identity', None) or request.client.host
+            request.app.state.speech_upload_limiter.take(identity, 10, 60)
+        except TutorError as error:
+            return JSONResponse({'error': {'code': error.code, 'message': error.message}}, status_code=error.status)
+    # Only this exact speech route receives a larger allowance. No multipart
+    # parser/spooled files: bounded raw WAV bytes, including false/chunked lengths.
+    limit = 2 * 1024 * 1024 if speech_upload else 32768
     chunks, total = [], 0
-    async for chunk in request.stream():
-        total += len(chunk)
-        if total > 32768:
-            return JSONResponse({'error': {'code': 'request_too_large', 'message': 'Please send a shorter study request.'}}, status_code=413)
-        chunks.append(chunk)
+    try:
+        async with asyncio.timeout(15 if speech_upload else None):
+            async for chunk in request.stream():
+                total += len(chunk)
+                if total > limit:
+                    return JSONResponse({'error': {'code': 'request_too_large', 'message': 'Please send a shorter recording.' if speech_upload else 'Please send a shorter study request.'}}, status_code=413)
+                chunks.append(chunk)
+    except TimeoutError:
+        return JSONResponse({'error': {'code': 'upload_timeout', 'message': 'The recording upload took too long. Please retry.'}}, status_code=408)
     request._body = b''.join(chunks)
     if not settings.staging_access_enabled:
         return None

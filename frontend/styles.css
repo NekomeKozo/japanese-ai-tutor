@@ -217,3 +217,8 @@ button,textarea,input,select { scroll-margin-bottom:100px; }
 #recording-status[data-recording="true"]::before { content:'● '; }
 #recording-timer { font-variant-numeric:tabular-nums; font-weight:700; }
 #recording-error,#recording-preview-error { color:#9a2935; overflow-wrap:anywhere; }
+#speech-controls { margin-top:20px; border-top:1px solid var(--border); padding-top:16px; }
+#speech-transcript { width:100%; margin:8px 0; }
+#speech-original,#speech-status,#speech-error,#speech-config-status { overflow-wrap:anywhere; }
+#speech-error { color:#9a2935; }
+#speech-result details { margin:12px 0; }

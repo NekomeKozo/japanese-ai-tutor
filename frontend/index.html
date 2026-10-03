@@ -11,6 +11,7 @@
   <script src="/static/audio.js" defer></script>
   <script src="/static/app.js" defer></script>
   <script src="/static/recorder.js" defer></script>
+  <script src="/static/speech.js" defer></script>
   <script src="/static/assessment.js" defer></script>
   <script src="/static/learner.js" defer></script>
   <script src="/static/conversation.js" defer></script>
@@ -129,7 +130,7 @@
     </form>
     <details id="recording-card" class="placement-card">
       <summary>Record spoken Japanese</summary>
-      <p>Record a short Japanese sentence and listen back. Audio stays in this browser tab. It is not uploaded, saved on the server, transcribed or sent to AI.</p>
+      <p>Record a short Japanese sentence and listen back. Recording and preview stay in this tab. Only <strong>Transcribe audio</strong> sends your recording to GoiGrow’s server and Groq for Japanese transcription. GoiGrow does not permanently store your audio.</p>
       <p class="small">Up to 60 seconds and 8 MB. Leaving this page or closing this panel discards the recording. Moving to another app stops an active recording.</p>
       <p id="recording-status" role="status">Microphone off. Press Record when you’re ready.</p>
       <p id="recording-timer" role="timer" aria-live="off" hidden>0:00 / 1:00</p>
@@ -142,6 +143,25 @@
       </div>
       <audio id="recording-preview" aria-label="Your local recording" controls controlslist="nodownload" disableremoteplayback preload="metadata" hidden></audio>
       <p id="recording-error" role="alert" hidden></p><p id="recording-preview-error" role="alert" hidden></p>
+      <div id="speech-controls">
+        <p class="small">Groq may retain audio and transcripts for reliability or abuse monitoring for up to 30 days unless the owner enables Zero Data Retention. Transcription may make mistakes; it is not a speaking assessment.</p>
+        <p id="speech-config-status" role="status">Transcription availability is checked when you open this panel.</p>
+        <div class="assessment-actions recording-actions">
+          <button id="speech-transcribe" type="button" hidden>Transcribe audio</button>
+          <button id="speech-cancel" type="button" class="secondary" hidden>Cancel transcription</button>
+          <button id="speech-config-retry" type="button" class="secondary" hidden>Check availability again</button>
+        </div>
+        <p id="speech-status" role="status"></p>
+        <p class="small">Cancelling stops waiting for a transcript; audio already sent to Groq cannot be recalled.</p>
+        <div id="speech-result" hidden>
+          <label for="speech-transcript">Japanese transcript · edit before confirming</label>
+          <textarea id="speech-transcript" rows="3" maxlength="4000" aria-describedby="speech-help"></textarea>
+          <p id="speech-help" class="small">Confirm text copies your edited text to the message box. Nothing is sent to the Tutor until you press Send message.</p>
+          <details><summary>Original transcription</summary><p id="speech-original"></p></details>
+          <button id="speech-confirm" type="button">Confirm text</button>
+        </div>
+        <p id="speech-error" role="alert" hidden></p>
+      </div>
     </details>
     </section>
     <section id="profile-panel" aria-label="Progress" hidden>
