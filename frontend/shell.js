@@ -38,10 +38,10 @@ async function renderRoute() {
   try {
     if (section === 'home') await renderHome();
     if (section === 'study') {
-      const jlpt = detail === 'jlpt';
-      $('personalized-study').hidden = jlpt; $('jlpt-panel').hidden = !jlpt;
-      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : '#study') ? 'page' : 'false'));
-      if (jlpt) await loadJLPT(); else await loadStudy();
+      const jlpt = detail === 'jlpt', listening = detail === 'listening';
+      $('personalized-study').hidden = jlpt || listening; $('jlpt-panel').hidden = !jlpt; $('listening-panel').hidden = !listening;
+      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : listening ? '#study/listening' : '#study') ? 'page' : 'false'));
+      if (jlpt) await loadJLPT(); else if (!listening) await loadStudy();
     }
     if (section === 'progress') { progressSection(detail); await renderProfile(); }
     if (section === 'settings') await loadSettings();

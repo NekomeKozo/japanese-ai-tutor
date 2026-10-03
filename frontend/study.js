@@ -92,6 +92,7 @@ async function currentActivity() {
   const reviewPosition = reviewItems.findIndex(a => a.activity_id === studyActivity.activity_id) + 1;
   $('study-heading').textContent = studyActivity.review_schedule_id ? `Review ${reviewPosition} of ${reviewItems.length} · ${studyActivity.title} · ${studyActivity.focus_dimension.replaceAll('_', ' ')}` : `${studyActivity.order}. ${studyActivity.title}`;
   $('study-purpose').textContent = `${studyActivity.purpose === 'review' ? 'Review' : 'Learn & practice'} · ${studyActivity.duration_minutes} minute estimate · ${studyActivity.reason}`;
+  japaneseAudio.stop();
   $('study-content').replaceChildren(node('p', 'Preparing this activity…'));
   $('study-feedback').textContent = '';
   $('study-answer-form').hidden = true; $('study-next').hidden = true; $('study-skip').hidden = false;

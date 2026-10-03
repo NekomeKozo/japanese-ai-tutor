@@ -7,6 +7,11 @@ let placementLearnerId = null;
 let savedSession = false;
 let pendingChat = null;
 const welcome = $('conversation').firstElementChild.cloneNode(true);
+function appendTutorWelcome() {
+  const article = welcome.cloneNode(true); $('conversation').append(article);
+  attachJapaneseAudio(article, 'こんにちは！', 'tutor greeting');
+}
+attachJapaneseAudio($('conversation').firstElementChild, 'こんにちは！', 'tutor greeting');
 
 function node(tag, text, className) {
   const element = document.createElement(tag);
@@ -58,6 +63,7 @@ function addMessage(who, text, container = $('conversation')) {
   const article = node('article', undefined, `message ${who}`);
   article.append(node('p', who === 'learner' ? 'YOU' : 'TUTOR', 'speaker'), node('p', text));
   container.append(article);
+  if (who === 'tutor') attachJapaneseAudio(article, text, 'tutor reply');
   return article;
 }
 
@@ -66,12 +72,14 @@ function renderReply(reply, container = $('conversation')) {
   if (reply.evaluation) article.append(node('p', reply.evaluation.status.replaceAll('_', ' '), 'evaluation'));
   if (reply.correction) {
     article.append(node('h2', 'Your sentence'), node('p', reply.correction.original, 'correction-original'), node('h2', 'Suggested Japanese'), node('p', reply.correction.improved, 'correction-improved'));
+    attachJapaneseAudio(article, reply.correction.improved, 'suggested Japanese');
   }
   if (reply.explanation) article.append(node('h2', reply.correction ? 'Why' : 'Explanation'), node('p', reply.explanation));
   if (reply.examples.length) {
     const list = node('ul');
     reply.examples.forEach((example) => list.append(node('li', example)));
     article.append(node('h2', 'Examples'), list);
+    attachJapaneseAudio(article, reply.examples.join('\n'), 'Japanese examples');
   }
   if (reply.exercise) {
     article.append(node('h2', 'Your turn'), node('p', reply.exercise.question));
@@ -94,6 +102,7 @@ async function refreshStatus() {
 
 async function resetSession() {
   if (practiceState?.status === 'active') { showError(new Error('Finish your active conversation first.')); return; }
+  japaneseAudio.stop();
   setBusy(true);
   $('error').hidden = true;
   try {
@@ -108,7 +117,7 @@ async function resetSession() {
     pendingChat = null;
     applyPractice(null);
     if (savedSession) remember(`session-${placementLearnerId}`, sessionId);
-    $('conversation').replaceChildren(welcome.cloneNode(true));
+    $('conversation').replaceChildren(); appendTutorWelcome();
     $('message').value = '';
     $('mode').value = 'chat';
     updateCount();

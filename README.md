@@ -3,7 +3,18 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 9 — persistent N5/N4 JLPT-style practice.**
+**Current phase: Phase 10A — Japanese playback and listening foundation.**
+
+Japanese playback is available on Tutor replies and in **Study → Listening**.
+Choose an installed Japanese voice and 0.75×, 1.0× or 1.25× speed; press Play,
+Stop or replay. No paid speech provider or additional tutor request is needed.
+Voice availability, pronunciation and speed behavior depend on the browser/device;
+some browser voices use an online speech service. If Japanese voices are missing,
+enable a Japanese speech voice in device settings or use transcript-assisted practice.
+Listening includes four original N5 and four basic N4 passages. Its tab-only summary
+separates assisted attempts and does not update saved mastery/JLPT scores.
+
+See [Phase 10A report](PHASE10A_REPORT.md) for compatibility, tests and limitations.
 
 Open **Study → JLPT practice** to choose quick, standard, focused, weakness-targeted,
 or mock practice. The initial bank contains 80 original questions across vocabulary,
@@ -13,7 +24,7 @@ Scores are practice accuracy, never official JLPT scores or pass predictions.
 Attempts feed the existing learning memory, mastery and review systems without changing
 placement. Questions and grading do not call AI. **Ask Tutor about this** prepares an
 optional explanation follow-up for you to send. See [Phase 9 report](PHASE9_REPORT.md)
-and [bank authoring guidance](docs/jlpt.md). Phase 10 and audio have not begun.
+and [bank authoring guidance](docs/jlpt.md).
 
 In **Tutor**, choose one of eight authored scenarios and a correction policy, then
 select **Start conversation**. Practice reuses saved tutor sessions, restores after

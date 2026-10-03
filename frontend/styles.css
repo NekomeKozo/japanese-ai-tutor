@@ -198,3 +198,14 @@ button,textarea,input,select { scroll-margin-bottom:100px; }
 #jlpt-results details { padding:.8rem 0; border-bottom:1px solid #cedbd3; }
 #jlpt-results summary { cursor:pointer; padding:.5rem 0; }
 @media(max-width:600px) { .jlpt-grid { grid-template-columns:1fr; } .jlpt-history-row { flex-wrap:wrap; } }
+
+/* Native speech controls share the existing button, form and card design. */
+.audio-player { margin:16px 0; padding:12px; border:1px solid var(--border); border-radius:var(--small-radius); display:flex; flex-wrap:wrap; gap:12px; align-items:end; }
+.audio-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.audio-player label { font-size:.8rem; flex:1 1 160px; min-width:0; margin:0; }
+.audio-player select { display:block; width:100%; min-width:0; max-width:100%; margin:4px 0 0; }
+.audio-player .audio-status { flex-basis:100%; margin:0; overflow-wrap:anywhere; }
+.audio-actions button { min-height:44px; }
+#listening-level { margin:8px 0 16px; }
+#listening-panel .assessment-actions { margin-top:16px; }
+@media(max-width:540px) { .audio-player { padding:10px; gap:10px; } .audio-actions { width:100%; } .audio-actions button { flex:1; } }

@@ -6,7 +6,7 @@ const assert = require('node:assert/strict');
 const root = path.join(__dirname, '..', 'frontend');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const scripts = [...html.matchAll(/src="\/static\/([^\"]+\.js)"/g)].map(m => m[1]);
-function harness() {
+function harness(audio = {}) {
   const elements = new Map(); const requests = []; const storage = new Map();
   class Element {
     constructor(tag = 'div') { this.tagName=tag; this.children=[]; this.listeners={}; this.hidden=false; this.value=''; this.textContent=''; this.attributes={}; }
@@ -18,21 +18,23 @@ function harness() {
     setAttribute(k,v) { this.attributes[k]=v; }
     addEventListener(type, fn) { this.listeners[type]=fn; }
     querySelectorAll() { return []; }
+    querySelector() { return this.selected || null; }
     closest() { return null; }
     focus() { this.focused=true; }
   }
   for (const m of html.matchAll(/<([\w-]+)\b[^>]*\bid="([^"]+)"[^>]*>/g)) { const e=new Element(m[1]); e.hidden=/\bhidden\b/.test(m[0]); elements.set(m[2],e); }
   elements.get('review-minutes').value='10'; elements.get('onboarding-goal-select').value='general';
-  const ctx = vm.createContext({console, Event, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, crypto:require('node:crypto').webcrypto,
-    document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(){},dispatchEvent(){}},
-    window:{addEventListener(){},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true},
+  const windowEvents = {}, documentEvents = {};
+  const ctx = vm.createContext({console, Event, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, setTimeout:()=>1, clearTimeout(){}, crypto:require('node:crypto').webcrypto,
+    document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(type,fn){(documentEvents[type] ||= []).push(fn);},dispatchEvent(event){for(const fn of documentEvents[event.type] || []) fn(event);}},
+    window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     sessionStorage:{getItem:()=>null,setItem(){}},
     fetch:async (url, options={})=>{ requests.push({url,...options}); throw new TypeError('offline'); }
   });
   // Run all real scripts; bootstrap is invoked explicitly by each test.
   for (const name of scripts) { let source=fs.readFileSync(path.join(root,name),'utf8'); if(name==='shell.js') source=source.replace(/boot\(\);\s*$/, ''); vm.runInContext(source,ctx,{filename:name}); }
-  return {ctx,elements,requests,storage,run:source=>vm.runInContext(source,ctx)};
+  return {ctx,elements,requests,storage,windowEvents,documentEvents,run:source=>vm.runInContext(source,ctx)};
 }
 
 test('unique DOM IDs and all literal JavaScript ID references resolve',()=>{
@@ -222,4 +224,102 @@ test('JLPT follow-up initializes Tutor before filling its composer and preserves
   const draft=h.elements.get('message').value;await h.run('jlptAsk(fixture)');
   assert.equal(h.elements.get('message').value,draft);assert.equal(h.requests.length,1);
   assert.match(h.elements.get('jlpt-error').textContent,/draft is still saved/);
+});
+
+function speechMock(voices = [{name:'Japanese local',voiceURI:'ja-local',lang:'ja-JP',localService:true}]) {
+  const spoken = [], events = new Map();
+  const synth = {voices,cancels:0,getVoices(){return this.voices;},cancel(){this.cancels++;},speak(utterance){spoken.push(utterance);},
+    addEventListener(name,fn){events.set(name,fn);},removeEventListener(name){events.delete(name);}};
+  class Utterance { constructor(text){this.text=text;} }
+  return {synth,Utterance,spoken,events,h:harness({speechSynthesis:synth,SpeechSynthesisUtterance:Utterance})};
+}
+test('audio discovers Japanese voices and prefers local voices without auto-speaking',()=>{
+  const m=speechMock([{name:'English',lang:'en-US'},{name:'Remote JP',lang:'ja-JP',localService:false},{name:'Local JP',lang:'ja-JP',localService:true}]);
+  const state=m.h.run('japaneseAudio.state()');assert.equal(state.availability,'ready');assert.equal(state.voices.length,2);assert.match(state.selected,/Local JP/);assert.equal(m.spoken.length,0);
+});
+test('late voiceschanged recovers the loading player without using an English voice',()=>{
+  const m=speechMock([{name:'English',lang:'en-US'}]);assert.equal(m.h.run("japaneseAudio.play('こんにちは','test')"),false);assert.equal(m.spoken.length,0);
+  m.synth.voices=[{name:'Japanese',lang:'ja_JP'}];m.events.get('voiceschanged')();
+  assert.equal(m.h.run('japaneseAudio.state().availability'),'ready');assert.equal(m.spoken.length,0);
+  m.h.run("japaneseAudio.play('こんにちは','test')");assert.equal(m.spoken[0].voice.lang,'ja_JP');
+});
+test('missing Japanese voice settles into a helpful state; unsupported browser is safe',()=>{
+  const m=speechMock([]);const timers=new Map();let seq=0;
+  m.h.ctx.deps={synth:m.synth,Utterance:m.Utterance,schedule(fn){timers.set(++seq,fn);return seq;},unschedule(id){timers.delete(id);}};
+  const audio=m.h.run('createJapaneseAudio(deps)');assert.equal(audio.state().availability,'loading');timers.get(1)();
+  assert.equal(audio.state().availability,'missing');assert.equal(audio.play('日本語','x'),false);assert.equal(m.spoken.length,0);
+  assert.equal(harness().run('japaneseAudio.state().availability'),'unsupported');
+});
+test('play, finish, replay and stop keep a single queue and ignore cancelled callbacks',()=>{
+  const m=speechMock();m.h.run("japaneseAudio.play('こんにちは！','one')");const first=m.spoken[0];const staleStart=first.onstart,staleEnd=first.onend;
+  first.onstart();assert.equal(m.h.run('japaneseAudio.state().phase'),'playing');
+  m.h.run("japaneseAudio.play('こんばんは！','two')");assert.equal(first.onend,null);staleStart();staleEnd();
+  assert.equal(m.h.run('japaneseAudio.state().owner'),'two');assert.equal(m.spoken.length,2);
+  m.spoken[1].onstart();m.spoken[1].onend();assert.equal(m.h.run('japaneseAudio.state().phase'),'idle');
+  m.h.run("japaneseAudio.play('こんばんは！','two');japaneseAudio.stop()");assert.equal(m.spoken.length,3);assert.equal(m.h.run('japaneseAudio.state().owner'),null);
+});
+test('all three speeds and voice selection apply to the next utterance',()=>{
+  const m=speechMock([{name:'JP one',lang:'ja-JP'},{name:'JP two',lang:'ja-JP'}]);
+  for(const rate of [.75,1,1.25]){m.h.ctx.rate=rate;m.h.run("japaneseAudio.setRate(rate);japaneseAudio.play('日本語','one')");assert.equal(m.spoken.at(-1).rate,rate);}
+  const id=m.h.run('japaneseAudio.state().voices[1].id');m.h.ctx.voiceId=id;m.h.run("japaneseAudio.setVoice(voiceId);japaneseAudio.play('日本語','one')");assert.equal(m.spoken.at(-1).voice.name,'JP two');
+  m.h.run('japaneseAudio.setRate(100)');assert.equal(m.h.run('japaneseAudio.state().rate'),1.25);
+});
+test('synthesis failure, thrown engines and silent-start timeouts recover for retry',()=>{
+  const m=speechMock();m.h.run("japaneseAudio.play('日本語','one')");m.spoken.at(-1).onerror({error:'synthesis-failed'});
+  assert.equal(m.h.run('japaneseAudio.state().phase'),'error');assert.match(m.h.run('japaneseAudio.state().message'),/could not play/);
+  m.synth.speak=()=>{throw Error('engine failure');};assert.equal(m.h.run("japaneseAudio.play('日本語','one')"),false);
+  const timers=new Map();let seq=0;m.synth.speak=u=>m.spoken.push(u);
+  m.h.ctx.deps={synth:m.synth,Utterance:m.Utterance,schedule(fn,ms){timers.set(++seq,{fn,ms});return seq;},unschedule(id){timers.delete(id);}};
+  const audio=m.h.run('createJapaneseAudio(deps)');audio.play('日本語','test');[...timers.values()].find(t=>t.ms===10000).fn();assert.equal(audio.state().phase,'error');
+  assert.equal(audio.play('日本語','test'),true);
+});
+test('long playback is chunked and stops without speaking the remaining chunks',()=>{
+  const m=speechMock();m.h.ctx.longText='こんにちは。'.repeat(70);m.h.run("japaneseAudio.play(longText,'long')");
+  assert.ok(m.spoken[0].text.length<=160);m.spoken[0].onstart();m.spoken[0].onend();assert.equal(m.spoken.length,2);
+  m.h.run('japaneseAudio.stop()');assert.equal(m.spoken[1].onend,null);
+});
+test('navigation, hidden tabs and learner changes safely cancel speech',()=>{
+  const m=speechMock();
+  for(const type of ['hashchange','pagehide']){m.h.run("japaneseAudio.play('こんにちは','one')");for(const fn of m.h.windowEvents[type]){if(type==='hashchange' && fn.name==='renderRoute')continue;fn();}assert.equal(m.h.run('japaneseAudio.state().owner'),null);}
+  m.h.run("japaneseAudio.play('こんにちは','one')");m.h.ctx.document.hidden=true;for(const fn of m.h.documentEvents.visibilitychange)fn();assert.equal(m.h.run('japaneseAudio.state().owner'),null);
+  m.h.run("japaneseAudio.play('こんにちは','one');document.dispatchEvent(new Event('learner-changed'))");assert.equal(m.h.run('japaneseAudio.state().owner'),null);
+});
+test('only displayed Japanese reply fields are playable; private metadata and English stay out',()=>{
+  const m=speechMock();m.h.ctx.reply={message:'Say: こんにちは！ Hello.',examples:['水をください。'],correction:{original:'水ください',improved:'水をください。'},explanation:'Internal discussion',private_rag:'秘密の文章',exercise:{question:'Choose one',choices:[],hint:'秘密の答え'}};
+  m.h.run('renderReply(reply)');const article=m.h.elements.get('conversation').children.at(-1);
+  const players=article.children.filter(e=>e.className==='audio-player');assert.equal(players.length,3);
+  for(const player of players)player.children[0].children[0].listeners.click();
+  assert.equal(m.spoken.map(u=>u.text).join('|'),'こんにちは！|水をください。|水をください。');assert.equal(m.h.requests.length,0);
+  assert.equal(m.h.run("japanesePlaybackText('Only English instructions.')"),'');
+});
+test('audio controls reflect loading, playing, errors and detached-player cleanup',()=>{
+  const m=speechMock();m.h.run("addMessage('tutor','こんにちは。')");const article=m.h.elements.get('conversation').children.at(-1), player=article.children.at(-1);
+  const [actions,,,status]=player.children;actions.children[0].listeners.click();assert.match(status.textContent,/Preparing/);m.spoken.at(-1).onstart();assert.match(status.textContent,/Playing/);
+  actions.children[1].listeners.click();assert.match(status.textContent,/stopped/);player.isConnected=false;
+  assert.doesNotThrow(()=>m.h.run('japaneseAudio.setRate(.75)'));
+});
+test('listening bank validates every answer and rejects invalid choices',()=>{
+  const h=harness(),bank=h.run('listeningExercises');assert.equal(bank.length,8);assert.equal(new Set(bank.map(e=>e.id)).size,8);
+  for(const e of bank){h.ctx.exercise=e;assert.match(e.text,/[ぁ-んァ-ヶ一-龯]/);for(let i=0;i<e.choices.length;i++){h.ctx.choice=i;assert.equal(h.run('listeningCheck(exercise,choice)'),i===e.answer);}h.ctx.choice=-1;assert.throws(()=>h.run('listeningCheck(exercise,choice)'),/Choose/);}
+});
+function startListening(h,level='N5'){h.elements.get('listening-level').value=level;h.elements.get('listening-start').listeners.click();}
+function answerListening(h,choice){h.elements.get('listening-choices').selected={value:String(choice)};h.elements.get('listening-answer-form').listeners.submit({preventDefault(){}});}
+test('listening requires playback or assisted reveal, hides transcript until answer, and scores once',()=>{
+  const m=speechMock(),h=m.h;startListening(h);assert.equal(h.elements.get('listening-transcript').hidden,true);assert.equal(m.spoken.length,0);
+  answerListening(h,1);assert.match(h.elements.get('listening-error').textContent,/Play/);assert.equal(h.run('listeningState.results.length'),0);
+  const player=h.elements.get('listening-audio').children[0];player.children[0].children[0].listeners.click();m.spoken.at(-1).onstart();answerListening(h,1);answerListening(h,1);
+  assert.equal(h.run('listeningState.results.length'),1);assert.equal(h.run('listeningState.results[0].correct'),true);assert.equal(h.run('listeningState.results[0].assisted'),false);
+  assert.equal(h.elements.get('listening-transcript').hidden,false);assert.match(h.elements.get('listening-feedback').textContent,/Correct/);assert.equal(h.requests.length,0);
+});
+test('assisted listening remains available without voices and summaries separate assisted attempts',()=>{
+  const h=harness();startListening(h,'N4');
+  for(let i=0;i<4;i++){h.elements.get('listening-reveal').listeners.click();assert.equal(h.elements.get('listening-transcript').hidden,false);assert.equal(h.run('listeningState.assisted'),true);answerListening(h,h.run('listeningState.exercises[listeningState.index].answer'));h.elements.get('listening-next').listeners.click();}
+  assert.match(h.elements.get('listening-summary-text').textContent,/without transcript: 0 correct of 0.*Assisted practice: 4 correct of 4/);
+  assert.equal(h.run('listeningState'),null);assert.equal(h.elements.get('listening-summary').hidden,false);assert.equal(h.requests.length,0);
+});
+test('listening navigation retains answer and attempt without API calls or hidden transcripts appearing',async()=>{
+  const h=harness();h.run('appReady=true');startListening(h);h.elements.get('listening-choices').selected={value:'1'};
+  h.ctx.location.hash='#placement';await h.run('renderRoute()');h.ctx.location.hash='#study/listening';await h.run('renderRoute()');
+  assert.equal(h.elements.get('listening-choices').selected.value,'1');assert.equal(h.elements.get('listening-transcript').hidden,true);
+  assert.equal(h.elements.get('jlpt-panel').hidden,true);assert.equal(h.elements.get('personalized-study').hidden,true);assert.equal(h.elements.get('listening-panel').hidden,false);assert.equal(h.requests.length,0);
 });

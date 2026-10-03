@@ -8,12 +8,14 @@
   <meta name="description" content="GoiGrow — Japanese Tutor. Personalized Japanese practice, JLPT study and daily review. A little, every day.">
   <title>GoiGrow — Japanese Tutor</title>
   <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/audio.js" defer></script>
   <script src="/static/app.js" defer></script>
   <script src="/static/assessment.js" defer></script>
   <script src="/static/learner.js" defer></script>
   <script src="/static/conversation.js" defer></script>
   <script src="/static/study.js" defer></script>
   <script src="/static/jlpt.js" defer></script>
+  <script src="/static/listening.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
   <script src="/static/shell.js" defer></script>
@@ -165,7 +167,7 @@
       <details class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
     </section>
     <section id="study-panel" aria-label="Today's Study" hidden>
-      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a></nav>
+      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a><a href="#study/listening">Listening</a></nav>
       <div id="personalized-study">
       <div id="daily-review" class="placement-card" hidden>
         <h2>Daily Review</h2>
@@ -211,6 +213,26 @@
         </div>
       </div>
       </div>
+      <section id="listening-panel" aria-label="Listening practice" hidden>
+        <div id="listening-intro" class="placement-card">
+          <p class="eyebrow">Listen, then understand</p><h2>Listening practice</h2>
+          <p>Four short, original passages per level. Press Play when you’re ready, then choose what you understood.</p>
+          <label for="listening-level">Listening level</label><select id="listening-level"><option>N5</option><option>N4</option></select>
+          <button id="listening-start" type="button">Start listening</button>
+          <p class="small">Practice stays in this tab until you reload. It does not change your saved mastery or JLPT scores.</p>
+        </div>
+        <div id="listening-exercise" class="placement-card" hidden>
+          <h2 id="listening-heading" tabindex="-1"></h2><div id="listening-audio"></div>
+          <p class="small">Listen as often as you like. Stop and replay work across more devices than pause.</p>
+          <button id="listening-reveal" type="button" class="secondary">Reveal transcript · assisted practice</button>
+          <p id="listening-transcript" class="jlpt-passage" lang="ja" hidden></p>
+          <form id="listening-answer-form"><h3 id="listening-question"></h3><fieldset id="listening-choices"><legend>Choose one answer</legend></fieldset><button type="submit">Check listening answer</button></form>
+          <p id="listening-error" role="alert" hidden></p><p id="listening-feedback" role="status"></p>
+          <div class="assessment-actions"><button id="listening-next" type="button" hidden>Next question</button><button id="listening-end" type="button" class="secondary">End listening practice</button></div>
+        </div>
+        <div id="listening-summary" class="placement-card" tabindex="-1" hidden><h2>A little listening, done.</h2><p id="listening-summary-text"></p><p class="small">A practice summary for this tab, not a proficiency assessment.</p><button id="listening-again" type="button">Choose another set</button></div>
+        <p class="small">Japanese voices and speed depend on your browser and device. If audio is unavailable, reveal the transcript for assisted practice. Your browser’s voice service may process speech online.</p>
+      </section>
       <section id="jlpt-panel" aria-label="JLPT Practice" hidden>
         <div class="placement-card">
           <p class="eyebrow">Practice at your pace</p><h2>JLPT Practice</h2>

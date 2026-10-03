@@ -13,6 +13,7 @@ const jsonOptions = (method, body) => ({method, headers: {'Content-Type': 'appli
 
 async function openSavedSession(id) {
   const saved = await api(`/api/learners/${placementLearnerId}/sessions/${id}`);
+  japaneseAudio.stop();
   sessionId = saved.session_id;
   savedSession = true;
   pendingChat = null;
@@ -20,7 +21,7 @@ async function openSavedSession(id) {
   $('conversation').replaceChildren();
   applyPractice(saved.conversation);
   if (saved.conversation) addMessage('tutor', saved.conversation.scenario.opening_line);
-  else if (!saved.turns.length) $('conversation').append(welcome.cloneNode(true));
+  else if (!saved.turns.length) appendTutorWelcome();
   saved.turns.forEach(turn => { addMessage('learner', turn.message); renderReply(turn.response); });
   $('message').value = '';
   updateCount();
@@ -35,7 +36,7 @@ async function activateLearner(id) {
   sessionId = null;
   savedSession = false;
   pendingChat = null;
-  $('conversation').replaceChildren(welcome.cloneNode(true));
+  $('conversation').replaceChildren(); appendTutorWelcome();
   remember('learner', placementLearnerId);
   $('placement-context').textContent = `${profile.estimated_level} · Saved learner profile · Preferences and recent learning guide the tutor.`;
   $('level').value = profile.preferences.preferred_difficulty || profile.estimated_level.match(/N[1-5]/)?.[0] || 'beginner';
