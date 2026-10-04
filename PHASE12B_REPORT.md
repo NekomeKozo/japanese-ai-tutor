@@ -140,6 +140,8 @@ Supabase team invitation and configure Render's server environment:
 | `ACCOUNT_AUTH_ENABLED` | Keep false until preceding values, backup/rollback and provider session-read capability are verified; then enable for controlled acceptance |
 
 The key generator refuses to overwrite an existing key and prints no key material.
+On 5 October 2026 it created the Git-ignored `.env.account-key` locally; no value was
+displayed, committed or sent to Render. The owner must copy it privately.
 Keep a private key backup for rollback; lost keys require fresh account sign-in, never
 resetting learner records. Retain older encryption keys during rotation until old sessions
 expire/re-encrypt. Default team email service is not approval for outside testers.
@@ -162,7 +164,21 @@ as proof of profile ownership. No Phase 12C implementation is included.
 
 ## Release status
 
-Pending commit, CI and verification of deployment with account functionality disabled.
-Live activation and actual email-delivery acceptance are not claimed complete.
+Implementation committed and pushed as `e6ac9d8341e9480aa730f287496718719963df3a`:
+`Phase 12B - implement secure account registration and login`.
+[GitHub Tests passed](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37211633655).
+[Render deployment succeeded and is Live](https://dashboard.render.com/web/srv-dap75h942hec7394sdi0/deploys/dep-db16ltrtqb8s7390t9bg).
+Verified on 5 October 2026: healthy `/health`, access page and manifest return 200;
+unauthenticated learner/account APIs return 401, all with `Cache-Control: no-store`.
+The free service initially needed to wake up; subsequent health checks passed.
+Read-only signed-in browser checks restored the saved Home, Study, Tutor and Progress
+views, and Settings had no account entry or visible error. No study answers, messages,
+preferences or learner histories were changed for these checks. The final account preview
+was checked again at 390px with no horizontal overflow and visible 47.59px buttons.
+
+Live account activation and actual invitation/recovery email acceptance are pending.
 Render environment inspection found no account activation/provider/key/allowlist
 settings present; default-disabled deployment creates no account schema or entry point.
+These settings and account/password entry require an owner handoff; the computer-use
+confirmation policy requires the owner to enter and submit new credentials privately.
+No Phase 12C work has begun.
