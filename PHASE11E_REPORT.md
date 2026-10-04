@@ -38,7 +38,7 @@ Recent review history includes both methods. Existing Home/Progress activity vie
 
 ## Deployment and limitations
 
-Implementation is ready for the existing main → Render workflow. Live deployment and GitHub CI verification will be recorded here after pushing. No Render service recreation, database reset, paid-provider request, or account/billing change is required.
+Implementation commit `b9b1f45` was pushed to `main` through the existing Render auto-deployment workflow. [GitHub Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37179264930) passed, including the full backend/disposable PostgreSQL suite, deployment audit, JavaScript syntax and all 134 frontend tests. The live website is currently showing Render’s startup screen; its public health request timed out, and the dashboard requires sign-in. Live interface verification is pending the service becoming available. No Render service recreation, database reset, paid-provider request, or account/billing change was made.
 
 Due Reviews is intentionally limited to accurately mapped authored targets. Self-assessment schedules retrieval and records practice; it is not objective mastery evidence. Optional audio depends on the existing browser Japanese voices. Free Practice and current batch position remain transient. Review history shows the latest 20 attempts; dates use the browser display timezone while scheduling remains backend UTC.
 
