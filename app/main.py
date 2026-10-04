@@ -7,8 +7,10 @@ from pathlib import Path
 import httpx
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
+from app.web_assets import WebAssets
 from starlette.exceptions import HTTPException
 
 from app.api.chat import router
@@ -53,6 +55,7 @@ logger = logging.getLogger(__name__)
 def create_app(settings: Settings | None = None, provider: LLMProvider | None = None,
                speech_provider: SpeechProvider | None = None) -> FastAPI:
     settings = settings or Settings()
+    assets = WebAssets(FRONTEND)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -134,7 +137,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             request_path.reset(token)
             if speech_upload:
                 request.app.state.speech_uploads -= 1
-        response.headers['Cache-Control'] = 'no-store'
+        response.headers['Cache-Control'] = assets.cache_control(request, response.status_code)
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['Referrer-Policy'] = 'no-referrer'
         # Keep Swagger /docs functional; the tutor UI needs no external scripts.
@@ -181,7 +184,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(jlpt_router)
     app.include_router(speech_router)
     app.include_router(audio_progress_router)
-    app.mount('/static', StaticFiles(directory=FRONTEND), name='static')
+    # Compress authored static content only. Private API/audio responses stay untouched.
+    app.mount('/static', GZipMiddleware(StaticFiles(directory=FRONTEND), minimum_size=500, compresslevel=6), name='static')
 
     @app.get('/health', include_in_schema=False)
     async def health():
@@ -196,7 +200,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
 
     @app.get('/', include_in_schema=False)
     async def index():
-        return FileResponse(FRONTEND / 'index.html')
+        return HTMLResponse(assets.index)
 
     return app
 

@@ -1,0 +1,276 @@
+{
+  "flashcards": [
+    {
+      "answerVisible": true,
+      "cardWidth": 272.9166564941406,
+      "documentWidth": 305,
+      "width": 320
+    },
+    {
+      "answerVisible": true,
+      "cardWidth": 343.5049133300781,
+      "documentWidth": 375,
+      "width": 390
+    },
+    {
+      "answerVisible": true,
+      "cardWidth": 383.7009887695313,
+      "documentWidth": 416,
+      "width": 430
+    },
+    {
+      "answerVisible": true,
+      "cardWidth": 704.9632568359375,
+      "documentWidth": 753,
+      "width": 768
+    },
+    {
+      "answerVisible": true,
+      "cardWidth": 885.0643310546875,
+      "documentWidth": 1425,
+      "width": 1440
+    }
+  ],
+  "routes": [
+    {
+      "route": "#home",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#tutor",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#progress",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#settings",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#placement",
+      "scroll": 320,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#study/jlpt",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#study/listening",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#study/speaking",
+      "scroll": 305,
+      "visibleError": [],
+      "width": 320
+    },
+    {
+      "route": "#home",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#tutor",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#progress",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#settings",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#placement",
+      "scroll": 390,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#study/jlpt",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#study/listening",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#study/speaking",
+      "scroll": 375,
+      "visibleError": [],
+      "width": 390
+    },
+    {
+      "route": "#home",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#tutor",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#progress",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#settings",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#placement",
+      "scroll": 430,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#study/jlpt",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#study/listening",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#study/speaking",
+      "scroll": 416,
+      "visibleError": [],
+      "width": 430
+    },
+    {
+      "route": "#home",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#tutor",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#progress",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#settings",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#placement",
+      "scroll": 768,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#study/jlpt",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#study/listening",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#study/speaking",
+      "scroll": 753,
+      "visibleError": [],
+      "width": 768
+    },
+    {
+      "route": "#home",
+      "scroll": 1425,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#tutor",
+      "scroll": 1425,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#progress",
+      "scroll": 1425,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#settings",
+      "scroll": 1425,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#placement",
+      "scroll": 1440,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#study/jlpt",
+      "scroll": 1425,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#study/listening",
+      "scroll": 1440,
+      "visibleError": [],
+      "width": 1440
+    },
+    {
+      "route": "#study/speaking",
+      "scroll": 1440,
+      "visibleError": [],
+      "width": 1440
+    }
+  ]
+}

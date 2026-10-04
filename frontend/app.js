@@ -37,7 +37,25 @@ function friendlyError(error) {
   if (['provider_error','provider_unavailable','provider_not_configured','invalid_provider_response'].includes(error.code) || /provider|API key|model configuration/i.test(error.message)) return 'The tutor couldn’t answer just now. Your text is still here; please try again shortly.';
   return error.message || 'Something went wrong. Please try again.';
 }
+const pendingAPIReads = new Map();
+let apiReadGeneration = 0;
+function invalidateAPIReads() { ++apiReadGeneration; pendingAPIReads.clear(); }
+document.addEventListener('learner-changed',invalidateAPIReads);
+document.addEventListener('learning-updated',invalidateAPIReads);
 async function api(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  // Share only equivalent in-flight reads. No settled responses or private data
+  // survive navigation via a shared/persistent cache; caller-specific options bypass.
+  if (method !== 'GET') { invalidateAPIReads(); return requestAPI(path,options); }
+  if (Object.keys(options).some(key => key !== 'method')) return requestAPI(path,options);
+  const key = `${apiReadGeneration}:${placementLearnerId || ''}:${path}`;
+  const existing = pendingAPIReads.get(key);
+  if (existing) return existing.then(data => JSON.parse(JSON.stringify(data)));
+  const request = requestAPI(path,options).finally(() => { if (pendingAPIReads.get(key) === request) pendingAPIReads.delete(key); });
+  pendingAPIReads.set(key,request);
+  return request.then(data => JSON.parse(JSON.stringify(data)));
+}
+async function requestAPI(path, options = {}) {
   const response = await fetch(path, options);
   if (response.status === 401 && path !== '/api/access') {
     window.location.assign('/access');

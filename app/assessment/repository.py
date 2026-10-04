@@ -85,9 +85,14 @@ class AssessmentRepository:
             migrate_jlpt(db)
             from app.audio_progress.migrations import migrate as migrate_audio
             migrate_audio(db)
-            for question in bank.items:
-                db.execute('INSERT OR IGNORE INTO assessment_questions VALUES (?, ?, ?)',
-                           (BANK_VERSION, question.id, question.model_dump_json()))
+            # Bound batches preserve INSERT OR IGNORE semantics while avoiding one
+            # remote round trip per question. No existing question/history is replaced.
+            for offset in range(0, len(bank.items), 100):
+                batch = bank.items[offset:offset + 100]
+                values = tuple(value for question in batch for value in
+                               (BANK_VERSION, question.id, question.model_dump_json()))
+                db.execute('INSERT OR IGNORE INTO assessment_questions VALUES ' +
+                           ','.join('(?,?,?)' for _ in batch), values)
         self.ready = True
 
     def require_ready(self):

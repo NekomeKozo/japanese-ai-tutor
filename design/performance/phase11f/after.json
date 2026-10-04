@@ -1,0 +1,14 @@
+{
+  "environment": "local TestClient/ASGI, disposable SQLite, no providers",
+  "initial_js_css_resources": 20,
+  "initial_js_css_raw_bytes": 187594,
+  "initial_js_css_gzip_transfer_bytes": 57433,
+  "repeat_static_body_bytes": 0,
+  "startup_question_bank_write_statements": 1,
+  "local_startup_ms": 132.08,
+  "warm_profile_median_ms": 2.77,
+  "health_completion_with_150ms_profile_ms": 2.62,
+  "lcp": null,
+  "cls": null,
+  "inp": null
+}

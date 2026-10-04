@@ -1,3 +1,4 @@
+from starlette.concurrency import run_in_threadpool
 from uuid import UUID
 
 from fastapi import APIRouter, Request
@@ -16,12 +17,12 @@ async def plan(body:PlanRequest,request:Request):
 
 @router.get(PREFIX+'/active')
 async def active(learner_id:UUID,request:Request):
-    return request.app.state.curriculum.active(learner_id)
+    return await run_in_threadpool(request.app.state.curriculum.active, learner_id)
 
 
 @router.get(PREFIX+'/{session_id}')
 async def session(learner_id:UUID,session_id:UUID,request:Request):
-    return request.app.state.curriculum.get(learner_id,session_id)
+    return await run_in_threadpool(request.app.state.curriculum.get, learner_id,session_id)
 
 
 @router.post(PREFIX+'/{session_id}/start')

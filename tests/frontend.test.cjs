@@ -998,3 +998,49 @@ test('prefixed Web Audio decoding works without autoplay or permanent recording 
   h.ctx.clip={blob:new Blob(['recording'],{type:'audio/mp4'})};h.ctx.signal=new AbortController().signal;
   const wav=await h.run('prepareSpeechAudio(clip,signal)');assert.equal(wav.type,'audio/wav');assert.equal(closes(),1);assert.equal(h.storage.size,0);
 });
+
+
+test('equivalent pending reads share only the request and never settled data',async()=>{
+  const h=harness();let calls=0,resolve;
+  h.ctx.fetch=()=>{calls++;return new Promise(r=>resolve=()=>r({ok:true,json:async()=>({items:[{value:1}]})}));};
+  const a=h.run("api('/api/example')"),b=h.run("api('/api/example')"),c=h.run("api('/api/example')");
+  assert.equal(calls,1);resolve();const results=await Promise.all([a,b,c]);
+  results[0].items[0].value=5;assert.equal(results[1].items[0].value,1);
+  const fresh=h.run("api('/api/example')");assert.equal(calls,2);resolve();await fresh;
+});
+test('learner changes and mutations split pending reads, including old cleanup',async()=>{
+  const h=harness();const pending=[];h.ctx.fetch=(url,opts={})=>new Promise(resolve=>pending.push({url,opts,resolve}));
+  const old=h.run("api('/api/example')");
+  h.run("placementLearnerId='other';document.dispatchEvent(new Event('learner-changed'))");
+  const current=h.run("api('/api/example')");assert.equal(pending.length,2);
+  pending[0].resolve({ok:true,json:async()=>({old:true})});await old;
+  const shared=h.run("api('/api/example')");assert.equal(pending.length,2);
+  const mutation=h.run("api('/api/example',{method:'POST'})");
+  const newer=h.run("api('/api/example')");assert.equal(pending.length,4);
+  for(const p of pending.slice(1))p.resolve({ok:true,json:async()=>({})});
+  await Promise.all([current,shared,mutation,newer]);
+  assert.equal(h.run('pendingAPIReads.size'),0);
+});
+test('caller-specific options bypass sharing; failed requests allow retry and auth redirect',async()=>{
+  const h=harness();let calls=0;h.ctx.fetch=async()=>{calls++;throw new TypeError('offline');};
+  const first=h.run("Promise.allSettled([api('/api/example'),api('/api/example')])");await first;assert.equal(calls,1);
+  await h.run("api('/api/example')").catch(()=>{});assert.equal(calls,2);
+  await h.run("Promise.allSettled([api('/api/example',{signal:new AbortController().signal}),api('/api/example',{headers:{'X-Test':'yes'}})])");assert.equal(calls,4);
+  h.ctx.fetch=async()=>({status:401});
+  await assert.rejects(h.run("api('/api/example')"),/Sign in/);assert.equal(h.ctx.redirect,'/access');
+});
+test('Home reuses matching initial profile once and reads fresh on later visits',async()=>{
+  const h=harness();h.run("placementLearnerId='learner'");
+  const profile={learner_id:'learner',estimated_level:'N5',preferences:{primary_goal:'general'},weak_topics:[]};
+  h.ctx.initial=profile;
+  h.ctx.fetch=async url=>{h.requests.push({url});return {ok:true,json:async()=>url.endsWith('/profile')?profile:url.includes('/due')?{due_count:0}:url.endsWith('/active')?null:[]};};
+  await h.run('renderHome(initial)');assert.equal(h.requests.some(r=>r.url.endsWith('/profile')),false);
+  await h.run('renderHome()');assert.equal(h.requests.filter(r=>r.url.endsWith('/profile')).length,1);
+  h.ctx.initial={...profile,learner_id:'wrong'};await h.run('renderHome(initial)');assert.equal(h.requests.filter(r=>r.url.endsWith('/profile')).length,2);
+});
+test('lazy public flashcard catalog uses the deployment version',async()=>{
+  const h=harness();h.ctx.document.documentElement={dataset:{assetVersion:'version123'}};
+  h.run('flashcardCatalog=null;flashcardCatalogLoading=null');
+  h.ctx.fetch=async url=>{h.requests.push({url});return {ok:true,json:async()=>JSON.parse(fs.readFileSync(path.join(root,'flashcard-catalog.json'),'utf8'))};};
+  await h.run('loadFlashcardCatalog()');assert.equal(h.requests[0].url,'/static/flashcard-catalog.json?v=version123');
+});

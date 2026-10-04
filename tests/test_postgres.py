@@ -55,6 +55,12 @@ def test_fresh_repeat_migration_and_rollback(pg_client, pg_settings):
     repo.initialize(QuestionBank.load())
     with repo.connection() as db:
         assert db.execute('SELECT count(*) FROM assessment_questions').fetchone()[0] == count
+        rows = db.execute('SELECT bank_version,id,payload FROM assessment_questions ORDER BY id').fetchall()
+        db.execute('DELETE FROM assessment_questions WHERE bank_version=? AND id=?', tuple(rows[0][:2]))
+    repo.initialize(QuestionBank.load())
+    with repo.connection() as db:
+        assert db.execute('SELECT count(*) FROM assessment_questions').fetchone()[0] == count
+        assert db.execute('SELECT payload FROM assessment_questions WHERE bank_version=? AND id=?', tuple(rows[0][:2])).fetchone()[0] == rows[0][2]
     with pytest.raises(TutorError):
         with repo.connection() as db:
             db.execute("INSERT INTO assessment_questions VALUES (?,?,?)", ('rollback', 'test', '{}'))

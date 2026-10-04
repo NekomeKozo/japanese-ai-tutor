@@ -1,3 +1,4 @@
+from starlette.concurrency import run_in_threadpool
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request
@@ -17,7 +18,7 @@ async def create(request: Request):
 
 @router.get('/{learner_id}/profile')
 async def profile(learner_id: UUID, request: Request):
-    return request.app.state.learners.profile(learner_id)
+    return await run_in_threadpool(request.app.state.learners.profile, learner_id)
 
 
 @router.patch('/{learner_id}/preferences')
@@ -27,7 +28,7 @@ async def preferences(learner_id: UUID, body: PreferencesPatch, request: Request
 
 @router.get('/{learner_id}/activity')
 async def activity(learner_id: UUID, request: Request, limit: int = Query(20, ge=1, le=50), offset: int = Query(0, ge=0, le=10000)):
-    return request.app.state.learners.activity(learner_id, limit, offset)
+    return await run_in_threadpool(request.app.state.learners.activity, learner_id, limit, offset)
 
 
 @router.post('/{learner_id}/sessions', status_code=201)
@@ -39,12 +40,12 @@ async def create_session(learner_id: UUID, request: Request):
 
 @router.get('/{learner_id}/sessions')
 async def sessions(learner_id: UUID, request: Request, limit: int = Query(20, ge=1, le=50)):
-    return request.app.state.saved_sessions.list(learner_id, limit)
+    return await run_in_threadpool(request.app.state.saved_sessions.list, learner_id, limit)
 
 
 @router.get('/{learner_id}/sessions/{session_id}')
 async def session(learner_id: UUID, session_id: UUID, request: Request):
-    return request.app.state.saved_sessions.get(learner_id, session_id)
+    return await run_in_threadpool(request.app.state.saved_sessions.get, learner_id, session_id)
 
 
 @router.post('/{learner_id}/sessions/{session_id}/close')

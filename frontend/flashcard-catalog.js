@@ -24,7 +24,8 @@ let flashcardCatalogRequest = null;
 async function loadFlashcardCatalog() {
   if (flashcardCatalog) return flashcardCatalog;
   if (!flashcardCatalogRequest) flashcardCatalogRequest = (async () => {
-    const response = await fetch('/static/flashcard-catalog.json');
+    const version = document.documentElement?.dataset?.assetVersion;
+    const response = await fetch('/static/flashcard-catalog.json' + (version ? '?v=' + encodeURIComponent(version) : ''));
     if (!response.ok) throw new Error('The practice decks could not load. Try again.');
     flashcardCatalog = validateFlashcardCatalog(await response.json());
     return flashcardCatalog;

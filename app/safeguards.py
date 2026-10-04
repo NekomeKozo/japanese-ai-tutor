@@ -13,6 +13,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field, SecretStr
+from starlette.concurrency import run_in_threadpool
 
 from app.config import PROJECT_ROOT
 from app.errors import TutorError
@@ -94,9 +95,9 @@ async def protect_resources(request: Request):
     params = request.path_params
     for name, kind in [('learner_id', 'learner'), ('assessment_id', 'assessment')]:
         if name in params:
-            owned(request, kind, params[name])
+            await run_in_threadpool(owned, request, kind, params[name])
     if request.url.path.startswith('/api/sessions/'):
-        owned(request, 'session', params['session_id'])
+        await run_in_threadpool(owned, request, 'session', params['session_id'])
     if request.url.path in ('/api/chat', '/api/curriculum/plan'):
         try:
             body = await request.json()
@@ -104,9 +105,9 @@ async def protect_resources(request: Request):
             raise TutorError('invalid_request', 'Send valid study data.', 422) from None
         if isinstance(body, dict):
             if body.get('learner_id'):
-                owned(request, 'learner', body['learner_id'])
+                await run_in_threadpool(owned, request, 'learner', body['learner_id'])
             if request.url.path == '/api/chat' and body.get('session_id'):
-                owned(request, 'session', body['session_id'])
+                await run_in_threadpool(owned, request, 'session', body['session_id'])
 
 
 def check_scope(text, *, study_answer=False):
@@ -169,7 +170,7 @@ async def before_request(request):
         if request.headers.get('sec-fetch-site') == 'cross-site' or (origin and origin.rstrip('/') != expected_origin.rstrip('/')):
             return JSONResponse({'error': {'code': 'origin_rejected', 'message': 'Open the staging website to continue.'}}, status_code=403)
         try:
-            owned(request, 'learner', request.url.path.split('/')[3])
+            await run_in_threadpool(owned, request, 'learner', request.url.path.split('/')[3])
         except TutorError as error:
             return JSONResponse({'error': {'code': error.code, 'message': error.message}}, status_code=error.status)
     if speech_upload:

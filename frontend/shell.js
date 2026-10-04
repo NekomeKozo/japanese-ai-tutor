@@ -26,7 +26,7 @@ function progressSection(detail) {
   Object.entries(ids).forEach(([key, id]) => { $(id).hidden = key !== selected; });
   document.querySelectorAll('.section-nav a').forEach(a => a.setAttribute('aria-current', a.hash === `#progress/${selected}` ? 'page' : 'false'));
 }
-async function renderRoute() {
+async function renderRoute(initial = {}) {
   const sequence = ++routeRequest;
   const {section, detail} = currentRoute();
   routes.forEach(route => { $(`${route === 'progress' ? 'profile' : route}-panel`).hidden = route !== section || (!appReady && (section !== 'settings' || booting)); });
@@ -39,7 +39,7 @@ async function renderRoute() {
   speakingRoute(section === 'study' && detail === 'speaking');
   voiceReplyControls();
   try {
-    if (section === 'home') await renderHome();
+    if (section === 'home') await renderHome(initial.profile);
     if (section === 'study') {
       const jlpt = detail === 'jlpt', listening = detail === 'listening', speaking = detail === 'speaking', flashcard = detail === 'flashcards';
       $('personalized-study').hidden = jlpt || listening || speaking || flashcard; $('jlpt-panel').hidden = !jlpt; $('listening-panel').hidden = !listening; $('speaking-panel').hidden = !speaking; $('flashcard-panel').hidden = !flashcard;
@@ -92,14 +92,14 @@ function chooseNextAction({learner, assessment, active, due}) {
   return due > 0 ? 'review' : 'study';
 }
 let homeRequest = 0;
-async function renderHome() {
+async function renderHome(initialProfile = null) {
   const sequence = ++homeRequest;
   const id = placementLearnerId;
   $('home-loading').hidden = false; $('home-content').hidden = true; $('app-error').hidden = true;
   try {
     let profile = null, queue = null, active = null, activity = [];
     if (id) [profile, queue, active, activity] = await Promise.all([
-      api(`/api/learners/${id}/profile`), api(`/api/learners/${id}/reviews/due?minutes=10`),
+      initialProfile?.learner_id === id ? Promise.resolve(initialProfile) : api(`/api/learners/${id}/profile`), api(`/api/learners/${id}/reviews/due?minutes=10`),
       api(`/api/learners/${id}/study/active`), api(`/api/learners/${id}/activity?limit=3`)
     ]);
     if (sequence !== homeRequest || id !== placementLearnerId) return;
@@ -172,7 +172,7 @@ async function boot() {
     appReady = true;
   } catch (error) { showAppError(error); }
   finally { booting = false; $('app-loading').hidden = true; }
-  if (appReady) await renderRoute();
+  if (appReady) await renderRoute({profile:activeProfile});
 }
 connectionState();
 boot();
