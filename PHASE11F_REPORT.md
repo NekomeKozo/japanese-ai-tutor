@@ -54,7 +54,11 @@ LCP, CLS and INP are **unavailable**: the supported browser inspection surface d
 
 ## Deployment and hosting limits
 
-Implementation is prepared for the existing `main` → Render auto-deployment workflow. Deployment and CI results will be recorded after the push. No service/database recreation, billing changes, Supabase settings changes, paid calls, load testing or keep-alive traffic.
+Implementation commit `568c359` was pushed to `main` through the existing Render auto-deployment workflow. [GitHub Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37194641205) passed, including the full backend suite, disposable PostgreSQL initialization/restoration and receipt tests, source/history audit, JavaScript syntax and all 139 frontend tests. No service/database recreation, billing changes, Supabase settings changes, paid calls, load testing or keep-alive traffic.
+
+Live verification on October 4, 2026: the freshly loaded HTML uses the new asset version; Home restores the existing learner, Free Practice loads its versioned catalog and supports reveal/next, and Due Reviews retrieves the existing scheduled queue. No live rating, chat, recording or learner mutation was submitted. Desktop at 1440px and mobile emulation at 390px have no document overflow; revealed rating controls are reachable by keyboard (focused Hard button at 478–550px in a 900px viewport). Live captures are retained in task outputs. The live versioned stylesheet uses gzip and private immutable caching and matches the local content after line-ending normalization.
+
+The first public health check timed out after 25 seconds; that observation alone cannot establish whether sleep/wake, deployment turnover or networking caused it. A later warm `/health` request returned 200 in 86.9ms including client/network overhead, with `no-store`; the stylesheet returned 200 in 91.21ms. These are single live round trips, not database latency, a cold-start benchmark or a Core Web Vitals score. Unauthenticated API/static probes returned 401/no-store. Results are retained in `design/performance/phase11f/live-checks.json`.
 
 Render sleep/wake, image build and remote PostgreSQL connection/lock latency are distinct from warm app performance. This phase does not remove sleep or serialization protections. AI generation/transcription latency is unchanged and not rebenchmarked using paid/real calls. Other synchronous backend workflows remain potential future profiling targets; worker dispatch alone does not remove database contention.
 
