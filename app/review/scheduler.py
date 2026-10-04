@@ -15,6 +15,15 @@ class ReviewScheduler:
             relearning_steps=(timedelta(minutes=policy.learning_minutes),), maximum_interval=policy.maximum_interval)
 
     def calculate_next_review(self, previous, evidence, mastery, now):
+        return self._schedule(previous, evidence, mastery, now, rating(evidence, mastery, self.policy))
+
+    def process_recall_rating(self, previous, target, mastery, now, label):
+        """Explicit self-report; never manufacture graded Evidence or mastery scores."""
+        if label not in ('again', 'hard', 'good', 'easy'):
+            raise ValueError('Invalid recall rating')
+        return self._schedule(previous, target, mastery, now, label)
+
+    def _schedule(self, previous, evidence, mastery, now, label):
         now = utc(now)
         result = copy.deepcopy(previous) if previous else {}
         key = f'{evidence.learner_id}:{evidence.topic_id}:{evidence.dimension}'
@@ -22,7 +31,6 @@ class ReviewScheduler:
         card = Card.from_dict(result['card']) if result else Card(card_id=number,due=now)
         if card.last_review and now < card.last_review:
             raise ValueError('Review clock moved backwards')
-        label = rating(evidence, mastery, self.policy)
         before_state = card.state
         updated, _ = self.engine.review_card(card, Rating[label.capitalize()], review_datetime=now)
         lapse = int(label == 'again' and before_state == State.Review)

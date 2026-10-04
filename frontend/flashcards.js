@@ -11,7 +11,7 @@ function createFlashcardSession(catalog, random = Math.random) {
   return {
     snapshot,
     start(category, selected = 'ja-en') {
-      cards = catalog.filter(card => card.category === category);
+      cards = (typeof catalog === 'function' ? catalog() : catalog).filter(card => card.category === category);
       direction = category === 'vocabulary' && selected === 'en-ja' ? 'en-ja' : 'ja-en';
       index = 0; revealed = false; finished = false; return snapshot();
     },
@@ -23,7 +23,8 @@ function createFlashcardSession(catalog, random = Math.random) {
   };
 }
 
-const flashcards = createFlashcardSession(flashcardCatalog);
+const flashcards = createFlashcardSession(() => flashcardCatalog || []);
+let flashcardMode = 'free';
 let flashcardPlayer = null;
 function cleanFlashcardAudio() { flashcardPlayer?.destroy(); flashcardPlayer = null; }
 function flashcardDirections() {
@@ -33,6 +34,7 @@ function flashcardDirections() {
   $('flashcard-deck-note').textContent = vocabulary ? '12 everyday words · both directions.' : $('flashcard-deck').value === 'kanji' ? '10 characters · meanings and readings in context.' : '8 patterns · meanings, explanations and examples.';
 }
 function renderFlashcard() {
+  if (flashcardMode === 'due') return renderDueFlashcard();
   cleanFlashcardAudio();
   const state = flashcards.snapshot(), card = state.card;
   $('flashcard-session').hidden = !card;
@@ -47,20 +49,26 @@ function renderFlashcard() {
   $('flashcard-progress').textContent = `${state.index + 1} / ${state.cards.length} cards · ${card.category} · ${card.level}`;
   $('flashcard-meter').max = state.cards.length; $('flashcard-meter').value = state.index + 1;
   $('flashcard-meter').setAttribute('aria-valuetext', `Card ${state.index + 1} of ${state.cards.length}`);
-  const reverse = state.direction === 'en-ja';
-  $('flashcard-prompt').textContent = reverse ? 'Recall the Japanese word' : card.category === 'kanji' ? 'Recall the meaning and a reading' : card.category === 'grammar' ? 'Recall how this pattern is used' : 'Recall the meaning';
-  $('flashcard-front').textContent = reverse ? card.meaning : card.front;
-  $('flashcard-front').setAttribute('lang', reverse ? 'en' : 'ja');
-  $('flashcard-reveal').hidden = state.revealed;
   $('flashcard-prev').disabled = state.index === 0;
   $('flashcard-next').textContent = state.index === state.cards.length - 1 ? 'Finish session' : 'Next card';
   if (state.finished) {
     $('flashcard-completion-text').textContent = `Practice ended with ${state.cards.length} cards in this deck. Browsing is not a mastery assessment; no reviews or progress were saved.`;
     return;
   }
-  if (state.revealed) {
+  renderFlashcardFace(card, state.revealed, state.direction === 'en-ja');
+}
+function renderFlashcardFace(card, revealed, reverse = false, due = false) {
+  cleanFlashcardAudio();
+  $('flashcard-answer').replaceChildren();
+  $('flashcard-answer').hidden = !revealed;
+  $('flashcard-prompt').textContent = due ? 'Recall first, then reveal' : reverse ? 'Recall the Japanese word' : card.category === 'kanji' ? 'Recall the meaning and a reading' : card.category === 'grammar' ? 'Recall how this pattern is used' : 'Recall the meaning';
+  $('flashcard-front').textContent = reverse ? card.meaning : card.front;
+  $('flashcard-front').setAttribute('lang', due || reverse ? 'en' : 'ja');
+  $('flashcard-front').className = due ? 'flashcard-front flashcard-question' : 'flashcard-front';
+  $('flashcard-reveal').hidden = revealed;
+  if (revealed) {
     const answer = $('flashcard-answer');
-    const heading = node('h3', reverse ? card.front : card.back, 'flashcard-answer-title'); heading.setAttribute('lang',reverse ? 'ja' : 'en');
+    const heading = node('h3', reverse ? card.front : card.back, 'flashcard-answer-title'); heading.setAttribute('lang',reverse || due && /[\u3040-\u30ff\u3400-\u9fff]/.test(card.back) ? 'ja' : 'en');
     answer.append(heading);
     if (card.reading) { const reading = node('p',card.reading,'flashcard-reading'); reading.setAttribute('lang','ja'); answer.append(reading); }
     if (reverse) answer.append(node('p',card.meaning));
@@ -69,15 +77,15 @@ function renderFlashcard() {
       const example = node('p',card.example_japanese,'flashcard-example'); example.setAttribute('lang','ja'); answer.append(example,node('p',card.example_translation,'small'));
     }
     // No activity callback: flashcard TTS never submits listening/mastery evidence.
-    flashcardPlayer = attachJapaneseAudio(answer, card.category === 'vocabulary' ? card.front : card.example_japanese || card.front, 'Flashcard Japanese');
+    flashcardPlayer = attachJapaneseAudio(answer, card.audio_text || (card.category === 'vocabulary' ? card.front : card.example_japanese || card.front), 'Flashcard Japanese');
   }
 }
 function flashcardAction(action, focus = 'flashcard-front') { action(); renderFlashcard(); visibleFocus(focus); }
 $('flashcard-deck').addEventListener('change', flashcardDirections);
 $('flashcard-setup').addEventListener('submit', event => {
-  event.preventDefault(); flashcards.start($('flashcard-deck').value,$('flashcard-direction').value); renderFlashcard(); visibleFocus('flashcard-front');
+  event.preventDefault(); if (!flashcardCatalog) return; flashcards.start($('flashcard-deck').value,$('flashcard-direction').value); renderFlashcard(); visibleFocus('flashcard-front');
 });
-$('flashcard-reveal').addEventListener('click', () => flashcardAction(() => flashcards.reveal(),'flashcard-answer'));
+$('flashcard-reveal').addEventListener('click', () => { if (flashcardMode === 'due') { dueFlashcards.revealed = true; renderDueFlashcard(); visibleFocus('flashcard-answer'); } else flashcardAction(() => flashcards.reveal(),'flashcard-answer'); });
 $('flashcard-prev').addEventListener('click', () => flashcardAction(() => flashcards.move(-1)));
 $('flashcard-next').addEventListener('click', () => flashcardAction(() => {
   const state = flashcards.snapshot(); if (state.index === state.cards.length - 1) flashcards.finish(); else flashcards.move(1);
@@ -91,3 +99,14 @@ window.addEventListener('hashchange', cleanFlashcardAudio);
 window.addEventListener('pagehide', cleanFlashcardAudio);
 document.addEventListener('learner-changed', () => { cleanFlashcardAudio(); flashcards.clear(); $('flashcard-session').hidden = true; });
 flashcardDirections();
+
+async function loadFlashcards() {
+  if (flashcardMode === 'due') { if (!dueFlashcards.loaded && !dueFlashcards.loading) loadDueFlashcards(); else renderDueFlashcard(); return; }
+  if (flashcardCatalog) { if (flashcards.snapshot().card) renderFlashcard(); else { $('flashcard-session').hidden = true; $('flashcard-empty').hidden = true; } return; }
+  $('flashcard-catalog-status').textContent = 'Loading practice decks…';
+  $('flashcard-start').disabled = true;
+  try { await loadFlashcardCatalog(); $('flashcard-catalog-status').textContent = ''; }
+  catch (error) { $('flashcard-catalog-status').textContent = friendlyError(error); }
+  finally { $('flashcard-start').disabled = !flashcardCatalog; $('flashcard-catalog-retry').hidden = Boolean(flashcardCatalog); }
+}
+$('flashcard-catalog-retry').addEventListener('click', loadFlashcards);

@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from uuid import NAMESPACE_URL, uuid5
+from types import SimpleNamespace
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from app.errors import TutorError
 from app.learner.catalog import TOPICS
@@ -100,6 +101,64 @@ class ReviewService:
             self.owned(db,learner)
             return queue(db,str(learner),utc(self.clock.now()),minutes,skill)
 
+    def get_flashcards(self, learner, minutes=20):
+        from app.review.queue import queue
+        from app.review.flashcards import eligible, card
+        with self.repository.connection() as db:
+            self.owned(db, learner)
+            result = queue(db, str(learner), utc(self.clock.now()), minutes, eligible=eligible)
+            for item in result['items']:
+                item['card'] = card(item['topic_id'], item['dimension'])
+                item.pop('review_count', None)
+            return result
+
+    def recall(self, learner, schedule_id, submission_id, version, label):
+        from app.review.flashcards import eligible
+        learner, key, event_id = str(learner), str(schedule_id), str(submission_id)
+        now = utc(self.clock.now())
+        fingerprint = json.dumps([learner, key, version, label])
+        with self.repository.connection() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self.owned(db, learner)
+            prior = db.execute('SELECT learner_id,fingerprint FROM learning_events WHERE event_id=?', (event_id,)).fetchone()
+            if prior:
+                if prior[0] != learner or prior[1] != fingerprint:
+                    raise TutorError('review_conflict', 'This submission belongs to a different review. Reload Due Reviews.', 409)
+                attempt = db.execute('SELECT payload FROM review_attempts WHERE schedule_id=? AND event_id=? AND learner_id=?', (key,event_id,learner)).fetchone()
+                if not attempt:
+                    raise TutorError('review_conflict', 'Reload Due Reviews to continue.', 409)
+                return json.loads(attempt[0])['receipt']
+            row = db.execute('SELECT topic_id,dimension,state_json,suspended,version,due_at FROM review_schedules WHERE learner_id=? AND schedule_id=?', (learner,key)).fetchone()
+            if not row:
+                raise TutorError('review_not_found', 'Review target not found.', 404)
+            topic, dimension, payload, suspended, current, due = row
+            if suspended or version != current or datetime.fromisoformat(due) > now:
+                raise TutorError('review_changed', 'This review has changed or is no longer due. Reload Due Reviews.', 409)
+            if not eligible(topic, dimension):
+                raise TutorError('review_unsupported', 'Use Daily Study for this review target.', 422)
+            found = db.execute('SELECT state_json FROM topic_mastery WHERE learner_id=? AND topic_id=?', (learner,topic)).fetchone()
+            mastery = json.loads(found[0]).get('dimensions',{}).get(dimension,{}) if found else {}
+            target = dict(learner_id=learner, topic_id=topic, dimension=dimension, evidence_type='recognition' if dimension=='recognition' else 'recall')
+            previous = json.loads(payload)
+            state = ReviewScheduler().process_recall_rating(previous, SimpleNamespace(**target), mastery, now, label)
+            receipt = dict(review_id=key, submission_id=event_id, rating=label, due_at=state['due_at'], completed=True)
+            metadata = dict(method='self_report', recall_rating=label, review_schedule_id=key, dimension=dimension)
+            # A truthful activity event, without a fabricated score or graded mastery evidence.
+            db.execute('INSERT INTO learning_events VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+                (event_id,learner,'flashcard_review_completed',topic,TOPICS[topic].skill,None,None,'manual_review',None,fingerprint,json.dumps(metadata),now.isoformat()))
+            save(db,learner,topic,dimension,state)
+            attempt = dict(method='self_report',target=target,rating=label,mastery=mastery,previous=previous,result=state,receipt=receipt)
+            db.execute('INSERT INTO review_attempts VALUES (?,?,?,?,?)',(key,event_id,learner,now.isoformat(),json.dumps(attempt)))
+            db.execute('UPDATE learner_state SET last_activity_at=?,updated_at=? WHERE learner_id=?',(now.isoformat(),now.isoformat(),learner))
+            return receipt
+
+    def history(self, learner, limit=20):
+        with self.repository.connection() as db:
+            self.owned(db, learner)
+            rows = db.execute('SELECT r.schedule_id,r.topic_id,r.dimension,a.reviewed_at,a.payload FROM review_attempts a JOIN review_schedules r ON r.schedule_id=a.schedule_id WHERE a.learner_id=? ORDER BY a.reviewed_at DESC,a.event_id DESC LIMIT ?', (str(learner),limit)).fetchall()
+            return dict(items=[dict(review_id=key,title=TOPICS[topic].label,dimension=dim,reviewed_at=when,
+                rating=json.loads(data)['result']['last_rating'],method=json.loads(data).get('method','graded')) for key,topic,dim,when,data in rows])
+
     def forecast(self,learner,timezone_name='UTC'):
         try:
             zone=ZoneInfo(timezone_name)
@@ -138,8 +197,11 @@ class ReviewService:
                 for index,(attempt,) in enumerate(rows):
                     data=json.loads(attempt)
                     if index==0: state=data['previous']
-                    evidence=Evidence.model_validate(data['evidence'])
-                    state=ReviewScheduler().process_review(state,evidence,data['mastery'],evidence.timestamp)
+                    if data.get('method') == 'self_report':
+                        state=ReviewScheduler().process_recall_rating(state,SimpleNamespace(**data['target']),data['mastery'],datetime.fromisoformat(data['result']['last_reviewed_at']),data['rating'])
+                    else:
+                        evidence=Evidence.model_validate(data['evidence'])
+                        state=ReviewScheduler().process_review(state,evidence,data['mastery'],evidence.timestamp)
                 state['version']=current['version']+1
                 save(db,str(learner),topic,dim,state,suspended)
 

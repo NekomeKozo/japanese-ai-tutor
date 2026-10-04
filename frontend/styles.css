@@ -20,7 +20,18 @@
 .flashcard-reading,.flashcard-example { font-size:1.25rem; line-height:1.8; }
 .flashcard-controls { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
 .flashcard-controls button { flex:1 1 180px; }
+.flashcard-front.flashcard-question { font-size:clamp(1.25rem,3vw,2rem); line-height:1.7; }
+.flashcard-rating-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:24px; }
+.flashcard-rating-grid button { padding:12px 8px; min-height:68px; }
+.flashcard-rating-grid span { display:block; font-size:.8rem; font-weight:400; }
+.flashcard-rating-grid .rating-again { background:var(--error-bg); color:var(--error); border-color:#d7b4ad; }
+.flashcard-rating-grid .rating-hard { background:#fff2d9; color:#714914; border-color:#d8c3a2; }
+.flashcard-rating-grid .rating-good { background:var(--soft); color:var(--accent); border-color:var(--control-border); }
+.flashcard-rating-grid button:hover:not(:disabled) { background:var(--accent-hover); color:var(--on-accent); }
+#flashcard-due-error { padding:12px; border-radius:var(--small-radius); color:var(--error); background:var(--error-bg); }
+#flashcard-free-options,#flashcard-due-options { margin-top:20px; }
 @media(max-width:480px) {
+  .flashcard-rating-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .flashcard-setup { grid-template-columns:minmax(0,1fr); }
   .flashcard-setup button { justify-self:stretch; }
   .flashcard-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }

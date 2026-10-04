@@ -1,8 +1,29 @@
 from uuid import UUID
 from typing import Literal
 from fastapi import APIRouter,Request,Query
+from pydantic import BaseModel, ConfigDict, Field
+from app.safeguards import study_guard
 
 router=APIRouter(prefix='/api/learners/{learner_id}/reviews')
+
+class RecallSubmission(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    submission_id: UUID
+    version: int = Field(ge=1, strict=True)
+    rating: Literal['again','hard','good','easy']
+
+@router.get('/flashcards')
+async def flashcards(request:Request,learner_id:UUID,minutes:int=Query(20,ge=5,le=60)):
+    return request.app.state.reviews.get_flashcards(learner_id,minutes)
+
+@router.post('/{review_id}/recall')
+async def recall(request:Request,learner_id:UUID,review_id:UUID,body:RecallSubmission):
+    study_guard(request)
+    return request.app.state.reviews.recall(learner_id,review_id,body.submission_id,body.version,body.rating)
+
+@router.get('/history')
+async def history(request:Request,learner_id:UUID,limit:int=Query(20,ge=1,le=50)):
+    return request.app.state.reviews.history(learner_id,limit)
 
 @router.get('/due')
 async def due(request:Request,learner_id:UUID,minutes:int=Query(20,ge=5,le=60),skill:Literal['grammar','vocabulary','kanji']|None=None):

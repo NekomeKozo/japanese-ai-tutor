@@ -6,7 +6,7 @@ from app.review.policy import POLICY
 def duration(kind,dimension):
     return 4 if kind=='grammar' and dimension in ('production','application') else 3 if dimension=='production' else 2
 
-def queue(db,learner,now,minutes,skill=None):
+def queue(db,learner,now,minutes,skill=None,eligible=None):
     from app.review.content import supported
     from app.curriculum.catalog import CATALOG
     from app.mastery.catalog import curriculum_key
@@ -18,7 +18,7 @@ def queue(db,learner,now,minutes,skill=None):
     for key,topic,dim,payload,mastery_json,due_at in rows:
         t=TOPICS[topic]
         if skill and t.kind!=skill: continue
-        if not supported(topic,dim): unsupported+=1; continue
+        if not supported(topic,dim) or (eligible is not None and not eligible(topic,dim)): unsupported+=1; continue
         state=json.loads(payload); mastery=json.loads(mastery_json) if mastery_json else {}
         m=mastery.get('dimensions',{}).get(dim,{})
         days=max(0,(now-datetime.fromisoformat(due_at)).total_seconds()/86400)

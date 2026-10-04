@@ -1,0 +1,484 @@
+[
+  {
+    "id": "fc_vocab_neko",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "猫",
+    "back": "cat",
+    "reading": "ねこ",
+    "meaning": "cat",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "猫がいます。",
+    "example_translation": "There is a cat.",
+    "topic_id": null,
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_gakkou",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "学校",
+    "back": "school",
+    "reading": "がっこう",
+    "meaning": "school",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "学校に行きます。",
+    "example_translation": "I go to school.",
+    "topic_id": "vocab_gakkou",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_yakusoku",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "約束",
+    "back": "promise; appointment",
+    "reading": "やくそく",
+    "meaning": "promise; appointment",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "友達と約束があります。",
+    "example_translation": "I have an appointment with a friend.",
+    "topic_id": null,
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_mizu",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "水",
+    "back": "water",
+    "reading": "みず",
+    "meaning": "water",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "水を飲みます。",
+    "example_translation": "I drink water.",
+    "topic_id": "vocab_mizu",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_eki",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "駅",
+    "back": "station",
+    "reading": "えき",
+    "meaning": "station",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "駅は近いです。",
+    "example_translation": "The station is nearby.",
+    "topic_id": "vocab_eki",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_taberu",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "食べる",
+    "back": "to eat",
+    "reading": "たべる",
+    "meaning": "to eat",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "朝ご飯を食べます。",
+    "example_translation": "I eat breakfast.",
+    "topic_id": "vocab_taberu",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_iku",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "行く",
+    "back": "to go",
+    "reading": "いく",
+    "meaning": "to go",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "日本に行きます。",
+    "example_translation": "I go to Japan.",
+    "topic_id": "vocab_iku",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_toshokan",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "図書館",
+    "back": "library",
+    "reading": "としょかん",
+    "meaning": "library",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "図書館で本を読みます。",
+    "example_translation": "I read books at the library.",
+    "topic_id": "vocab_toshokan",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_kyou",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "今日",
+    "back": "today",
+    "reading": "きょう",
+    "meaning": "today",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "今日は休みです。",
+    "example_translation": "Today is a day off.",
+    "topic_id": "vocab_kyou",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_ashita",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "明日",
+    "back": "tomorrow",
+    "reading": "あした",
+    "meaning": "tomorrow",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "明日、勉強します。",
+    "example_translation": "I will study tomorrow.",
+    "topic_id": "vocab_ashita",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_yasui",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "安い",
+    "back": "inexpensive",
+    "reading": "やすい",
+    "meaning": "inexpensive",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "この本は安いです。",
+    "example_translation": "This book is inexpensive.",
+    "topic_id": "vocab_yasui",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_vocab_arigatou",
+    "category": "vocabulary",
+    "level": "Beginner",
+    "front": "ありがとう",
+    "back": "thank you",
+    "reading": "ありがとう",
+    "meaning": "thank you",
+    "explanation": "Recall the word, then read it in the example sentence.",
+    "example_japanese": "ありがとう。助かりました。",
+    "example_translation": "Thank you. That helped.",
+    "topic_id": "vocab_arigatou",
+    "tags": [
+      "everyday"
+    ]
+  },
+  {
+    "id": "fc_kanji_ichi",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "一",
+    "back": "one",
+    "reading": "いち / ひと",
+    "meaning": "one",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 一つ（ひとつ）— one thing.",
+    "example_japanese": "一つ",
+    "example_translation": "one thing",
+    "topic_id": "kanji_ichi",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_tsuki",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "月",
+    "back": "moon; month",
+    "reading": "げつ / がつ / つき",
+    "meaning": "moon; month",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 月曜日（げつようび）— Monday.",
+    "example_japanese": "月曜日",
+    "example_translation": "Monday",
+    "topic_id": "kanji_tsuki",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_hito",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "人",
+    "back": "person",
+    "reading": "じん / にん / ひと",
+    "meaning": "person",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 日本人（にほんじん）— Japanese person.",
+    "example_japanese": "日本人",
+    "example_translation": "Japanese person",
+    "topic_id": "kanji_hito",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_yama",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "山",
+    "back": "mountain",
+    "reading": "さん / やま",
+    "meaning": "mountain",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 山（やま）— mountain.",
+    "example_japanese": "山",
+    "example_translation": "mountain",
+    "topic_id": "kanji_yama",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_gaku",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "学",
+    "back": "study; learning",
+    "reading": "がく / まなぶ",
+    "meaning": "study; learning",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 学校（がっこう）— school.",
+    "example_japanese": "学校",
+    "example_translation": "school",
+    "topic_id": "kanji_gaku",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_kuruma",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "車",
+    "back": "car; vehicle",
+    "reading": "しゃ / くるま",
+    "meaning": "car; vehicle",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 電車（でんしゃ）— train.",
+    "example_japanese": "電車",
+    "example_translation": "train",
+    "topic_id": "kanji_kuruma",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_nomu",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "飲",
+    "back": "drink",
+    "reading": "いん / のむ",
+    "meaning": "drink",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 飲む（のむ）— to drink.",
+    "example_japanese": "飲む",
+    "example_translation": "to drink",
+    "topic_id": "kanji_nomu",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_sha",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "社",
+    "back": "company; shrine",
+    "reading": "しゃ / やしろ",
+    "meaning": "company; shrine",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 会社（かいしゃ）— company.",
+    "example_japanese": "会社",
+    "example_translation": "company",
+    "topic_id": "kanji_sha",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_sei",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "生",
+    "back": "life; birth",
+    "reading": "せい / しょう / いきる",
+    "meaning": "life; birth",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 学生（がくせい）— student.",
+    "example_japanese": "学生",
+    "example_translation": "student",
+    "topic_id": "kanji_sei",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_kanji_kou",
+    "category": "kanji",
+    "level": "Beginner",
+    "front": "校",
+    "back": "school",
+    "reading": "こう",
+    "meaning": "school",
+    "explanation": "Selected readings, not an exhaustive list. Readings depend on the word. Example: 学校（がっこう）— school.",
+    "example_japanese": "学校",
+    "example_translation": "school",
+    "topic_id": "kanji_kou",
+    "tags": [
+      "character",
+      "reading-in-context"
+    ]
+  },
+  {
+    "id": "fc_grammar_tai",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "〜たい",
+    "back": "want to do something",
+    "meaning": "want to do something",
+    "explanation": "Attach たい to the verb stem before ます. It conjugates like an い-adjective.",
+    "example_japanese": "日本に行きたいです。",
+    "example_translation": "I want to go to Japan.",
+    "topic_id": "tai_form",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_ni",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "に · destination",
+    "back": "destination of movement",
+    "meaning": "destination of movement",
+    "explanation": "Use に after a destination with a movement verb such as 行く.",
+    "example_japanese": "学校に行きます。",
+    "example_translation": "I go to school.",
+    "topic_id": "particle_ni_destination",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_de",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "で · action location",
+    "back": "where an action happens",
+    "meaning": "where an action happens",
+    "explanation": "Use で after the place where an action is performed.",
+    "example_japanese": "図書館で勉強します。",
+    "example_translation": "I study at the library.",
+    "topic_id": "particle_de_location",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_wa",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "は · topic",
+    "back": "introduce the topic",
+    "meaning": "introduce the topic",
+    "explanation": "は marks what the sentence is about. As a particle, it is pronounced わ.",
+    "example_japanese": "私は学生です。",
+    "example_translation": "I am a student.",
+    "topic_id": "particle_wa_vs_ga",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_past",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "〜ました",
+    "back": "polite past of a verb",
+    "meaning": "polite past of a verb",
+    "explanation": "Replace ます with ました for a polite affirmative past statement.",
+    "example_japanese": "昨日、本を読みました。",
+    "example_translation": "I read a book yesterday.",
+    "topic_id": "verb_past_tense",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_te",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "〜てください",
+    "back": "a polite request to do something",
+    "meaning": "a polite request to do something",
+    "explanation": "Add ください to a verb in its て-form. The て-form depends on the verb group.",
+    "example_japanese": "ここに名前を書いてください。",
+    "example_translation": "Please write your name here.",
+    "topic_id": "verb_te_form",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_i",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "〜くないです",
+    "back": "negative of an い-adjective",
+    "meaning": "negative of an い-adjective",
+    "explanation": "Replace the final い with くないです. いい is irregular: よくないです.",
+    "example_japanese": "この本は高くないです。",
+    "example_translation": "This book is not expensive.",
+    "topic_id": "adjective_i_conjugation",
+    "tags": [
+      "pattern"
+    ]
+  },
+  {
+    "id": "fc_grammar_na",
+    "category": "grammar",
+    "level": "Beginner",
+    "front": "〜な + noun",
+    "back": "a な-adjective describing a noun",
+    "meaning": "a な-adjective describing a noun",
+    "explanation": "Use な between a な-adjective and the noun it describes.",
+    "example_japanese": "静かな部屋で勉強します。",
+    "example_translation": "I study in a quiet room.",
+    "topic_id": "adjective_na_conjugation",
+    "tags": [
+      "pattern"
+    ]
+  }
+]

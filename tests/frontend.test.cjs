@@ -38,7 +38,7 @@ function harness(audio = {}) {
     fetch:async (url, options={})=>{ requests.push({url,...options}); throw new TypeError('offline'); }
   });
   // Run all real scripts; bootstrap is invoked explicitly by each test.
-  for (const name of scripts) { let source=fs.readFileSync(path.join(root,name),'utf8'); if(name==='shell.js') source=source.replace(/boot\(\);\s*$/, ''); vm.runInContext(source,ctx,{filename:name}); }
+  for (const name of scripts) { let source=fs.readFileSync(path.join(root,name),'utf8'); if(name==='shell.js') source=source.replace(/boot\(\);\s*$/, ''); vm.runInContext(source,ctx,{filename:name}); if(name==='flashcard-catalog.js') vm.runInContext('flashcardCatalog = validateFlashcardCatalog('+fs.readFileSync(path.join(root,'flashcard-catalog.json'),'utf8')+')',ctx); }
   return {ctx,elements,requests,storage,windowEvents,documentEvents,run:source=>vm.runInContext(source,ctx)};
 }
 
@@ -46,6 +46,102 @@ function flashcardStart(h, category='vocabulary', direction='ja-en') {
   h.elements.get('flashcard-deck').value=category; h.elements.get('flashcard-direction').value=direction;
   h.elements.get('flashcard-setup').listeners.submit({preventDefault(){}});
 }
+
+function dueHarness(items=2) {
+  const h=harness();h.run("placementLearnerId='learner';flashcardMode='due'");h.ctx.location.hash='#study/flashcards';
+  const cards=Array.from({length:items},(_,i)=>({review_id:'review-'+i,version:1,dimension:'reading',card:{front:'Read 学校 in kana.',back:'がっこう',category:'vocabulary',audio_text:'学校'}}));
+  h.ctx.fetch=async (url,options={})=>{
+    h.requests.push({url,...options});
+    if(url.endsWith('/history'))return {ok:true,json:async()=>({items:[]})};
+    if(url.endsWith('/flashcards'))return {ok:true,json:async()=>({items:cards,due_count:items,unsupported_count:0})};
+    const body=JSON.parse(options.body);return {ok:true,json:async()=>({completed:true,review_id:url.split('/').at(-2),submission_id:body.submission_id})};
+  };
+  return h;
+}
+test('due queue shows the front only, reveal enables ratings without saving',async()=>{
+  const h=dueHarness();await h.run('loadDueFlashcards()');
+  assert.equal(h.elements.get('flashcard-front').textContent,'Read 学校 in kana.');
+  assert.equal(h.elements.get('flashcard-answer').hidden,true);assert.equal(h.elements.get('flashcard-ratings').hidden,true);
+  await h.run("saveFlashcardRating('good')");assert.equal(h.requests.filter(r=>r.method==='POST').length,0);
+  h.elements.get('flashcard-reveal').listeners.click();
+  assert.match(descendantText(h.elements.get('flashcard-answer')),/がっこう/);assert.equal(h.elements.get('flashcard-ratings').hidden,false);
+  assert.equal(h.elements.get('flashcard-rate-good').disabled,false);assert.equal(h.run('dueFlashcards.completed.size'),0);
+});
+test('due save blocks double taps and advances only after a confirmed receipt',async()=>{
+  const h=dueHarness();await h.run('loadDueFlashcards()');h.elements.get('flashcard-reveal').listeners.click();
+  const fetch=h.ctx.fetch;let resolve;h.ctx.fetch=(url,opts)=>opts?.method==='POST'?new Promise(r=>resolve=()=>r(fetch(url,opts))):fetch(url,opts);
+  const saving=h.run("saveFlashcardRating('good')");await h.run("saveFlashcardRating('easy')");
+  assert.equal(h.run('dueFlashcards.index'),0);assert.equal(h.elements.get('flashcard-rate-good').disabled,true);
+  assert.equal(h.run('dueFlashcards.completed.size'),0);resolve();await saving;
+  assert.equal(h.requests.filter(r=>r.method==='POST').length,1);assert.equal(h.run('dueFlashcards.index'),1);
+  assert.equal(h.run('dueFlashcards.completed.size'),1);assert.equal(h.elements.get('flashcard-answer').hidden,true);
+});
+test('ambiguous save retry keeps UUID and original rating and cannot falsely complete',async()=>{
+  const h=dueHarness(1);await h.run('loadDueFlashcards()');h.elements.get('flashcard-reveal').listeners.click();
+  const fetch=h.ctx.fetch;let failedBody;h.ctx.fetch=async(url,opts)=>{if(opts?.method==='POST'){failedBody=opts.body;throw new TypeError('offline');}return fetch(url,opts);};
+  await h.run("saveFlashcardRating('hard')");assert.equal(h.run('dueFlashcards.completed.size'),0);assert.equal(h.run('dueFlashcards.index'),0);
+  assert.equal(h.elements.get('flashcard-due-retry').hidden,false);assert.equal(h.elements.get('flashcard-due-load').disabled,true);
+  h.ctx.fetch=fetch;await h.elements.get('flashcard-due-retry').listeners.click();
+  assert.equal(h.requests.find(r=>r.method==='POST').body,failedBody);assert.match(h.elements.get('flashcard-due-status').textContent,/Batch complete! 1 completed/);
+  assert.equal(h.elements.get('flashcard-session').hidden,true);
+});
+test('changed due review requires reload and cannot be counted',async()=>{
+  const h=dueHarness();await h.run('loadDueFlashcards()');h.elements.get('flashcard-reveal').listeners.click();
+  h.ctx.fetch=async()=>({ok:false,json:async()=>({error:{code:'review_changed',message:'Review changed.'}})});
+  await h.run("saveFlashcardRating('good')");assert.equal(h.run('dueFlashcards.completed.size'),0);
+  assert.equal(h.elements.get('flashcard-due-retry').hidden,true);assert.equal(h.elements.get('flashcard-due-load').disabled,false);
+});
+test('an older history response cannot hide a newly confirmed review',async()=>{
+  const h=dueHarness(1), fetch=h.ctx.fetch;let resolve, calls=0;
+  const entry=title=>({title,dimension:'reading',rating:'good',method:'self_report',reviewed_at:'2026-10-04T00:00:00Z'});
+  h.ctx.fetch=(url,opts)=>{
+    if(url.endsWith('/history')) {
+      if(++calls===1)return new Promise(r=>resolve=()=>r({ok:true,json:async()=>({items:[entry('Old history')]})}));
+      return Promise.resolve({ok:true,json:async()=>({items:[entry('Saved review')]})});
+    }
+    return fetch(url,opts);
+  };
+  await h.run('loadDueFlashcards()');h.elements.get('flashcard-reveal').listeners.click();await h.run("saveFlashcardRating('good')");
+  await new Promise(setImmediate);resolve();await new Promise(setImmediate);
+  assert.match(descendantText(h.elements.get('flashcard-due-history')),/Saved review/);
+  assert.doesNotMatch(descendantText(h.elements.get('flashcard-due-history')),/Old history/);
+});
+test('stale queue and save responses never populate a changed learner',async()=>{
+  const h=dueHarness();let resolve;const fetch=h.ctx.fetch;
+  h.ctx.fetch=(url,opts)=>url.endsWith('/flashcards')?new Promise(r=>resolve=()=>r(fetch(url,opts))):fetch(url,opts);
+  const loading=h.run('loadDueFlashcards()');h.run("placementLearnerId=null;document.dispatchEvent(new Event('learner-changed'))");resolve();await loading;
+  assert.equal(h.run('dueFlashcards.items.length'),0);
+  h.run("placementLearnerId='learner'");h.ctx.fetch=fetch;await h.run('loadDueFlashcards()');h.elements.get('flashcard-reveal').listeners.click();
+  h.ctx.fetch=(url,opts)=>opts?.method==='POST'?new Promise(r=>resolve=()=>r(fetch(url,opts))):fetch(url,opts);
+  const saving=h.run("saveFlashcardRating('good')");h.run("placementLearnerId=null;document.dispatchEvent(new Event('learner-changed'))");resolve();await saving;
+  assert.equal(h.run('dueFlashcards.completed.size'),0);assert.equal(h.elements.get('flashcard-mode-free').disabled,false);
+});
+test('mode switching preserves free practice position and does not post ratings',async()=>{
+  const h=dueHarness();h.run("flashcardMode='free'");flashcardStart(h);h.elements.get('flashcard-next').listeners.click();
+  h.run("setFlashcardMode('due')");await new Promise(setImmediate);h.run("setFlashcardMode('free')");
+  assert.equal(h.run('flashcards.snapshot().index'),1);assert.equal(h.elements.get('flashcard-controls').hidden,false);
+  assert.equal(h.elements.get('flashcard-free-options').hidden,false);assert.equal(h.elements.get('flashcard-ratings').hidden,true);
+  assert.equal(h.requests.filter(r=>r.method==='POST').length,0);
+});
+test('due empty, no profile and network failure are distinct recoverable states',async()=>{
+  const h=dueHarness(0);await h.run('loadDueFlashcards()');assert.match(h.elements.get('flashcard-due-status').textContent,/caught up/);
+  h.run('placementLearnerId=null');await h.run('loadDueFlashcards()');assert.equal(h.elements.get('flashcard-due-profile').hidden,false);
+  h.run("placementLearnerId='learner'");h.ctx.fetch=async()=>{throw new TypeError('offline');};await h.run('loadDueFlashcards()');
+  assert.equal(h.elements.get('flashcard-due-error').hidden,false);assert.equal(h.elements.get('flashcard-due-load').disabled,false);
+  assert.doesNotMatch(h.elements.get('flashcard-due-status').textContent,/caught up/);
+});
+test('due reveal TTS reads the Japanese target without activity or review writes',async()=>{
+  const m=speechMock(),h=m.h;h.run("placementLearnerId='learner';flashcardMode='due';dueFlashcards={...freshDueFlashcards(),learner:'learner',loaded:true,total:1,items:[{review_id:'r',dimension:'production',card:{category:'vocabulary',front:'Recall water in Japanese.',back:'水',audio_text:'水'}}]}");h.ctx.location.hash='#study/flashcards';
+  h.elements.get('flashcard-reveal').listeners.click();const player=h.elements.get('flashcard-answer').children.at(-1);player.children[0].children[0].listeners.click();
+  assert.equal(m.spoken.at(-1).text,'水');assert.equal(h.requests.length,0);assert.equal(h.run('dueFlashcards.completed.size'),0);
+});
+test('practice catalog is cached, retries failed loads and retains validated content',async()=>{
+  const h=harness();h.run('flashcardCatalog=null');const catalog=JSON.parse(fs.readFileSync(path.join(root,'flashcard-catalog.json'),'utf8'));let calls=0;
+  h.ctx.fetch=async()=>{calls++;throw new TypeError('offline');};await h.run('loadFlashcards()');
+  assert.equal(h.elements.get('flashcard-start').disabled,true);assert.equal(h.elements.get('flashcard-catalog-retry').hidden,false);
+  h.ctx.fetch=async()=>{calls++;return {ok:true,json:async()=>catalog};};await h.run('loadFlashcards()');await h.run('loadFlashcards()');
+  assert.equal(calls,2);assert.equal(h.run('flashcardCatalog.length'),30);assert.equal(h.elements.get('flashcard-start').disabled,false);
+});
 function descendantText(element) { return [element.textContent,...element.children.map(descendantText)].join(' '); }
 test('flashcard catalog validates, has stable unique IDs and appropriate decks',()=>{
   const h=harness(), catalog=h.run('flashcardCatalog');

@@ -66,6 +66,17 @@ def test_fresh_repeat_migration_and_rollback(pg_client, pg_settings):
         assert not db.execute("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='learner_state'").fetchone()
 
 
+def test_flashcard_recall_receipt_and_replay_postgres(pg_client,pg_settings,provider,monkeypatch):
+    from tests.test_flashcard_reviews import test_retry_restart_and_stale_version, test_suspension_and_replay_preserve_existing_history
+    clock=review_tests.Clock(); learner=memory_tests.create(pg_client)
+    monkeypatch.setattr('app.learner.events.now_iso',lambda:clock.now().isoformat())
+    pg_client.app.state.reviews.clock=clock
+    test_retry_restart_and_stale_version(pg_client,(learner,clock),pg_settings,provider)
+    learner=memory_tests.create(pg_client)
+    clock.value=review_tests.NOW
+    test_suspension_and_replay_preserve_existing_history(pg_client,(learner,clock))
+
+
 def test_private_knowledge_migration_rebuild_and_rollback(pg_client,pg_settings):
     from app.knowledge.repository import KnowledgeRepository
     from tests.test_knowledge import seed,document
