@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from typing import Literal
 from urllib.parse import urlsplit
 
@@ -34,6 +35,11 @@ class Settings(BaseSettings):
     staging_access_code: SecretStr = SecretStr('')
     staging_session_secret: SecretStr = SecretStr('')
     staging_session_hours: int = Field(default=168, ge=1, le=720)
+    # Preparation only: activation requires the separately reviewed Phase 12B.
+    account_auth_enabled: bool = False
+    supabase_auth_url: str = ''
+    supabase_auth_publishable_key: SecretStr = SecretStr('')
+    supabase_auth_timeout_seconds: float = Field(default=5, ge=1, le=10)
     ai_rate_limit_per_hour: int = Field(default=40, ge=1, le=200)
     ai_global_rate_limit_per_hour: int = Field(default=200, ge=1, le=1000)
     scope_enforcement_enabled: bool = False
@@ -52,6 +58,33 @@ class Settings(BaseSettings):
     knowledge_context_limit: int = Field(default=6000, ge=1000, le=12000)
     knowledge_min_score: float = Field(default=.35, ge=.1, le=1)
     knowledge_db_path: str = 'knowledge_base/index.sqlite3'
+
+    @model_validator(mode='after')
+    def account_auth_configuration(self):
+        if self.account_auth_enabled:
+            raise ValueError('Account authentication activation is unavailable in Phase 12A')
+        key = self.supabase_auth_publishable_key.get_secret_value()
+        if not self.supabase_auth_url and not key:
+            return self
+        if any(ord(char) <= 32 for char in self.supabase_auth_url):
+            raise ValueError('Use a valid Supabase Auth origin')
+        try:
+            origin = urlsplit(self.supabase_auth_url)
+            port = origin.port
+        except ValueError:
+            raise ValueError('Use a valid Supabase Auth origin') from None
+        hosted = (origin.scheme == 'https' and port in (None, 443)
+                  and re.fullmatch(r'[a-z0-9-]+\.supabase\.co', origin.hostname or ''))
+        local = (self.environment == 'development' and origin.scheme == 'http'
+                 and origin.hostname in ('localhost', '127.0.0.1', '::1'))
+        if (not (hosted or local) or origin.username or origin.password or origin.query
+                or origin.fragment or origin.path not in ('', '/')
+                or self.supabase_auth_url.strip() != self.supabase_auth_url):
+            raise ValueError('Use a Supabase HTTPS project origin, or development-only HTTP loopback')
+        if not re.fullmatch(r'sb_publishable_[A-Za-z0-9_-]{10,480}', key):
+            raise ValueError('Auth preparation requires a publishable key, never a privileged key')
+        self.supabase_auth_url = self.supabase_auth_url.rstrip('/')
+        return self
 
     @model_validator(mode='after')
     def staging_configuration(self):
