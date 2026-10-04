@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#285d4e">
   <meta name="application-name" content="GoiGrow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GoiGrow">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/pwa/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/pwa/favicon-32.png">
   <meta name="description" content="GoiGrow — Japanese Tutor. Personalized Japanese practice, JLPT study and daily review. A little, every day.">
   <title>GoiGrow — Japanese Tutor</title>
   <link rel="stylesheet" href="/static/styles.css">
@@ -27,6 +33,7 @@
   <script src="/static/flashcards.js" defer></script>
   <script src="/static/flashcard-reviews.js" defer></script>
   <script src="/static/shell.js" defer></script>
+  <script src="/static/pwa.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to content</a>
@@ -46,6 +53,7 @@
   <main id="main-content" tabindex="-1">
     <header class="page-header"><div><p id="page-kicker" class="eyebrow">YOUR LEARNING SPACE</p><h1 id="page-title" tabindex="-1">Home</h1></div><button id="reset" type="button" class="secondary" hidden>New conversation</button></header>
     <p id="connection-notice" class="notice" role="status" hidden>You’re offline. Reconnect to save answers and continue learning.</p>
+    <p id="pwa-update" class="notice" role="status" hidden>A GoiGrow update is ready. Finish your current activity, then close all GoiGrow tabs and app windows and open it again. Nothing will reload automatically.</p>
     <p id="app-loading" role="status">Opening GoiGrow… After a quiet period, the server may take a moment to wake up. Keep this page open; nothing is being submitted.</p>
     <div id="app-error" role="alert" hidden><p id="app-error-text"></p><button id="app-retry" type="button" class="secondary">Try again</button><a href="#settings">Profile recovery</a></div>
     <section id="home-panel" aria-label="Home" hidden>
@@ -197,6 +205,7 @@
       </div>
     </section>
     <section id="settings-panel" aria-label="Settings" hidden>
+      <section id="pwa-settings" class="placement-card" aria-labelledby="pwa-title"><h2 id="pwa-title">Add GoiGrow to your device</h2><p>Keep GoiGrow close with a home-screen or desktop shortcut. Learning still needs an internet connection.</p><button id="pwa-install" type="button" hidden>Add GoiGrow</button><p>On iPhone, open GoiGrow in Safari, tap Share → Add to Home Screen, then Add. Enable Open as Web App if that option appears. On supported Android and desktop browsers, use the browser’s Install app or Add to Home Screen option.</p><p class="small">Installation is optional. An installed browser may ask for your access code again; saved learning belongs to its private browser session.</p><p id="pwa-status" class="small" role="status"></p></section>
         <div class="placement-card"><h2>Make it yours</h2>
           <p id="settings-loading" role="status">Loading preferences…</p><p id="settings-error" role="alert" hidden></p><button id="settings-retry" type="button" class="secondary" hidden>Reload preferences</button><p id="settings-empty" hidden>Create a learner profile to save preferences. <a href="#placement">Get started</a></p><form id="preferences-form" hidden><fieldset><legend>Japanese display</legend>
             <label><input id="pref-romaji" type="checkbox"> Include romaji when helpful</label>

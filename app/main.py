@@ -7,7 +7,7 @@ from pathlib import Path
 import httpx
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
 from app.web_assets import WebAssets
@@ -117,6 +117,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                   docs_url=None if settings.environment == 'staging' else '/docs',
                   redoc_url=None if settings.environment == 'staging' else '/redoc',
                   openapi_url=None if settings.environment == 'staging' else '/openapi.json')
+    app.state.web_assets = assets
 
     @app.middleware('http')
     async def response_headers(request: Request, call_next):
@@ -142,7 +143,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
         response.headers['Referrer-Policy'] = 'no-referrer'
         # Keep Swagger /docs functional; the tutor UI needs no external scripts.
         if not request.url.path.startswith(('/docs', '/redoc')):
-            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; media-src blob:; frame-ancestors 'none'; base-uri 'self'"
+            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; media-src blob:; frame-ancestors 'none'; base-uri 'self'"
         return response
 
     @app.exception_handler(TutorError)
@@ -186,6 +187,22 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     app.include_router(audio_progress_router)
     # Compress authored static content only. Private API/audio responses stay untouched.
     app.mount('/static', GZipMiddleware(StaticFiles(directory=FRONTEND), minimum_size=500, compresslevel=6), name='static')
+
+    @app.get('/manifest.webmanifest', include_in_schema=False)
+    async def manifest():
+        return JSONResponse(assets.manifest(), media_type='application/manifest+json')
+
+    @app.get('/service-worker.js', include_in_schema=False)
+    async def service_worker():
+        return Response(assets.worker, media_type='application/javascript', headers={'Service-Worker-Allowed':'/'})
+
+    @app.get('/offline', include_in_schema=False)
+    async def offline():
+        return HTMLResponse(assets.offline)
+
+    @app.get('/favicon.ico', include_in_schema=False)
+    async def favicon():
+        return FileResponse(FRONTEND / 'pwa/favicon.ico', media_type='image/x-icon')
 
     @app.get('/health', include_in_schema=False)
     async def health():

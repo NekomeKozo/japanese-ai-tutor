@@ -20,7 +20,7 @@ def test_versioned_assets_compress_without_changing_content(client):
     assert html.headers['cache-control'] == 'no-store'
     version = re.search('data-asset-version="([a-f0-9]+)"', html.text)[1]
     urls = re.findall(r'(?:src|href)="(/static/[^" ]+\.(?:js|css)\?v=[a-f0-9]+)"', html.text)
-    assert len(urls) == 20
+    assert len(urls) == 21
     for url in urls + ['/static/flashcard-catalog.json?v=' + version]:
         zipped = client.get(url, headers={'Accept-Encoding': 'gzip'})
         plain = client.get(url, headers={'Accept-Encoding': 'identity'})

@@ -32,7 +32,7 @@ function harness(audio = {}) {
   const windowEvents = {}, documentEvents = {};
   const ctx = vm.createContext({console, Event, AbortController, Blob, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, setTimeout:()=>1, clearTimeout(){}, crypto:require('node:crypto').webcrypto,
     document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(type,fn){(documentEvents[type] ||= []).push(fn);},dispatchEvent(event){for(const fn of documentEvents[event.type] || []) fn(event);}},
-    window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true,mediaDevices:audio.mediaDevices},performance:{now:audio.now || (()=>0)},
+    window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true,mediaDevices:audio.mediaDevices,...audio.navigator},performance:{now:audio.now || (()=>0)},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     sessionStorage:{getItem:()=>null,setItem(){}},
     fetch:async (url, options={})=>{ requests.push({url,...options}); throw new TypeError('offline'); }
@@ -1043,4 +1043,49 @@ test('lazy public flashcard catalog uses the deployment version',async()=>{
   h.run('flashcardCatalog=null;flashcardCatalogLoading=null');
   h.ctx.fetch=async url=>{h.requests.push({url});return {ok:true,json:async()=>JSON.parse(fs.readFileSync(path.join(root,'flashcard-catalog.json'),'utf8'))};};
   await h.run('loadFlashcardCatalog()');assert.equal(h.requests[0].url,'/static/flashcard-catalog.json?v=version123');
+});
+
+
+test('PWA registers once after load with root scope and bypasses the HTTP worker cache',async()=>{
+  const calls=[];const reg={addEventListener(){}};
+  const h=harness({isSecureContext:true,navigator:{serviceWorker:{controller:null,register:async(...args)=>{calls.push(args);return reg;},ready:Promise.resolve(reg)}}});
+  assert.equal(calls.length,0);await Promise.all(h.windowEvents.load.map(fn=>fn()));await Promise.all(h.windowEvents.load.map(fn=>fn()));
+  assert.equal(calls.length,1);assert.equal(calls[0][0],'/service-worker.js');assert.equal(calls[0][1].scope,'/');assert.equal(calls[0][1].updateViaCache,'none');
+  assert.match(h.elements.get('pwa-status').textContent,/Offline connection help is ready/);assert.equal(h.requests.length,0);
+});
+test('PWA install prompt waits for explicit action and accepted choice is not claimed as installed',async()=>{
+  const h=harness();let prompted=0,prevented=0;
+  h.windowEvents.beforeinstallprompt[0]({preventDefault(){prevented++;},prompt:async()=>prompted++,userChoice:Promise.resolve({outcome:'accepted'})});
+  assert.equal(prevented,1);assert.equal(prompted,0);assert.equal(h.elements.get('pwa-install').hidden,false);
+  await h.elements.get('pwa-install').listeners.click();assert.equal(prompted,1);assert.equal(h.elements.get('pwa-install').hidden,true);
+  assert.match(h.elements.get('pwa-status').textContent,/check the result/);assert.doesNotMatch(h.elements.get('pwa-status').textContent,/installed successfully/);
+  h.windowEvents.appinstalled[0]();assert.equal(h.elements.get('pwa-settings').hidden,true);
+});
+test('PWA keeps standalone install controls hidden and unsupported browsers usable',async()=>{
+  for(const platform of [{navigator:{standalone:true}},{matchMedia:()=>({matches:true,addEventListener(){}})}]) {
+    const h=harness(platform);assert.equal(h.elements.get('pwa-settings').hidden,true);assert.equal(h.elements.get('pwa-install').hidden,true);
+  }
+  const h=harness();await Promise.all(h.windowEvents.load.map(fn=>fn()));assert.equal(h.elements.get('pwa-settings').hidden,false);assert.equal(h.elements.get('pwa-install').hidden,true);assert.equal(h.requests.length,0);
+  assert.match(html,/Safari, tap Share → Add to Home Screen/);
+});
+test('PWA waiting updates give guidance without activating or reloading active sessions',async()=>{
+  const events={};let workerListener;
+  const reg={waiting:null,installing:{state:'installing',addEventListener(type,fn){workerListener=fn;}},addEventListener(type,fn){events[type]=fn;}};
+  const h=harness({isSecureContext:true,navigator:{serviceWorker:{controller:{},register:async()=>reg,ready:Promise.resolve(reg)}}});
+  await Promise.all(h.windowEvents.load.map(fn=>fn()));assert.equal(h.elements.get('pwa-update').hidden,true);
+  events.updatefound();reg.waiting={postMessage(){throw new Error('Must not activate');}};reg.installing.state='installed';workerListener();
+  assert.equal(h.elements.get('pwa-update').hidden,false);assert.equal(h.requests.length,0);assert.equal(h.ctx.redirect,undefined);
+});
+test('PWA registration failure and dismissed installation do not block the website',async()=>{
+  const h=harness({isSecureContext:true,navigator:{serviceWorker:{register:async()=>{throw new TypeError('blocked');}}}});
+  await Promise.all(h.windowEvents.load.map(fn=>fn()));assert.match(h.elements.get('pwa-status').textContent,/still use GoiGrow online/);
+  h.windowEvents.beforeinstallprompt[0]({preventDefault(){},prompt:async()=>{},userChoice:Promise.resolve({outcome:'dismissed'})});await h.elements.get('pwa-install').listeners.click();
+  assert.match(h.elements.get('pwa-status').textContent,/Installation is optional/);assert.equal(h.elements.get('pwa-install').disabled,false);
+});
+test('offline review save cannot complete or automatically replay after reconnect',async()=>{
+  const h=dueHarness(1);await h.run('loadDueFlashcards()');h.elements.get('flashcard-reveal').listeners.click();let posts=0;
+  h.ctx.fetch=async()=>{posts++;throw new TypeError('offline');};h.ctx.navigator.onLine=false;
+  for(const fn of h.windowEvents.offline)fn();assert.equal(h.elements.get('connection-notice').hidden,false);
+  await h.run("saveFlashcardRating('good')");assert.equal(h.run('dueFlashcards.completed.size'),0);assert.equal(posts,1);
+  h.ctx.navigator.onLine=true;for(const fn of h.windowEvents.online)fn();await new Promise(setImmediate);assert.equal(posts,1);assert.equal(h.elements.get('connection-notice').hidden,true);assert.equal(h.run('dueFlashcards.completed.size'),0);
 });

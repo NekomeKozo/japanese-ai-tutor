@@ -11,12 +11,12 @@ from collections import deque
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Request
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field, SecretStr
 from starlette.concurrency import run_in_threadpool
 
-from app.config import PROJECT_ROOT
 from app.errors import TutorError
+from app.web_assets import PWA_PUBLIC_PATHS
 
 logger = logging.getLogger(__name__)
 COOKIE = 'tutor_staging'
@@ -206,6 +206,8 @@ async def before_request(request):
             return JSONResponse({'error': {'code': 'origin_rejected', 'message': 'Open the staging website to continue.'}}, status_code=403)
     if path in ('/health', '/access', '/api/access', '/static/access.js', '/static/styles.css'):
         return None
+    if request.method in ('GET', 'HEAD') and path in PWA_PUBLIC_PATHS:
+        return None
     if not identity:
         if path == '/':
             return RedirectResponse('/access', status_code=303)
@@ -218,8 +220,8 @@ class AccessRequest(BaseModel):
 
 
 @router.get('/access', include_in_schema=False)
-async def access_page():
-    return FileResponse(PROJECT_ROOT / 'frontend' / 'access.html')
+async def access_page(request: Request):
+    return HTMLResponse(request.app.state.web_assets.access)
 
 
 @router.post('/api/access', include_in_schema=False)

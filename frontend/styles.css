@@ -317,3 +317,12 @@ h1,h2,h3,p,li,summary { overflow-wrap:anywhere; }
 .study-nav a:hover:not([aria-current="page"]),.section-nav a:hover:not([aria-current="page"]) { background:var(--soft); color:var(--accent); }
 .primary-nav a:active,.secondary-nav a:active,.study-nav a:active,.section-nav a:active { background:var(--accent-hover); color:var(--on-accent); }
 @media(max-width:540px) { .study-nav a[href="#study/flashcards"] { grid-column:1/-1; } }
+
+/* Installed iOS sessions retain the existing bottom clearance and notch spacing. */
+@media (display-mode:standalone) and (max-width:959px) {
+  .app-sidebar { padding-top:calc(18px + env(safe-area-inset-top)); }
+  .access-page main { padding-top:calc(24px + env(safe-area-inset-top)); padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+}
+@media (display-mode:standalone) and (max-width:540px) {
+  .app-sidebar { padding-top:calc(12px + env(safe-area-inset-top)); }
+}
