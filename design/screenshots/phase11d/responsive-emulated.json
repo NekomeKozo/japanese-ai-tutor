@@ -1,0 +1,194 @@
+[
+  {
+    "category": "vocabulary",
+    "documentWidth": 305,
+    "scrollWidth": 305,
+    "smallButtons": [],
+    "target": 320,
+    "width": 320
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 345,
+    "scrollWidth": 345,
+    "smallButtons": [],
+    "target": 360,
+    "width": 360
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 375,
+    "scrollWidth": 375,
+    "smallButtons": [],
+    "target": 390,
+    "width": 390
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 416,
+    "scrollWidth": 416,
+    "smallButtons": [],
+    "target": 430,
+    "width": 430
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 753,
+    "scrollWidth": 753,
+    "smallButtons": [],
+    "target": 768,
+    "width": 768
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 1009,
+    "scrollWidth": 1009,
+    "smallButtons": [],
+    "target": 1024,
+    "width": 1024
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 1425,
+    "scrollWidth": 1425,
+    "smallButtons": [],
+    "target": 1440,
+    "width": 1440
+  },
+  {
+    "category": "vocabulary",
+    "documentWidth": 1905,
+    "scrollWidth": 1905,
+    "smallButtons": [],
+    "target": 1920,
+    "width": 1920
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 305,
+    "scrollWidth": 305,
+    "smallButtons": [],
+    "target": 320,
+    "width": 320
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 345,
+    "scrollWidth": 345,
+    "smallButtons": [],
+    "target": 360,
+    "width": 360
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 375,
+    "scrollWidth": 375,
+    "smallButtons": [],
+    "target": 390,
+    "width": 390
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 416,
+    "scrollWidth": 416,
+    "smallButtons": [],
+    "target": 430,
+    "width": 430
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 753,
+    "scrollWidth": 753,
+    "smallButtons": [],
+    "target": 768,
+    "width": 768
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 1009,
+    "scrollWidth": 1009,
+    "smallButtons": [],
+    "target": 1024,
+    "width": 1024
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 1425,
+    "scrollWidth": 1425,
+    "smallButtons": [],
+    "target": 1440,
+    "width": 1440
+  },
+  {
+    "category": "kanji",
+    "documentWidth": 1905,
+    "scrollWidth": 1905,
+    "smallButtons": [],
+    "target": 1920,
+    "width": 1920
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 305,
+    "scrollWidth": 305,
+    "smallButtons": [],
+    "target": 320,
+    "width": 320
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 345,
+    "scrollWidth": 345,
+    "smallButtons": [],
+    "target": 360,
+    "width": 360
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 375,
+    "scrollWidth": 375,
+    "smallButtons": [],
+    "target": 390,
+    "width": 390
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 416,
+    "scrollWidth": 416,
+    "smallButtons": [],
+    "target": 430,
+    "width": 430
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 753,
+    "scrollWidth": 753,
+    "smallButtons": [],
+    "target": 768,
+    "width": 768
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 1009,
+    "scrollWidth": 1009,
+    "smallButtons": [],
+    "target": 1024,
+    "width": 1024
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 1425,
+    "scrollWidth": 1425,
+    "smallButtons": [],
+    "target": 1440,
+    "width": 1440
+  },
+  {
+    "category": "grammar",
+    "documentWidth": 1905,
+    "scrollWidth": 1905,
+    "smallButtons": [],
+    "target": 1920,
+    "width": 1920
+  }
+]

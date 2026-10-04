@@ -7,6 +7,26 @@
   font-family:system-ui,-apple-system,"Segoe UI","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
   color:var(--ink); background:var(--page); font-synthesis:none; line-height:1.6;
 }
+.flashcards { max-width:900px; margin-inline:auto; }
+.flashcard-setup { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:end; }
+.flashcard-setup label { display:grid; gap:6px; }
+.flashcard-setup button { grid-column:1/-1; justify-self:start; }
+#flashcard-deck-note { margin-top:16px; }
+.flashcard-stage { padding:clamp(24px,4vw,48px); text-align:center; overflow-wrap:anywhere; }
+.flashcard-front { font-size:clamp(2rem,6vw,4rem); line-height:1.5; margin:20px 0 32px; }
+.flashcard-stage>button { width:100%; }
+.flashcard-answer { text-align:left; }
+.flashcard-answer-title { font-size:1.65rem; margin:0 0 12px; }
+.flashcard-reading,.flashcard-example { font-size:1.25rem; line-height:1.8; }
+.flashcard-controls { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
+.flashcard-controls button { flex:1 1 180px; }
+@media(max-width:480px) {
+  .flashcard-setup { grid-template-columns:minmax(0,1fr); }
+  .flashcard-setup button { justify-self:stretch; }
+  .flashcard-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .flashcard-controls button { padding:10px 12px; }
+  #flashcard-finish { grid-column:1/-1; }
+}
 * { box-sizing:border-box; }
 [hidden] { display:none !important; }
 body { margin:0; padding-left:230px; }
@@ -285,3 +305,4 @@ h1,h2,h3,p,li,summary { overflow-wrap:anywhere; }
 .study-nav a,.section-nav a { display:inline-flex; align-items:center; justify-content:center; min-height:var(--control); }
 .study-nav a:hover:not([aria-current="page"]),.section-nav a:hover:not([aria-current="page"]) { background:var(--soft); color:var(--accent); }
 .primary-nav a:active,.secondary-nav a:active,.study-nav a:active,.section-nav a:active { background:var(--accent-hover); color:var(--on-accent); }
+@media(max-width:540px) { .study-nav a[href="#study/flashcards"] { grid-column:1/-1; } }

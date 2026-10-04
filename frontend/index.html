@@ -23,6 +23,8 @@
   <script src="/static/voice.js" defer></script>
     <script src="/static/mastery.js" defer></script>
     <script src="/static/reviews.js" defer></script>
+  <script src="/static/flashcard-catalog.js" defer></script>
+  <script src="/static/flashcards.js" defer></script>
   <script src="/static/shell.js" defer></script>
 </head>
 <body>
@@ -209,7 +211,44 @@
       <details class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
     </section>
     <section id="study-panel" aria-label="Today's Study" hidden>
-      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a><a href="#study/listening">Listening</a><a href="#study/speaking">Speaking Practice</a></nav>
+      <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a><a href="#study/listening">Listening</a><a href="#study/speaking">Speaking Practice</a><a href="#study/flashcards">Flashcards</a></nav>
+      <section id="flashcard-panel" class="flashcards" aria-label="Japanese Flashcards" hidden>
+        <div class="placement-card">
+          <h2>Flashcards</h2>
+          <p>A little recall, at your own pace.</p>
+          <form id="flashcard-setup" class="flashcard-setup">
+            <label>Deck <select id="flashcard-deck"><option value="vocabulary">Vocabulary</option><option value="kanji">Kanji</option><option value="grammar">Grammar</option></select></label>
+            <label>Study direction <select id="flashcard-direction"><option value="ja-en">Japanese → English</option><option value="en-ja">English → Japanese</option></select></label>
+            <button type="submit">Start flashcards</button>
+          </form>
+          <p id="flashcard-deck-note" class="small"></p>
+          <p class="small">Deck and direction changes apply when you press Start flashcards.</p>
+          <p class="small">Beginner practice labels are our guides, not an official JLPT list. This practice does not save mastery or scheduled reviews.</p>
+        </div>
+        <p id="flashcard-empty" role="status" hidden>No cards in this deck. Choose another deck to practise.</p>
+        <section id="flashcard-session" aria-label="Flashcard session" hidden>
+          <p id="flashcard-progress" role="status" class="small"></p>
+          <progress id="flashcard-meter" max="1" value="0" aria-label="Current card position"></progress>
+          <div id="flashcard-stage" class="placement-card flashcard-stage">
+            <p id="flashcard-prompt" class="eyebrow"></p>
+            <h2 id="flashcard-front" class="flashcard-front" tabindex="-1"></h2>
+            <button id="flashcard-reveal" type="button" aria-controls="flashcard-answer">Reveal answer</button>
+            <div id="flashcard-answer" class="flashcard-answer" tabindex="-1" aria-label="Card answer" hidden></div>
+          </div>
+          <div id="flashcard-controls" class="flashcard-controls">
+            <button id="flashcard-prev" type="button" class="secondary">Previous card</button>
+            <button id="flashcard-next" type="button">Next card</button>
+            <button id="flashcard-shuffle" type="button" class="secondary">Shuffle &amp; restart</button>
+            <button id="flashcard-restart" type="button" class="secondary">Restart session</button>
+            <button id="flashcard-finish" type="button" class="secondary">Finish session</button>
+          </div>
+          <div id="flashcard-completion" class="placement-card" tabindex="-1" hidden>
+            <h2>A little practice, done.</h2><p id="flashcard-completion-text"></p>
+            <div class="assessment-actions"><button id="flashcard-again" type="button">Restart session</button><button id="flashcard-again-shuffle" type="button" class="secondary">Restart with shuffle</button></div>
+          </div>
+          <p class="small">Optional audio uses your browser’s Japanese voice. Its speech service may process text online. No GoiGrow AI provider is called.</p>
+        </section>
+      </section>
       <div id="personalized-study">
       <div id="daily-review" class="placement-card" hidden>
         <h2>Daily Review</h2>

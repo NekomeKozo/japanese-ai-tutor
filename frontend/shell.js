@@ -41,10 +41,11 @@ async function renderRoute() {
   try {
     if (section === 'home') await renderHome();
     if (section === 'study') {
-      const jlpt = detail === 'jlpt', listening = detail === 'listening', speaking = detail === 'speaking';
-      $('personalized-study').hidden = jlpt || listening || speaking; $('jlpt-panel').hidden = !jlpt; $('listening-panel').hidden = !listening; $('speaking-panel').hidden = !speaking;
-      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : listening ? '#study/listening' : speaking ? '#study/speaking' : '#study') ? 'page' : 'false'));
-      if (jlpt) await loadJLPT(); else if (!listening && !speaking) await loadStudy();
+      const jlpt = detail === 'jlpt', listening = detail === 'listening', speaking = detail === 'speaking', flashcard = detail === 'flashcards';
+      $('personalized-study').hidden = jlpt || listening || speaking || flashcard; $('jlpt-panel').hidden = !jlpt; $('listening-panel').hidden = !listening; $('speaking-panel').hidden = !speaking; $('flashcard-panel').hidden = !flashcard;
+      document.querySelectorAll('.study-nav a').forEach(a => a.setAttribute('aria-current', a.hash === (jlpt ? '#study/jlpt' : listening ? '#study/listening' : speaking ? '#study/speaking' : flashcard ? '#study/flashcards' : '#study') ? 'page' : 'false'));
+      if (flashcard) { if (flashcards.snapshot().card) renderFlashcard(); }
+      else if (jlpt) await loadJLPT(); else if (!listening && !speaking) await loadStudy();
     }
     if (section === 'progress') { progressSection(detail); await renderProfile(); }
     if (section === 'settings') await loadSettings();

@@ -42,6 +42,93 @@ function harness(audio = {}) {
   return {ctx,elements,requests,storage,windowEvents,documentEvents,run:source=>vm.runInContext(source,ctx)};
 }
 
+function flashcardStart(h, category='vocabulary', direction='ja-en') {
+  h.elements.get('flashcard-deck').value=category; h.elements.get('flashcard-direction').value=direction;
+  h.elements.get('flashcard-setup').listeners.submit({preventDefault(){}});
+}
+function descendantText(element) { return [element.textContent,...element.children.map(descendantText)].join(' '); }
+test('flashcard catalog validates, has stable unique IDs and appropriate decks',()=>{
+  const h=harness(), catalog=h.run('flashcardCatalog');
+  assert.equal(catalog.length,30);assert.equal(new Set(catalog.map(c=>c.id)).size,30);
+  for(const [category,count] of [['vocabulary',12],['kanji',10],['grammar',8]]) assert.equal(catalog.filter(c=>c.category===category).length,count);
+  assert.equal(catalog[0].id,'fc_vocab_neko');assert.equal(catalog[16].topic_id,'kanji_gaku');assert.equal(catalog[22].topic_id,'tai_form');
+  assert.ok(catalog.every(c=>c.example_japanese&&c.example_translation));assert.ok(Object.isFrozen(catalog));
+});
+test('flashcard malformed records and duplicate identities are rejected',()=>{
+  const h=harness();
+  for(const mutation of ["id:''","category:'unknown'","front:''","meaning:''","reading:null","example_translation:null","tags:'bad'","topic_id:'invalid id'"]) {
+    assert.throws(()=>h.run(`validateFlashcardCatalog([{...flashcardCatalog[0],${mutation}}])`),/Invalid|Missing|needs/);
+  }
+  assert.throws(()=>h.run('validateFlashcardCatalog([flashcardCatalog[0],flashcardCatalog[0]])'),/duplicate/);
+  assert.throws(()=>h.run('validateFlashcardCatalog(null)'),/array/);
+});
+test('vocabulary Japanese question excludes answer until explicit reveal',()=>{
+  const h=harness();flashcardStart(h);
+  assert.equal(h.elements.get('flashcard-front').textContent,'猫');assert.equal(h.elements.get('flashcard-front').attributes.lang,'ja');
+  assert.equal(h.elements.get('flashcard-answer').hidden,true);assert.equal(descendantText(h.elements.get('flashcard-answer')),'');
+  h.elements.get('flashcard-reveal').listeners.click();assert.equal(h.elements.get('flashcard-answer').hidden,false);
+  assert.match(descendantText(h.elements.get('flashcard-answer')),/cat.*ねこ.*猫がいます/);
+  assert.equal(h.elements.get('flashcard-answer').focused,true);assert.equal(h.elements.get('flashcard-reveal').hidden,true);
+});
+test('reverse vocabulary asks English then reveals Japanese and kana',()=>{
+  const h=harness();flashcardStart(h,'vocabulary','en-ja');
+  assert.equal(h.elements.get('flashcard-front').textContent,'cat');assert.equal(h.elements.get('flashcard-front').attributes.lang,'en');
+  assert.equal(h.elements.get('flashcard-answer').children.length,0);
+  h.elements.get('flashcard-reveal').listeners.click();assert.match(descendantText(h.elements.get('flashcard-answer')),/猫.*ねこ/);
+  h.elements.get('flashcard-next').listeners.click();assert.equal(h.run('flashcards.snapshot().direction'),'en-ja');assert.equal(h.elements.get('flashcard-front').textContent,'school');
+});
+for(const category of ['kanji','grammar']) test(`${category} uses specialized Japanese presentation instead of reverse`,()=>{
+  const h=harness();flashcardStart(h,category,'en-ja');assert.equal(h.run('flashcards.snapshot().direction'),'ja-en');
+  h.elements.get('flashcard-reveal').listeners.click();assert.match(descendantText(h.elements.get('flashcard-answer')),category==='kanji'?/one.*ひと.*一つ/:/want to do.*verb stem.*日本に行きたいです/);
+  h.elements.get('flashcard-deck').listeners.change();assert.equal(h.elements.get('flashcard-direction').disabled,true);
+});
+test('next and previous clamp boundaries and remove revealed content',()=>{
+  const h=harness();flashcardStart(h);assert.equal(h.elements.get('flashcard-prev').disabled,true);
+  h.elements.get('flashcard-reveal').listeners.click();h.elements.get('flashcard-next').listeners.click();assert.equal(h.run('flashcards.snapshot().index'),1);
+  assert.equal(h.elements.get('flashcard-answer').children.length,0);assert.equal(h.elements.get('flashcard-answer').hidden,true);
+  h.elements.get('flashcard-prev').listeners.click();h.elements.get('flashcard-prev').listeners.click();assert.equal(h.run('flashcards.snapshot().index'),0);
+});
+test('shuffle has no duplicates, preserves direction and resets position/reveal',()=>{
+  const h=harness();h.run("const shuffled=createFlashcardSession(flashcardCatalog,()=>0); shuffled.start('vocabulary','en-ja'); shuffled.reveal(); shuffled.move(3); shuffled.restart(true)");
+  const state=h.run('shuffled.snapshot()');assert.equal(state.cards.length,12);assert.equal(new Set(state.cards.map(c=>c.id)).size,12);assert.notEqual(state.cards[0].id,'fc_vocab_neko');
+  assert.equal(state.index,0);assert.equal(state.revealed,false);assert.equal(state.direction,'en-ja');
+});
+test('final card finishes session and restart is transient',()=>{
+  const h=harness();flashcardStart(h);for(let i=0;i<11;i++)h.elements.get('flashcard-next').listeners.click();
+  assert.equal(h.elements.get('flashcard-next').textContent,'Finish session');h.elements.get('flashcard-next').listeners.click();
+  assert.equal(h.elements.get('flashcard-completion').hidden,false);assert.equal(h.elements.get('flashcard-stage').hidden,true);
+  assert.match(h.elements.get('flashcard-completion-text').textContent,/no reviews or progress were saved/);
+  h.elements.get('flashcard-again').listeners.click();assert.equal(h.run('flashcards.snapshot().finished'),false);assert.equal(h.run('flashcards.snapshot().index'),0);
+  assert.equal(h.elements.get('flashcard-progress').textContent,'1 / 12 cards · vocabulary · Beginner');
+});
+test('empty flashcard deck shows recovery and does not retain an answer',()=>{
+  const h=harness();flashcardStart(h);h.run("flashcards.start('missing'); renderFlashcard()");
+  assert.equal(h.elements.get('flashcard-empty').hidden,false);assert.equal(h.elements.get('flashcard-session').hidden,true);assert.equal(h.elements.get('flashcard-answer').children.length,0);
+});
+test('flashcard TTS uses Japanese public text and cleans up on navigation',()=>{
+  const m=speechMock(),h=m.h;flashcardStart(h,'vocabulary','en-ja');h.elements.get('flashcard-reveal').listeners.click();
+  const player=h.elements.get('flashcard-answer').children.at(-1);assert.equal(player.attributes['aria-label'],'Audio: Flashcard Japanese');
+  player.children[0].children[0].listeners.click();assert.equal(m.spoken[0].text,'猫');assert.equal(m.spoken[0].lang,'ja-JP');
+  const before=m.synth.cancels;h.elements.get('flashcard-next').listeners.click();assert.ok(m.synth.cancels>before);assert.equal(h.run('japaneseAudio.state().owner'),null);
+  h.elements.get('flashcard-reveal').listeners.click();h.windowEvents.hashchange[0]();assert.equal(h.run('japaneseAudio.state().owner'),null);
+});
+test('flashcard audio handles missing Japanese voice without preventing reveal',()=>{
+  const m=speechMock([{name:'English',lang:'en-US'}]),h=m.h;flashcardStart(h);h.run('japaneseAudio.refresh()');h.elements.get('flashcard-reveal').listeners.click();
+  const player=h.elements.get('flashcard-answer').children.at(-1);assert.equal(player.children[0].children[0].disabled,true);assert.match(player.children.at(-1).textContent,/Japanese voices|No Japanese voice/);
+  assert.equal(h.elements.get('flashcard-answer').hidden,false);assert.equal(m.spoken.length,0);
+});
+test('flashcard route and all session controls produce no AI, storage or review events',async()=>{
+  const h=harness();h.run('appReady=true');h.ctx.location.hash='#study/flashcards';await h.run('renderRoute()');
+  assert.equal(h.elements.get('flashcard-panel').hidden,false);assert.equal(h.elements.get('personalized-study').hidden,true);
+  flashcardStart(h);for(const id of ['flashcard-reveal','flashcard-next','flashcard-prev','flashcard-shuffle','flashcard-restart','flashcard-finish','flashcard-again-shuffle'])h.elements.get(id).listeners.click();
+  assert.equal(h.requests.length,0);assert.equal(h.storage.size,0);assert.equal(h.elements.get('flashcard-meter').attributes['aria-valuetext'],'Card 1 of 12');
+});
+test('return to ordinary Study preserves saved activity and existing routes',async()=>{
+  const h=harness();h.run("appReady=true;placementLearnerId='example';studyPlan={session_id:'saved',status:'in_progress',activities:[],estimated_minutes:5,note:''};studyActivity={activity_id:'current'};refreshReviews=async()=>{}");
+  h.elements.get('study-answer').value='先生です。';h.elements.get('study-activity').hidden=false;h.ctx.location.hash='#study/flashcards';await h.run('renderRoute()');
+  h.ctx.location.hash='#study';await h.run('renderRoute()');assert.equal(h.elements.get('flashcard-panel').hidden,true);assert.equal(h.elements.get('study-answer').value,'先生です。');assert.equal(h.elements.get('study-activity').hidden,false);
+});
+
 test('unique DOM IDs and all literal JavaScript ID references resolve',()=>{
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]); assert.equal(new Set(ids).size,ids.length);
   for (const name of scripts) for (const match of fs.readFileSync(path.join(root,name),'utf8').matchAll(/\$\('([^']+)'\)/g)) assert.ok(ids.includes(match[1]),`${name}: ${match[1]}`);
