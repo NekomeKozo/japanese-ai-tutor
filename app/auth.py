@@ -1,8 +1,8 @@
-"""Inactive Phase 12A utility; no routes, cookies, storage writes or ownership grants.
+"""Phase 12A verification utility; no cookies, storage writes or ownership grants.
 
 Supabase /auth/v1/user is the signature-verification authority over trusted TLS.
 Locally decoded claims only narrow acceptance; decoding NEVER authenticates a user.
-The utility is deliberately not wired into the current staging request pipeline.
+Phase 12B uses the same narrow claims and trusted provider authority in its BFF.
 """
 import asyncio
 import base64

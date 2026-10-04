@@ -66,7 +66,7 @@ def test_disabled_defaults_and_configuration():
         SupabaseAccountVerifier(config, object())
     assert caught.value.status == 503
     for value in [True, 'true']:
-        with pytest.raises(ValidationError,match='activation is unavailable'):
+        with pytest.raises(ValidationError,match='activation requires'):
             auth_settings(account_auth_enabled=value)
     assert auth_settings(account_auth_enabled='false').account_auth_enabled is False
     assert KEY not in repr(auth_settings())

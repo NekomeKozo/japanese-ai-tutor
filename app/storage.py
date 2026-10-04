@@ -56,7 +56,7 @@ class PostgresConnection:
 
 
 @contextmanager
-def postgres_connection(url, *, initialize=False):
+def postgres_connection(url, *, initialize=False, serialize=True):
     # Supabase's session pooler can pool these short-lived connections. Disable
     # prepared statements for compatibility with its transaction pooler too.
     options = conninfo_to_dict(url)
@@ -67,7 +67,8 @@ def postgres_connection(url, *, initialize=False):
     with psycopg.connect(**options, connect_timeout=5, prepare_threshold=None) as connection:
         connection.execute("SET LOCAL statement_timeout='10s'")
         connection.execute("SET LOCAL lock_timeout='5s'")
-        connection.execute('SELECT pg_advisory_xact_lock(650065)')
+        if serialize:
+            connection.execute('SELECT pg_advisory_xact_lock(650065)')
         if initialize:
             connection.execute('CREATE SCHEMA IF NOT EXISTS tutor_private')
             connection.execute('REVOKE ALL ON SCHEMA tutor_private FROM PUBLIC')

@@ -11,6 +11,8 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.gzip import GZipMiddleware
 from app.web_assets import WebAssets
+from app.accounts import AccountService
+from app.api.accounts import router as account_router
 from starlette.exceptions import HTTPException
 
 from app.api.chat import router
@@ -53,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_app(settings: Settings | None = None, provider: LLMProvider | None = None,
-               speech_provider: SpeechProvider | None = None) -> FastAPI:
+               speech_provider: SpeechProvider | None = None, account_provider=None) -> FastAPI:
     settings = settings or Settings()
     assets = WebAssets(FRONTEND)
 
@@ -90,6 +92,11 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             app.state.global_limiter = WindowLimiter()
             app.state.login_limiter = WindowLimiter()
             app.state.login_client_limiter = WindowLimiter()
+            app.state.account_limiter = WindowLimiter()
+            if settings.account_auth_enabled:
+                app.state.accounts = AccountService(repository, settings, account_provider)
+                app.state.accounts.initialize()
+                app.state.account_html = assets.version_html((FRONTEND / 'account.html').read_text(encoding='utf-8'))
             app.state.speech_upload_limiter = WindowLimiter()
             app.state.speech_uploads = 0
             app.state.speech = SpeechService(settings, speech_provider or GroqSpeechProvider(settings, client))
@@ -164,6 +171,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             'Send a nonempty message of up to 4,000 characters, a valid session, learning mode and level.')
         if request.url.path.startswith('/api/learners'):
             message = 'Check the learner/session identifiers and supported preference values.'
+        if request.url.path.startswith('/api/account/'):
+            message = 'Check your email and form fields. New passwords need 12–128 characters.'
         if request.url.path.endswith('/speech/transcribe'):
             message = 'Send a valid learner identifier and transcription request identifier.'
         if request.url.path.startswith('/api/curriculum') or '/study/' in request.url.path:
@@ -182,6 +191,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
             'message': 'Something went wrong. Please try again.'}}))
 
     app.include_router(access_router)
+    if settings.account_auth_enabled:
+        app.include_router(account_router)
     app.include_router(router)
     app.include_router(assessment_router)
     app.include_router(learner_router)
@@ -224,7 +235,11 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
 
     @app.get('/', include_in_schema=False)
     async def index():
-        return HTMLResponse(assets.index)
+        account_card = ('<section class="placement-card"><h2>Your account</h2>'
+            '<p>Invitation-only account sign-in is separate from this browser’s existing learning space. '
+            'Profile linking is not available yet.</p><a class="button-link secondary" href="/auth/sign-in">'
+            'Open account sign-in</a></section>' if settings.account_auth_enabled else '')
+        return HTMLResponse(assets.index.replace('<!-- ACCOUNT_SETTINGS -->', account_card))
 
     return app
 

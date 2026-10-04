@@ -2,6 +2,7 @@ from pathlib import Path
 import re
 from typing import Literal
 from urllib.parse import urlsplit
+from uuid import UUID
 
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -35,8 +36,10 @@ class Settings(BaseSettings):
     staging_access_code: SecretStr = SecretStr('')
     staging_session_secret: SecretStr = SecretStr('')
     staging_session_hours: int = Field(default=168, ge=1, le=720)
-    # Preparation only: activation requires the separately reviewed Phase 12B.
+    # Owner-controlled beta; disabled until private deployment prerequisites exist.
     account_auth_enabled: bool = False
+    account_session_encryption_keys: SecretStr = SecretStr('')
+    account_invited_ids: SecretStr = SecretStr('')
     supabase_auth_url: str = ''
     supabase_auth_publishable_key: SecretStr = SecretStr('')
     supabase_auth_timeout_seconds: float = Field(default=5, ge=1, le=10)
@@ -62,7 +65,27 @@ class Settings(BaseSettings):
     @model_validator(mode='after')
     def account_auth_configuration(self):
         if self.account_auth_enabled:
-            raise ValueError('Account authentication activation is unavailable in Phase 12A')
+            from cryptography.fernet import Fernet
+            try:
+                keys = self.account_session_encryption_keys.get_secret_value().split(',')
+                if not keys[0] or len(keys) > 3:
+                    raise ValueError()
+                for value in keys:
+                    Fernet(value.encode('ascii'))
+                ids = self.account_invited_ids.get_secret_value().split(',')
+                if not ids[0] or len(ids) > 20 or any(str(UUID(value)) != value for value in ids):
+                    raise ValueError()
+            except (ValueError, TypeError, UnicodeError):
+                raise ValueError('Account activation requires private encryption keys and invited account UUIDs') from None
+            if not self.supabase_auth_url or not self.frontend_url:
+                raise ValueError('Account activation requires provider and frontend origins')
+            frontend = urlsplit(self.frontend_url)
+            local_frontend = (self.environment == 'development' and frontend.scheme == 'http'
+                              and frontend.hostname in ('localhost', '127.0.0.1', '::1'))
+            if (not (frontend.scheme == 'https' or local_frontend) or not frontend.netloc
+                    or frontend.username or frontend.password or frontend.path not in ('', '/')
+                    or frontend.query or frontend.fragment or any(ord(c) <= 32 for c in self.frontend_url)):
+                raise ValueError('Account activation requires an exact secure frontend origin')
         key = self.supabase_auth_publishable_key.get_secret_value()
         if not self.supabase_auth_url and not key:
             return self

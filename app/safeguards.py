@@ -206,6 +206,12 @@ async def before_request(request):
             return JSONResponse({'error': {'code': 'origin_rejected', 'message': 'Open the staging website to continue.'}}, status_code=403)
     if path in ('/health', '/access', '/api/access', '/static/access.js', '/static/styles.css'):
         return None
+    # Email landing shells contain no account data and grant no staging access.
+    # Cookies may be absent on cross-site email navigation. ALL account API
+    # requests still pass the existing staging gate below.
+    if (settings.account_auth_enabled and request.method in ('GET', 'HEAD')
+            and path in ('/auth/sign-in', '/auth/callback', '/auth/recovery', '/static/account.js', '/static/account.css')):
+        return None
     if request.method in ('GET', 'HEAD') and path in PWA_PUBLIC_PATHS:
         return None
     if not identity:

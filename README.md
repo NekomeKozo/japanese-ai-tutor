@@ -3,7 +3,32 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 10E — Turn-based voice conversation integration.**
+**Current phase: Phase 12B — Invitation-controlled account foundation (activation pending).**
+
+Accounts use Supabase Auth through GoiGrow's backend. Public signup stays disabled;
+existing staging access and learning records remain separate. Verified invited accounts
+show an account-ready state; learner linking/restoration belongs to Phase 12C.
+See [Phase 12B report](PHASE12B_REPORT.md) for configuration and acceptance status.
+
+`ACCOUNT_AUTH_ENABLED` defaults to `false`: no account entry point or account-table
+migration runs until activation. Required private settings are the Supabase project
+origin/publishable key, `FRONTEND_URL`, separate Fernet
+`ACCOUNT_SESSION_ENCRYPTION_KEYS` (current first; older keys retained for rotation),
+and `ACCOUNT_INVITED_IDS` (exact owner-invited Supabase user UUIDs, maximum 20).
+Never put keys, passwords or email verification links in Git or chat.
+
+Team-only testing uses Supabase's default emails. In an invitation/recovery email,
+**copy the original Accept invitation/Reset password link without opening it**;
+paste it into the account screen and verify explicitly. FastAPI exchanges its hash
+with Supabase; provider session tokens stay encrypted on the server. Invalid/used
+links require a fresh email. Default templates cannot currently be edited without
+custom SMTP; external beta delivery and a polished clickable email flow require a
+separate owner decision. No paid service has been enabled.
+
+Account cookies expire after seven days or 24 hours of inactivity. Logout clears
+the current browser's account session; password reset revokes all application
+account sessions. Safari and installed iOS PWAs sign in independently; this does
+not transfer legacy profiles. Keep existing staging cookies and learner IDs.
 
 In an active **Tutor → Conversation practice** scenario, optionally open **Record
 spoken reply**. Press **Record Reply**, Stop and preview, explicitly Transcribe,
@@ -630,8 +655,10 @@ short reading passages, recognition choices, and a limited production rubric res
 accuracy. Some subskills may have too little evidence for a level. Live LLM grading and
 teaching quality still need verification with a configured key.
 
-The app has no production authentication, rate limits or assessment ownership controls;
-keep it bound to loopback. IDs are not user accounts. Free-response grading can make
+Staging requires its access gate, request limits and server-side resource ownership.
+Development without those controls must remain on loopback. Phase 12B account
+authentication is optional and does not yet authorize learning profiles. IDs are
+not user accounts. Free-response grading can make
 mistakes despite valid JSON. Bank generation is a validated extension point, not an
 implemented automatic generation workflow. There is no streaming, automatic
 level promotion or spaced repetition. The verified dependency set
@@ -641,8 +668,8 @@ Learning observations can be wrong even when structurally valid. The fixed catal
 small, scores are heuristic, and placement confidence remains separate from mastery confidence. Recent mistake
 counts cover at most 50 occurrences in 30 days. Topic status is a rolling signal, not a
 mastery certification. Saved transcripts/events currently have no automatic retention
-cleanup. Requests are scoped to learner/session IDs, but anyone with the IDs and server
-access can read or modify that local learner; this is not production access control.
+cleanup. Local development without the staging gate is not production access control.
+Staging rejects foreign learner/session IDs; account-to-learner linking is pending.
 
 The curriculum catalog covers foundations through a small N3 sample. It is not a complete
 N5–N1 course. Generated text is checked for schema/topic/difficulty identity, but this

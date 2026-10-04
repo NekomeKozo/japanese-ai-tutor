@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+  <meta name="theme-color" content="#285d4e"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="GoiGrow">
+  <title>Sign In — GoiGrow — Japanese Tutor</title>
+  <link rel="icon" href="/static/pwa/favicon-32.png"><link rel="stylesheet" href="/static/styles.css"><link rel="stylesheet" href="/static/account.css">
+  <script src="/static/account.js" defer></script>
+</head>
+<body class="access-page account-page"><main>
+  <div class="brand"><span class="brand-mark" lang="ja">あ</span><span>GoiGrow<span class="brand-descriptor">Japanese Tutor</span><small>A little, every day.</small></span></div>
+  <section class="placement-card" aria-labelledby="account-title">
+    <p class="eyebrow">PRIVATE BETA · INVITATION ONLY</p><h1 id="account-title" tabindex="-1">Sign in</h1>
+    <p id="account-status" role="status" aria-live="polite">Checking account access…</p>
+    <p id="account-error" role="alert" hidden></p>
+    <form id="gate-form" hidden>
+      <p>Enter your existing staging access code to open account sign-in.</p>
+      <label for="gate-code">Staging access code</label><input id="gate-code" type="password" autocomplete="current-password" maxlength="512" required>
+      <button type="submit">Open sign-in</button>
+    </form>
+    <form id="login-form" hidden>
+      <label for="login-email">Email</label><input id="login-email" type="email" autocomplete="username" maxlength="254" required>
+      <label for="login-password">Password</label><input id="login-password" type="password" autocomplete="current-password" maxlength="128" required>
+      <button type="submit">Sign in</button>
+    </form>
+    <form id="link-form" hidden>
+      <p id="link-instructions">In your invitation email, copy the “Accept invitation” link without opening it. Paste it below to verify your email securely.</p>
+      <label for="link-email">Invited email</label><input id="link-email" type="email" autocomplete="email" maxlength="254" required>
+      <label for="email-link">Email verification link</label><input id="email-link" type="password" autocomplete="off" spellcheck="false" maxlength="4096" required aria-describedby="link-privacy">
+      <p id="link-privacy" class="small">Keep this link private. GoiGrow verifies it on the server and does not save it.</p>
+      <button type="submit">Verify email</button>
+    </form>
+    <form id="recovery-form" hidden>
+      <label for="recovery-email">Email</label><input id="recovery-email" type="email" autocomplete="email" maxlength="254" required>
+      <button type="submit">Send recovery email</button>
+      <p class="small">Private team testing only. Copy the reset link from your email into “Use recovery link” without opening it.</p>
+    </form>
+    <form id="password-form" hidden>
+      <label for="new-password">New password</label><input id="new-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required aria-describedby="password-help">
+      <p id="password-help" class="small">Use 12–128 characters. Supabase may require additional password rules.</p>
+      <label for="confirm-password">Confirm password</label><input id="confirm-password" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+      <button type="submit">Save password</button>
+    </form>
+    <div id="account-ready" hidden>
+      <p>Your verified account is ready. Connecting existing learning profiles will be available in a later update. Your saved progress has not been moved or reset.</p>
+      <button id="logout" type="button" class="secondary">Sign out of this browser</button>
+    </div>
+    <nav id="account-options" aria-label="Account options" hidden>
+      <button type="button" data-screen="login" class="secondary">Sign in</button>
+      <button type="button" data-screen="invite" class="secondary">Accept invitation</button>
+      <button type="button" data-screen="forgot" class="secondary">Forgot password</button>
+      <button type="button" data-screen="reset" class="secondary">Use recovery link</button>
+    </nav>
+  </section>
+  <p class="small">Safari and an installed iPhone app can have separate sessions. Sign in independently in each. Account sign-in does not restore or claim a learner profile yet.</p>
+  <a class="button-link" href="/#home">Return to this browser’s existing learning space</a>
+  <noscript><p>Enable JavaScript to use secure account sign-in. Your existing learning space remains available.</p></noscript>
+</main></body></html>

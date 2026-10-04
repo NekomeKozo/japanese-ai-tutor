@@ -1,0 +1,12 @@
+.account-page main { width: min(100%, 38rem); }
+.account-page form { display: grid; gap: .75rem; }
+.account-page form[hidden] { display: none; }
+.account-page input { width: 100%; min-width: 0; font-size: 1rem; }
+.account-page button { min-height: 44px; }
+#account-options { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+#account-options[hidden] { display: none; }
+#account-error { padding: .75rem; border: 1px solid var(--error, #9c3a30); border-radius: .5rem; color: var(--error, #9c3a30); }
+.account-page [aria-busy="true"] { opacity: .75; }
+.account-page h1 { overflow-wrap: anywhere; }
+.account-page .button-link { display: inline-block; white-space: normal; }
+@media (max-width: 480px) { .account-page .placement-card { padding: 1rem; } }
