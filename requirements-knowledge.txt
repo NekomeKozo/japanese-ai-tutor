@@ -1,2 +1,2 @@
 # Administrative PDF ingestion only; the Render web process does not parse PDFs.
-pypdf==6.18.1
+pypdf==6.19.0

@@ -1089,3 +1089,24 @@ test('offline review save cannot complete or automatically replay after reconnec
   await h.run("saveFlashcardRating('good')");assert.equal(h.run('dueFlashcards.completed.size'),0);assert.equal(posts,1);
   h.ctx.navigator.onLine=true;for(const fn of h.windowEvents.online)fn();await new Promise(setImmediate);assert.equal(posts,1);assert.equal(h.elements.get('connection-notice').hidden,true);assert.equal(h.run('dueFlashcards.completed.size'),0);
 });
+
+test('Japanese passage language and untrusted Tutor text remain semantic and inert', () => {
+  const h=harness();
+  const article=h.run("addMessage('tutor','日本語を毎日勉強しましょう。')");
+  assert.equal(article.children[1].attributes.lang,'ja');
+  const english=h.run("addMessage('tutor','This is an English explanation of 日本語.')");
+  assert.equal(english.children[1].attributes.lang,undefined);
+  const injection=h.run("addMessage('learner','<img src=x onerror=alert(1)>')");
+  assert.equal(injection.children[1].textContent,'<img src=x onerror=alert(1)>');
+  assert.equal(injection.children[1].children.length,0);
+});
+
+test('denied profile restoration preserves selected learner and does not create a replacement', async () => {
+  const h=harness();h.run("placementLearnerId='original';activeProfile={learner_id:'original'}");
+  h.ctx.fetch=async (url,options={})=>{h.requests.push({url,...options});return {ok:false,status:404,json:async()=>({error:{code:'not_found',message:'Unavailable in this access session.'}})};};
+  await assert.rejects(h.run("activateLearner('different')"), /Unavailable/);
+  assert.equal(h.run('placementLearnerId'),'original');
+  assert.equal(h.run('activeProfile.learner_id'),'original');
+  assert.equal(h.requests.length,1);
+  assert.equal(h.requests[0].method,undefined);
+});

@@ -15,7 +15,13 @@ attachJapaneseAudio($('conversation').firstElementChild, 'こんにちは！', '
 
 function node(tag, text, className) {
   const element = document.createElement(tag);
-  if (text !== undefined) element.textContent = text;
+  if (text !== undefined) {
+    element.textContent = text;
+    // Mark predominantly Japanese passages; keep English explanations in the
+    // page language rather than switching an entire mixed conversation log.
+    const value = String(text);
+    if ((value.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || []).length > (value.match(/[a-z]/gi) || []).length) element.setAttribute('lang','ja');
+  }
   if (className) element.className = className;
   return element;
 }

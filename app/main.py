@@ -119,32 +119,39 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                   openapi_url=None if settings.environment == 'staging' else '/openapi.json')
     app.state.web_assets = assets
 
+    def secure_response(request, response):
+        response.headers['Cache-Control'] = assets.cache_control(request, response.status_code)
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Permissions-Policy'] = 'camera=(), geolocation=(), microphone=(self)'
+        if settings.environment == 'staging':
+            response.headers['Strict-Transport-Security'] = 'max-age=15552000'
+        # Only the actual development documentation needs its external scripts.
+        docs = settings.environment != 'staging' and request.url.path in ('/docs', '/docs/oauth2-redirect', '/redoc')
+        if not docs:
+            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; media-src blob:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; form-action 'self'"
+        return response
+
     @app.middleware('http')
     async def response_headers(request: Request, call_next):
         # Route templates exclude query strings, learner IDs and user-supplied paths.
         # Routing populates this scope before the service calls its provider.
         token = request_path.set(request.scope)
         speech_upload = request.method == 'POST' and request.url.path.endswith('/speech/transcribe')
-        if speech_upload and request.app.state.speech_uploads >= 2:
-            request_path.reset(token)
-            return JSONResponse({'error': {'code': 'stt_busy', 'message': 'Transcription is busy. Please retry shortly.'}}, status_code=429)
-        if speech_upload:
+        speech_busy = speech_upload and request.app.state.speech_uploads >= 2
+        if speech_upload and not speech_busy:
             request.app.state.speech_uploads += 1
         try:
-            response = await before_request(request)
+            response = (JSONResponse({'error': {'code': 'stt_busy', 'message': 'Transcription is busy. Please retry shortly.'}}, status_code=429)
+                        if speech_busy else await before_request(request))
             if response is None:
                 response = await call_next(request)
         finally:
             request_path.reset(token)
-            if speech_upload:
+            if speech_upload and not speech_busy:
                 request.app.state.speech_uploads -= 1
-        response.headers['Cache-Control'] = assets.cache_control(request, response.status_code)
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['Referrer-Policy'] = 'no-referrer'
-        # Keep Swagger /docs functional; the tutor UI needs no external scripts.
-        if not request.url.path.startswith(('/docs', '/redoc')):
-            response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; worker-src 'self'; manifest-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; media-src blob:; frame-ancestors 'none'; base-uri 'self'"
-        return response
+        return secure_response(request, response)
 
     @app.exception_handler(TutorError)
     async def tutor_error(request: Request, exc: TutorError):
@@ -171,8 +178,8 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     @app.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception):
         logger.error('Unexpected backend exception: %s', type(exc).__name__)
-        return JSONResponse(status_code=500, content={'error': {'code': 'internal_error',
-            'message': 'Something went wrong. Please try again.'}})
+        return secure_response(request, JSONResponse(status_code=500, content={'error': {'code': 'internal_error',
+            'message': 'Something went wrong. Please try again.'}}))
 
     app.include_router(access_router)
     app.include_router(router)
