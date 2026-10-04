@@ -43,7 +43,7 @@ Additional captures: Home, JLPT feedback, editable transcript, and representativ
 - Local UI: Study plan/activity interaction; correct JLPT answer saved; mock recording → Stop → Transcribe → edit → Confirm copied Japanese to the composer without sending. Tutor draft retained across navigation. JLPT selected choice uses shared soft/accent colours and 10px radius, with height above 52px.
 - Desktop Home/Tutor visually checked at 1440px: sidebar, centering, card hierarchy and spacing preserved. Existing responsive matrix includes large-monitor views.
 - Backend tests not rerun locally: no functional code changed. No live AI/STT calls required.
-- Deployment/CI verification pending final checkpoint.
+- Implementation checkpoint `555a9b1` deployed through existing Render auto-deploy. [GitHub Tests](https://github.com/NekomeKozo/japanese-ai-tutor/actions/runs/37174012903) passed. Live shared token confirmed; authenticated mobile Home, completed Study recap and JLPT history restored. `/health` 200; unauthenticated protected endpoints remain 401. Progress Knowledge loaded its filters and topics; the saved restaurant Tutor conversation restored with its audio player and enabled composer. The live desktop sidebar remains 230px at 1440px; desktop and mobile document widths match their scroll widths. Live verification screenshots are kept outside Git because they include private learner state.
 
 ## Limitations and handover
 
