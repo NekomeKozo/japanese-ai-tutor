@@ -10,7 +10,7 @@
 <body class="access-page account-page"><main>
   <div class="brand"><span class="brand-mark" lang="ja">あ</span><span>GoiGrow<span class="brand-descriptor">Japanese Tutor</span><small>A little, every day.</small></span></div>
   <section class="placement-card" aria-labelledby="account-title">
-    <p class="eyebrow">PRIVATE BETA · INVITATION ONLY</p><h1 id="account-title" tabindex="-1">Sign in</h1>
+    <p class="eyebrow">PRIVATE BETA · APPROVED ACCOUNTS ONLY</p><h1 id="account-title" tabindex="-1">Sign in</h1>
     <p id="account-status" role="status" aria-live="polite">Checking account access…</p>
     <p id="account-error" role="alert" hidden></p>
     <form id="gate-form" hidden>
@@ -19,6 +19,7 @@
       <button type="submit">Open sign-in</button>
     </form>
     <form id="login-form" hidden>
+      <p>Approved owner accounts can sign in directly with their verified email and password. No invitation link is required.</p>
       <label for="login-email">Email</label><input id="login-email" type="email" autocomplete="username" maxlength="254" required>
       <label for="login-password">Password</label><input id="login-password" type="password" autocomplete="current-password" maxlength="128" required>
       <button type="submit">Sign in</button>

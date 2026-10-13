@@ -8,10 +8,11 @@ from cryptography.fernet import Fernet
 from fastapi.testclient import TestClient
 import httpx
 import pytest
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 from app.accounts import AccountService, COOKIE, SupabaseAccounts, digest
 from app.auth import AuthenticationError
+from app.config import Settings
 from app.main import create_app
 from app.safeguards import COOKIE as GATE_COOKIE
 from tests.test_account_auth import ORIGIN, KEY, claims, token, user_for
@@ -134,6 +135,142 @@ def signin(client):
     result = client.post('/api/account/login', json={'email': 'test@example.test', 'password': PASSWORD}, headers=bootstrap(client))
     assert result.status_code == 200, result.text
     return result
+
+
+@pytest.fixture
+def owner_client(account_client):
+    client = account_client
+    settings = client.app.state.settings
+    settings.account_owner_bootstrap_ids = SecretStr(client.authority.payload['sub'])
+    client.app.state.accounts = AccountService(client.app.state.repository, settings,
+                                              client.app.state.accounts.provider)
+    client.authority.user['invited_at'] = None
+    return client
+
+
+def test_owner_password_bootstrap_preserves_learner_and_skips_invitation(owner_client):
+    client = owner_client
+    learner = client.post('/api/learners').json()['learner_id']
+    before = client.get(f'/api/learners/{learner}/profile').json()
+    result = signin(client)
+    assert result.json() == {'state': 'ready', 'profile': 'linking_pending'}
+    assert client.get('/api/account/me').json()['state'] == 'ready'
+    assert client.get(f'/api/learners/{learner}/profile').json() == before
+    with client.app.state.repository.connection() as db:
+        assert db.execute('SELECT count(*) FROM account_beta_members').fetchone()[0] == 0
+    assert not any(path.endswith('/verify') or (method == 'PUT' and path.endswith('/user'))
+                   for method, path, _ in client.authority.calls)
+    cookie = result.headers['set-cookie']
+    assert all(value in cookie for value in ('Secure', 'HttpOnly', 'SameSite=lax'))
+    old = client.cookies.get(COOKIE)
+    assert client.post('/api/account/logout', json={}, headers=bootstrap(client)).status_code == 200
+    client.cookies.set(COOKIE, old)
+    assert client.get('/api/account/me').status_code == 401
+
+
+@pytest.mark.parametrize('change', ['wrong-password', 'unconfirmed', 'signature',
+                                   'email-mismatch', 'not-approved', 'identity-mismatch'])
+def test_owner_exception_does_not_bypass_identity_or_credentials(owner_client, change):
+    client = owner_client
+    email, password = 'test@example.test', PASSWORD
+    if change == 'wrong-password': password = 'incorrect'
+    if change == 'unconfirmed': client.authority.user['email_confirmed_at'] = None
+    if change == 'signature': client.authority.bad = 'signature'
+    if change == 'email-mismatch': email = 'other@example.test'
+    if change == 'not-approved': client.app.state.accounts.allowed.clear()
+    if change == 'identity-mismatch': client.authority.user['id'] = client.authority.second['sub']
+    result = client.post('/api/account/login', json={'email': email, 'password': password}, headers=bootstrap(client))
+    assert result.status_code == 401
+    assert client.get('/api/account/me').status_code == 401
+
+
+@pytest.mark.parametrize('invited', [None, '2026-01-01T00:00:00Z'])
+def test_other_allowlisted_user_cannot_use_owner_bootstrap(owner_client, invited):
+    client = owner_client
+    client.authority.active = client.authority.second
+    client.authority.user = user_for(client.authority.second) | {'invited_at': invited}
+    response = client.post('/api/account/login', json={'email': 'test@example.test', 'password': PASSWORD}, headers=bootstrap(client))
+    assert response.status_code == 401  # Invitation alone still needs activation.
+    client.authority.user['invited_at'] = '2026-01-01T00:00:00Z'
+    activate(client)
+    signin(client)  # Existing external invitation design remains functional.
+
+
+def test_owner_invitation_endpoint_still_requires_invitation(owner_client):
+    client = owner_client
+    result = client.post('/api/account/accept', json={'email': 'test@example.test', 'link': link()}, headers=bootstrap(client))
+    assert result.status_code == 401
+    assert client.get('/api/account/me').status_code == 401
+
+
+def test_owner_deselection_revokes_existing_bootstrap_access(owner_client):
+    client = owner_client
+    client.authority.user['invited_at'] = '2026-01-01T00:00:00Z'
+    signin(client)
+    client.app.state.accounts.bootstrap_owners.clear()
+    assert client.get('/api/account/me').status_code == 401
+    response = client.post('/api/account/login', json={'email': 'test@example.test', 'password': PASSWORD}, headers=bootstrap(client))
+    assert response.status_code == 401
+
+
+def test_owner_refresh_keeps_identity_fixed(owner_client):
+    client = owner_client
+    signin(client)
+    with client.app.state.repository.connection() as db:
+        db.execute('UPDATE account_sessions SET token_expiry=?', (time.time()+1,))
+    assert client.get('/api/account/me').status_code == 200
+    assert client.authority.refreshes == 1
+    client.authority.active = client.authority.second
+    client.authority.user = user_for(client.authority.second) | {'invited_at': '2026-01-01T00:00:00Z'}
+    assert client.get('/api/account/me').status_code == 401
+
+
+def test_owner_session_must_exist_at_provider(owner_client):
+    service = owner_client.app.state.accounts
+    repository = service.repository
+    old_url = repository.database_url
+    # Exercise the managed-session check without connecting to a live database.
+    repository.database_url = 'mock-postgres'
+    class MissingSession:
+        def execute(self, query, args): return self
+        def fetchone(self): return None
+    try:
+        with pytest.raises(AuthenticationError):
+            service.verified(owner_client.authority.bundle(), MissingSession(), email='test@example.test')
+    finally:
+        repository.database_url = old_url
+
+
+def test_owner_mode_retains_policy_gate_csrf_and_no_registration(owner_client):
+    client = owner_client
+    headers = bootstrap(client)
+    body = {'email': 'test@example.test', 'password': PASSWORD}
+    for extra in [{'bootstrap_owner': True}, {'account_id': client.authority.payload['sub']}]:
+        assert client.post('/api/account/login', json=body | extra, headers=headers).status_code == 422
+    assert client.post('/api/account/login', json=body, headers=headers | {'Origin': 'https://attacker.example'}).status_code == 403
+    assert client.post('/api/account/login', json=body, headers=headers | {'X-CSRF-Token': 'wrong'}).status_code == 403
+    assert client.post('/api/account/register', json=body, headers=headers).status_code == 404
+    client.authority.public = True
+    assert client.post('/api/account/login', json=body, headers=headers).status_code == 503
+    client.cookies.clear()
+    assert client.post('/api/account/login', json=body, headers=headers).status_code == 401
+
+
+def test_owner_configuration_is_explicit_subset_and_redacted(settings):
+    authority = Authority()
+    config = enabled(settings, authority)
+    owner = authority.payload['sub']
+    assert Settings(_env_file=None).account_owner_bootstrap_ids.get_secret_value() == ''
+    valid = config.model_dump() | {'account_owner_bootstrap_ids': SecretStr(owner)}
+    checked = Settings(_env_file=None, **valid)
+    assert owner not in repr(checked)
+    for value in [str(uuid4()), owner.upper(), ' '+owner, owner+',',
+                  owner+','+authority.second['sub'], 'not-a-uuid']:
+        with pytest.raises(ValidationError) as caught:
+            Settings(_env_file=None, **(valid | {'account_owner_bootstrap_ids': SecretStr(value)}))
+        assert value not in str(caught.value)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, account_owner_bootstrap_ids=SecretStr(owner))
 
 
 def test_activation_login_logout_no_learner_assignment(account_client, provider):

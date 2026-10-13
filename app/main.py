@@ -236,7 +236,7 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     @app.get('/', include_in_schema=False)
     async def index():
         account_card = ('<section class="placement-card"><h2>Your account</h2>'
-            '<p>Invitation-only account sign-in is separate from this browser’s existing learning space. '
+            '<p>Approved account sign-in is separate from this browser’s existing learning space. '
             'Profile linking is not available yet.</p><a class="button-link secondary" href="/auth/sign-in">'
             'Open account sign-in</a></section>' if settings.account_auth_enabled else '')
         return HTMLResponse(assets.index.replace('<!-- ACCOUNT_SETTINGS -->', account_card))

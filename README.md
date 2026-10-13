@@ -3,10 +3,10 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 12B — Invitation-controlled account foundation (activation pending).**
+**Current phase: Phase 12B — Controlled accounts with owner password bootstrap (live verification pending).**
 
 Accounts use Supabase Auth through GoiGrow's backend. Public signup stays disabled;
-existing staging access and learning records remain separate. Verified invited accounts
+existing staging access and learning records remain separate. Approved verified accounts
 show an account-ready state; learner linking/restoration belongs to Phase 12C.
 See [Phase 12B report](PHASE12B_REPORT.md) for configuration and acceptance status.
 
@@ -14,16 +14,32 @@ See [Phase 12B report](PHASE12B_REPORT.md) for configuration and acceptance stat
 migration runs until activation. Required private settings are the Supabase project
 origin/publishable key, `FRONTEND_URL`, separate Fernet
 `ACCOUNT_SESSION_ENCRYPTION_KEYS` (current first; older keys retained for rotation),
-and `ACCOUNT_INVITED_IDS` (exact owner-invited Supabase user UUIDs, maximum 20).
+and `ACCOUNT_INVITED_IDS` (exact authorized Supabase user UUIDs, maximum 20;
+the deployment setting name is retained for compatibility).
 Never put keys, passwords or email verification links in Git or chat.
 
-Team-only testing uses Supabase's default emails. In an invitation/recovery email,
+For the controlled owner test, set optional `ACCOUNT_OWNER_BOOTSTRAP_IDS` privately
+to **one existing owner UUID already in `ACCOUNT_INVITED_IDS`**. It defaults empty.
+The owner opens `/auth/sign-in` and uses their existing confirmed Supabase Auth
+email/password. This exception needs neither an invitation timestamp nor prior
+invitation activation. It grants no Supabase organization/admin privilege, adds no
+public registration, and does not bypass password, signature, UUID, confirmed-email,
+live provider-session, staging, Origin/CSRF or session checks. Bootstrap login does
+not create beta-membership rows; removing the exception restores normal invitation
+requirements on sign-in and session resolution. Keep `ACCOUNT_AUTH_ENABLED`
+owner-controlled; changing this allowlist never enables it automatically.
+
+For future external invited testers, the existing invitation path remains available
+and still requires a genuine invitation plus completed activation. It is separate
+from owner password login. Team-only email testing uses Supabase's default sender.
+In an invitation/recovery email,
 **copy the original Accept invitation/Reset password link without opening it**;
 paste it into the account screen and verify explicitly. FastAPI exchanges its hash
 with Supabase; provider session tokens stay encrypted on the server. Invalid/used
 links require a fresh email. Default templates cannot currently be edited without
 custom SMTP; external beta delivery and a polished clickable email flow require a
-separate owner decision. No paid service has been enabled.
+separate owner decision. The Resend/Send Email Hook proposal is paused, not implemented.
+No paid service has been enabled.
 
 Account cookies expire after seven days or 24 hours of inactivity. Logout clears
 the current browser's account session; password reset revokes all application

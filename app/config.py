@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     account_auth_enabled: bool = False
     account_session_encryption_keys: SecretStr = SecretStr('')
     account_invited_ids: SecretStr = SecretStr('')
+    # Explicit owner-only exception, default off; never expands the UUID allowlist.
+    account_owner_bootstrap_ids: SecretStr = SecretStr('')
     supabase_auth_url: str = ''
     supabase_auth_publishable_key: SecretStr = SecretStr('')
     supabase_auth_timeout_seconds: float = Field(default=5, ge=1, le=10)
@@ -64,6 +66,16 @@ class Settings(BaseSettings):
 
     @model_validator(mode='after')
     def account_auth_configuration(self):
+        owner_ids = self.account_owner_bootstrap_ids.get_secret_value()
+        if owner_ids:
+            try:
+                owners = owner_ids.split(',')
+                allowed = self.account_invited_ids.get_secret_value().split(',')
+                if (len(owners) != 1 or str(UUID(owners[0])) != owners[0]
+                        or owners[0] not in allowed):
+                    raise ValueError()
+            except (ValueError, TypeError):
+                raise ValueError('Owner bootstrap requires one canonical UUID already in ACCOUNT_INVITED_IDS') from None
         if self.account_auth_enabled:
             from cryptography.fernet import Fernet
             try:

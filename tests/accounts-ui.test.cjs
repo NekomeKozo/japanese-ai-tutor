@@ -40,7 +40,21 @@ test('initial sign-in clears URL fragments without sending provider tokens',asyn
   assert.equal(h.nodes.get('login-form').hidden,false);
   assert.deepEqual(h.notices,['/auth/sign-in']);
   assert.equal(h.requests.some(r=>JSON.stringify(r).includes('never-submit-this')),false);
-  assert.match(h.nodes.get('account-status').textContent,/copy the original email link/);
+  assert.match(h.nodes.get('account-status').textContent,/Owner accounts do not need an invitation link/);
+  assert.doesNotMatch(h.nodes.get('account-status').textContent,/copy|paste/i);
+  assert.equal(h.nodes.get('link-form').hidden,true);
+});
+
+test('owner login failure requests credentials without an invitation link',async()=>{
+  const h=harness();await tick();
+  h.reply(()=>({error:{message:'Please sign in.'},status:401}));
+  h.nodes.get('login-email').value='test@example.test';h.nodes.get('login-password').value='incorrect';
+  h.submit('login-form');await tick();
+  assert.match(h.nodes.get('account-error').textContent,/email and password/);
+  assert.doesNotMatch(h.nodes.get('account-error').textContent,/invitation|link|paste/i);
+  assert.equal(h.nodes.get('link-form').hidden,true);
+  assert.equal(h.nodes.get('login-password').value,'');
+  assert.equal(h.requests.some(r=>r.url.endsWith('/accept')),false);
 });
 test('gate denial exposes only the access-code form',async()=>{
   const h=harness({bootstrapError:{error:{code:'staging_access_required'},status:401}});await tick();

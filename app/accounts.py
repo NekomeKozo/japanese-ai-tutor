@@ -125,11 +125,10 @@ class SupabaseAccounts:
         user = self.request('GET', '/user', token=token)
         try:
             confirmed = datetime.fromisoformat(user['email_confirmed_at'].replace('Z', '+00:00'))
-            invited = datetime.fromisoformat(user['invited_at'].replace('Z', '+00:00'))
             now = datetime.now(timezone.utc)
             if (user.get('id') != str(candidate.account_id) or user.get('is_anonymous') is not False
                     or not isinstance(user.get('email'), str) or not user['email']
-                    or confirmed.tzinfo is None or invited.tzinfo is None or confirmed > now or invited > now
+                    or confirmed.tzinfo is None or confirmed > now
                     or candidate.expires_at <= time.time()):
                 raise ValueError()
         except (ValueError, TypeError, KeyError, AttributeError):
@@ -164,6 +163,7 @@ class AccountService:
         self.csrf_key = hashlib.sha256(('csrf:' + keys[0]).encode()).digest()
         self.key_version = hashlib.sha256(keys[0].encode()).hexdigest()[:16]
         self.allowed = set(settings.account_invited_ids.get_secret_value().split(','))
+        self.bootstrap_owners = set(filter(None, settings.account_owner_bootstrap_ids.get_secret_value().split(',')))
 
     def initialize(self):
         # Only called with the feature enabled. Separate additive schema marker;
@@ -250,7 +250,7 @@ class AccountService:
         if not row or not isinstance(supplied, str) or not hmac.compare_digest(self.csrf(nonce), supplied):
             raise TutorError('account_csrf', 'Refresh the account page and try again.', 403)
 
-    def verified(self, bundle, db, *, expected=None, email=None):
+    def verified(self, bundle, db, *, expected=None, email=None, purpose='ready'):
         if (not isinstance(bundle, dict) or not isinstance(bundle.get('access_token'), str)
                 or not isinstance(bundle.get('refresh_token'), str)
                 or not 1 <= len(bundle['refresh_token']) <= 4096):
@@ -259,9 +259,24 @@ class AccountService:
         account = str(candidate.account_id)
         if account not in self.allowed or (expected and account != expected) or (email and user['email'].casefold() != email.casefold()):
             raise AuthenticationError()
+        # Only an explicitly designated owner may use password login/recovery
+        # without an invitation. The invitation endpoint always requires one.
+        if account not in self.bootstrap_owners or purpose == 'activation':
+            try:
+                invited = datetime.fromisoformat(user['invited_at'].replace('Z', '+00:00'))
+                if invited.tzinfo is None or invited > datetime.now(timezone.utc):
+                    raise ValueError()
+            except (ValueError, TypeError, KeyError, AttributeError):
+                raise AuthenticationError() from None
         if self.repository.database_url and not self.provider.session_exists(db, candidate):
             raise AuthenticationError()
         return candidate
+
+    def require_ready_membership(self, db, candidate):
+        account = str(candidate.account_id)
+        if account not in self.bootstrap_owners and not db.execute(
+                'SELECT 1 FROM account_beta_members WHERE account_id=?', (account,)).fetchone():
+            raise AuthenticationError()
 
     def authenticate(self, nonce, owner, email, secret, purpose):
         self.provider.policy()
@@ -273,9 +288,9 @@ class AccountService:
             with self.transaction() as db:
                 if not self.row(db, nonce, owner):
                     raise AuthenticationError()
-                candidate = self.verified(bundle, db, email=email)
-                if purpose == 'ready' and not db.execute('SELECT 1 FROM account_beta_members WHERE account_id=?', (str(candidate.account_id),)).fetchone():
-                    raise AuthenticationError()
+                candidate = self.verified(bundle, db, email=email, purpose=purpose)
+                if purpose == 'ready':
+                    self.require_ready_membership(db, candidate)
                 fresh = self.insert(db, owner, purpose, bundle, candidate)
                 db.execute('DELETE FROM account_sessions WHERE nonce_hash=?', (digest(nonce),))
             return fresh
@@ -295,7 +310,9 @@ class AccountService:
         if row[9] <= self.clock() + 30:
             bundle = self.provider.refresh(bundle['refresh_token'])
             bundle = {key: bundle.get(key) for key in ('access_token', 'refresh_token')}
-        candidate = self.verified(bundle, db, expected=row[2])
+        candidate = self.verified(bundle, db, expected=row[2], purpose=row[4])
+        if row[4] == 'ready':
+            self.require_ready_membership(db, candidate)
         if str(candidate.provider_session_id) != row[3]:
             raise AuthenticationError()
         db.execute('UPDATE account_sessions SET encrypted_tokens=?,token_expiry=?,touched_at=? WHERE nonce_hash=?',
