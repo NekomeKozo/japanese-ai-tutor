@@ -97,6 +97,9 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
                 app.state.accounts = AccountService(repository, settings, account_provider)
                 app.state.accounts.initialize()
                 app.state.account_html = assets.version_html((FRONTEND / 'account.html').read_text(encoding='utf-8'))
+            from app.account_links import AccountLinks
+            app.state.account_links = AccountLinks(repository, settings, getattr(app.state, 'accounts', None))
+            app.state.account_links.inspect()
             app.state.speech_upload_limiter = WindowLimiter()
             app.state.speech_uploads = 0
             app.state.speech = SpeechService(settings, speech_provider or GroqSpeechProvider(settings, client))
@@ -236,10 +239,12 @@ def create_app(settings: Settings | None = None, provider: LLMProvider | None = 
     @app.get('/', include_in_schema=False)
     async def index():
         account_card = ('<section class="placement-card"><h2>Your account</h2>'
-            '<p>Approved account sign-in is separate from this browser’s existing learning space. '
-            'Profile linking is not available yet.</p><a class="button-link secondary" href="/auth/sign-in">'
-            'Open account sign-in</a></section>' if settings.account_auth_enabled else '')
-        return HTMLResponse(assets.index.replace('<!-- ACCOUNT_SETTINGS -->', account_card))
+            '<p>Manage sign-in and your learning-profile link. Linked progress restores after independent sign-in on another device.</p>'
+            '<a class="button-link secondary" href="/auth/sign-in">Open your account</a></section>' if settings.account_auth_enabled else '')
+        html = assets.index.replace('<!-- ACCOUNT_SETTINGS -->', account_card)
+        if settings.account_auth_enabled and app.state.repository.account_links_ready:
+            html = html.replace('<html lang="en"', '<html lang="en" data-account-restoration="true"')
+        return HTMLResponse(html)
 
     return app
 

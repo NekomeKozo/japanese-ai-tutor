@@ -323,7 +323,18 @@ class AccountService:
         self.provider.policy()
         with self.transaction() as db:
             row, _ = self.resolve(db, nonce, owner)
-            return {'state': row[4], 'profile': 'linking_pending', 'expires_at': row[8]}
+            linked = (self.repository.account_links_ready and row[4] == 'ready' and db.execute(
+                'SELECT 1 FROM account_learner_links WHERE account_id=?', (row[2],)).fetchone())
+            return {'state': row[4], 'profile': 'linked' if linked else 'linking_pending', 'expires_at': row[8]}
+
+    def principal(self, nonce, owner):
+        from app.learner_access import Principal
+        self.provider.policy()
+        with self.transaction() as db:
+            row, _ = self.resolve(db, nonce, owner)
+            if row[4] != 'ready':
+                raise AuthenticationError()
+            return Principal(str(row[2]), row[0], row[3], row[6])
 
     def set_password(self, nonce, owner, password):
         self.provider.policy()

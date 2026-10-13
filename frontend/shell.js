@@ -81,7 +81,7 @@ async function loadSettings() {
     $('pref-romaji').checked = prefs.romaji_enabled; $('pref-furigana').checked = prefs.furigana_enabled;
     $('pref-language').value = prefs.explanation_language; $('pref-style').value = prefs.correction_style;
     $('pref-difficulty').value = prefs.preferred_difficulty || ''; $('pref-goal').value = prefs.primary_goal;
-    $('learner-identity').textContent = `Your saved profile ID: ${id}`;
+    $('learner-identity').textContent = accountContext.linked() ? 'Your linked profile restores securely after account sign-in.' : `Your saved profile ID: ${id}`;
     settingsLearner = id; settingsDirty = false; $('preferences-form').hidden = false;
   } finally { $('settings-loading').hidden = true; }
 }
@@ -133,6 +133,7 @@ async function applyOnboardingGoal() {
 }
 document.querySelector('.skip-link').addEventListener('click', event => { event.preventDefault(); $('main-content').focus(); });
 $('fresh-profile').addEventListener('click', () => {
+  if (accountContext.linked()) return;
   if (busy || assessmentBusy) return;
   try { localStorage.removeItem(resumeKey); } catch { /* Server records are kept. */ }
   assessmentState = null; pendingSubmission = null;
@@ -164,8 +165,9 @@ async function boot() {
   renderRoute();
   try {
     try { const goal = sessionStorage.getItem('japanese-tutor-onboarding-goal'); if (goal) $('onboarding-goal-select').value = goal; } catch { /* Optional draft only. */ }
-    const id = recalled('learner');
-    await Promise.all([id ? activateLearner(id) : Promise.resolve(), resumeAssessment()]);
+    const account = await accountContext.resolve();
+    const id = account.state === 'linked' ? account.learner_id : recalled('learner');
+    await Promise.all([id ? activateLearner(id) : Promise.resolve(), account.state === 'legacy' ? resumeAssessment() : Promise.resolve()]);
     if (id) {
       try { if (!sessionStorage.getItem('japanese-tutor-onboarding-goal')) $('onboarding-goal-select').value = activeProfile.preferences.primary_goal; } catch { /* Optional draft. */ }
     }

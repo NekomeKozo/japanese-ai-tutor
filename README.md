@@ -3,12 +3,13 @@
 *A little, every day.* GoiGrow is an adaptive Japanese tutor with personalized
 practice, JLPT study, learning memory and daily review.
 
-**Current phase: Phase 12B — Controlled accounts with owner password bootstrap (live verification pending).**
+**Current phase: Phase 12C — Secure learner linking and restoration (production approval pending).**
 
 Accounts use Supabase Auth through GoiGrow's backend. Public signup stays disabled;
 existing staging access and learning records remain separate. Approved verified accounts
-show an account-ready state; learner linking/restoration belongs to Phase 12C.
+show an account-ready state. Phase 12C adds explicit owner linking and server-resolved restoration.
 See [Phase 12B report](PHASE12B_REPORT.md) for configuration and acceptance status.
+See [Phase 12C report](PHASE12C_REPORT.md) for migration, rollback and production approval.
 
 `ACCOUNT_AUTH_ENABLED` defaults to `false`: no account entry point or account-table
 migration runs until activation. Required private settings are the Supabase project
@@ -43,8 +44,21 @@ No paid service has been enabled.
 
 Account cookies expire after seven days or 24 hours of inactivity. Logout clears
 the current browser's account session; password reset revokes all application
-account sessions. Safari and installed iOS PWAs sign in independently; this does
-not transfer legacy profiles. Keep existing staging cookies and learner IDs.
+account sessions. Safari and installed iOS PWAs sign in independently. Once explicitly
+linked, the server restores the same learner without copying browser IDs or credentials.
+Keep the original legacy browser context until the approved link is complete.
+
+`ACCOUNT_LEARNER_LINKING_ENABLED=false` is a separate Phase 12C rollout switch.
+The association migration never runs at startup. Preview the fixed migration with
+`python scripts/migrate_account_links.py`; `--check` inspects prerequisites read-only.
+After the documented owner approval and restorable backup only, apply with
+`--apply --owner-approved --backup-confirmed`, keeping new linking disabled until
+the migrated deployment is ready. No learner/history rows are rewritten. Then the
+freshly signed-in approved owner checks the original browser's eligible profile and
+explicitly confirms. Missing or multiple profiles stop for owner assistance; no
+profile is guessed. Account profile creation, merging, replacement placement,
+unlinking and transfers are unavailable. Turning new linking off preserves existing
+ownership checks; reverting to a staging-only authorizer after a link is unsafe.
 
 In an active **Tutor → Conversation practice** scenario, optionally open **Record
 spoken reply**. Press **Record Reply**, Stop and preview, explicitly Transcribe,
@@ -685,7 +699,7 @@ small, scores are heuristic, and placement confidence remains separate from mast
 counts cover at most 50 occurrences in 30 days. Topic status is a rolling signal, not a
 mastery certification. Saved transcripts/events currently have no automatic retention
 cleanup. Local development without the staging gate is not production access control.
-Staging rejects foreign learner/session IDs; account-to-learner linking is pending.
+Staging rejects foreign learner/session IDs. Linked learners additionally require their verified owning account, including when new linking is disabled.
 
 The curriculum catalog covers foundations through a small N3 sample. It is not a complete
 N5–N1 course. Generated text is checked for schema/topic/difficulty identity, but this

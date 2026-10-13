@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
+from typing import Literal
 from starlette.concurrency import run_in_threadpool
 import re
 import hashlib
@@ -39,6 +40,41 @@ class Verification(Email):
 class Password(BaseModel):
     model_config = ConfigDict(extra='forbid', hide_input_in_errors=True)
     password: SecretStr = Field(min_length=12, max_length=128)
+
+
+class LinkConfirmation(BaseModel):
+    model_config = ConfigDict(extra='forbid', hide_input_in_errors=True)
+    confirm: Literal[True]
+    confirmation: SecretStr = Field(min_length=40, max_length=4096)
+
+    @field_validator('confirm', mode='before')
+    @classmethod
+    def explicit_confirmation(cls, value):
+        if value is not True:
+            raise ValueError('Explicit confirmation is required')
+        return value
+
+
+@router.get('/api/account/learner')
+async def linked_learner(request: Request):
+    service(request)
+    return await run_in_threadpool(request.app.state.account_links.context, nonce(request), owner(request))
+
+
+@router.get('/api/account/link-preview')
+async def link_preview(request: Request):
+    service(request)
+    identity = request.client.host if request.client else 'unknown'
+    request.app.state.account_limiter.take('link-preview:' + identity, 30, 60)
+    return await run_in_threadpool(request.app.state.account_links.preview, nonce(request), owner(request))
+
+
+@router.post('/api/account/link-learner')
+async def link_learner(request: Request, body: LinkConfirmation):
+    await mutation(request)
+    result = await run_in_threadpool(request.app.state.account_links.confirm, nonce(request), owner(request), body.confirmation.get_secret_value())
+    logger.info('Account security event=learner_link outcome=success')
+    return result
 
 
 def service(request):

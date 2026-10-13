@@ -31,9 +31,10 @@ function harness(audio = {}) {
   elements.get('review-minutes').value='10'; elements.get('onboarding-goal-select').value='general';
   const windowEvents = {}, documentEvents = {};
   const ctx = vm.createContext({console, Event, AbortController, Blob, URLSearchParams, Intl, TypeError, SyntaxError, setInterval:()=>1, clearInterval(){}, setTimeout:()=>1, clearTimeout(){}, crypto:require('node:crypto').webcrypto,
-    document:{getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(type,fn){(documentEvents[type] ||= []).push(fn);},dispatchEvent(event){for(const fn of documentEvents[event.type] || []) fn(event);}},
+    BroadcastChannel:audio.BroadcastChannel,
+    document:{documentElement:{getAttribute:()=>audio.accountRestoration?'true':null,hidden:false},getElementById:id=>elements.get(id),createElement:tag=>new Element(tag),querySelectorAll:()=>[],querySelector:selector=>selector==='.skip-link'?new Element('a'):null,addEventListener(type,fn){(documentEvents[type] ||= []).push(fn);},dispatchEvent(event){for(const fn of documentEvents[event.type] || []) fn(event);}},
     window:{...audio,addEventListener(type,fn){(windowEvents[type] ||= []).push(fn);},location:{assign(url){ctx.redirect=url;}}},location:{hash:''},navigator:{onLine:true,mediaDevices:audio.mediaDevices,...audio.navigator},performance:{now:audio.now || (()=>0)},
-    localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
+    localStorage:{get length(){return storage.size;},key:i=>[...storage.keys()][i],getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},
     sessionStorage:{getItem:()=>null,setItem(){}},
     fetch:async (url, options={})=>{ requests.push({url,...options}); throw new TypeError('offline'); }
   });
@@ -1109,4 +1110,70 @@ test('denied profile restoration preserves selected learner and does not create 
   assert.equal(h.run('activeProfile.learner_id'),'original');
   assert.equal(h.requests.length,1);
   assert.equal(h.requests[0].method,undefined);
+});
+
+test('account restoration selects only the server-owned learner and discards stale storage hints',async()=>{
+  const h=harness({accountRestoration:true});h.storage.set('japanese-tutor-learner','other-profile');h.storage.set('japanese-tutor-session-other-profile','old-session');
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,status:200,json:async()=>({state:'linked',learner_id:'server-owned'})};};
+  const context=await h.run('accountContext.resolve()');
+  assert.equal(context.learner_id,'server-owned');assert.equal(h.run('accountContext.linked()'),true);
+  assert.equal(h.storage.has('japanese-tutor-learner'),false);assert.equal(h.storage.has('japanese-tutor-session-other-profile'),false);
+  assert.equal(h.requests[0].cache,'no-store');assert.equal(h.elements.get('legacy-profile-tools').hidden,true);
+  h.run("remember('study-server-owned','private-study-id')");assert.equal(h.storage.has('japanese-tutor-study-server-owned'),false);
+});
+
+test('unlinked account redirects to explicit account linking without placement or profile creation',async()=>{
+  const h=harness({accountRestoration:true});
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,status:200,json:async()=>({state:'unlinked',linking_enabled:true})};};
+  await assert.rejects(h.run('accountContext.resolve()'),/original learning profile/);
+  assert.equal(h.ctx.redirect,'/auth/sign-in');assert.equal(h.requests.length,1);
+});
+
+test('account logout message clears private DOM, media and state and rejects late responses',async()=>{
+  let notify;
+  const h=harness({accountRestoration:true,BroadcastChannel:class{addEventListener(_,fn){notify=fn;}close(){}}});
+  h.run("placementLearnerId='old';activeProfile={learner_id:'old'};sessionId='old-session';pendingChat={signature:'private'}");
+  h.elements.get('message').value='private draft';h.elements.get('conversation').append({textContent:'private history'});
+  h.elements.get('audio-progress').textContent='private audio history';h.elements.get('study-content').append({textContent:'private activity'});
+  let release;h.ctx.fetch=()=>new Promise(resolve=>{release=()=>resolve({ok:true,status:200,json:async()=>({private:'old-response'})});});
+  const pending=h.run("api('/api/learners/old/profile')");notify();release();
+  await assert.rejects(pending,/context changed/);
+  assert.equal(h.run('placementLearnerId'),null);assert.equal(h.run('activeProfile'),null);assert.equal(h.run('pendingChat'),null);
+  assert.equal(h.elements.get('message').value,'');assert.equal(h.elements.get('conversation').children.length,0);assert.equal(h.ctx.redirect,'/auth/sign-in');
+  assert.equal(h.elements.get('audio-progress').textContent,'');assert.equal(h.elements.get('study-content').children.length,0);
+});
+
+test('restored Tutor opens existing history without creating or closing a conversation',async()=>{
+  const h=harness({accountRestoration:true});
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,status:200,json:async()=>url==='/api/account/learner'?{state:'linked',learner_id:'owned'}:null};};
+  await h.run('accountContext.resolve()');h.run("placementLearnerId='owned'");
+  h.ctx.fetch=async(url,options={})=>{h.requests.push({url,...options});return {ok:true,json:async()=>url.endsWith('/active')?null:url.endsWith('/sessions')?[{session_id:'saved'}]:{session_id:'saved',turns:[],conversation:null,interaction_count:0,ended_at:null}};};
+  await h.run('ensureTutorSession()');assert.equal(h.run('sessionId'),'saved');
+  assert.equal(h.requests.some(r=>r.method==='POST'||r.method==='DELETE'),false);
+  assert.equal(h.storage.has('japanese-tutor-session-owned'),false);
+});
+
+test('focus revalidation preserves a valid draft but a different profile clears it',async()=>{
+  const h=harness({accountRestoration:true});let learner='owned';
+  h.ctx.fetch=async()=>({ok:true,status:200,json:async()=>({state:'linked',learner_id:learner})});
+  await h.run('accountContext.resolve()');h.run("placementLearnerId='owned'");h.elements.get('message').value='keep this draft';
+  h.windowEvents.focus[0]();await new Promise(setImmediate);assert.equal(h.elements.get('message').value,'keep this draft');assert.equal(h.ctx.redirect,undefined);
+  learner='different';h.windowEvents.focus[0]();await new Promise(setImmediate);assert.equal(h.elements.get('message').value,'');assert.equal(h.ctx.redirect,'/auth/sign-in');
+});
+
+test('blocked browser storage does not prevent server-authorized restoration',async()=>{
+  const h=harness({accountRestoration:true});
+  for(const name of ['localStorage','sessionStorage']) Object.defineProperty(h.ctx,name,{get(){throw new Error('Storage blocked');}});
+  h.ctx.fetch=async()=>({ok:true,status:200,json:async()=>({state:'linked',learner_id:'owned'})});
+  assert.equal((await h.run('accountContext.resolve()')).learner_id,'owned');
+  assert.equal(h.run('accountContext.linked()'),true);
+});
+
+test('an interrupted account resolution cannot reinstate the previous account context',async()=>{
+  let notify,release;
+  const h=harness({accountRestoration:true,BroadcastChannel:class{addEventListener(_,fn){notify=fn;}close(){}}});
+  h.ctx.fetch=()=>new Promise(resolve=>{release=()=>resolve({ok:true,status:200,json:async()=>({state:'linked',learner_id:'previous'})});});
+  const resolving=h.run('accountContext.resolve()');notify();release();
+  await assert.rejects(resolving,/context changed/);assert.equal(h.run('accountContext.linked()'),false);
+  assert.equal(h.run('placementLearnerId'),null);
 });

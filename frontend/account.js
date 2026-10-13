@@ -3,7 +3,7 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const status = $('account-status'), error = $('account-error');
-  let csrf = '', busy = false;
+  let csrf = '', busy = false, confirmation = '';
   let screen = location.pathname === '/auth/recovery' ? 'reset' : location.pathname === '/auth/callback' ? 'invite' : 'login';
   // Default Supabase links can redirect with provider tokens in the fragment.
   // Do not accept, store or submit those tokens. Remove them immediately.
@@ -12,6 +12,7 @@
   const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('goigrow-account') : null;
   channel?.addEventListener('message', () => location.reload());
   const announce = () => channel?.postMessage('changed');
+  const markAccount = () => { try { localStorage.setItem('goigrow-account-mode', '1'); } catch (_) { /* Optional sign-in hint, never authorization. */ } };
   const clearSecrets = () => document.querySelectorAll('input[type="password"]').forEach((field) => { field.value = ''; });
   function show(next) {
     screen = next;
@@ -20,6 +21,7 @@
     $('account-options').hidden = ['ready', 'password', 'gate'].includes(next);
     $('account-title').textContent = { login: 'Sign in', invite: 'Accept your invitation', reset: 'Use your recovery link', forgot: 'Forgot password', password: 'Choose your password', ready: 'Your account is ready', gate: 'Open account sign-in' }[next];
     $('link-instructions').textContent = next === 'reset' ? 'In your recovery email, copy the “Reset password” link without opening it. Paste it below to verify it securely.' : 'In your invitation email, copy the “Accept invitation” link without opening it. Paste it below to verify your email securely.';
+    confirmation = ''; $('learner-link-preview').hidden = true;
     clearSecrets(); error.hidden = true;
   }
   async function request(path, body, flow) {
@@ -34,12 +36,24 @@
     return data;
   }
   async function bootstrap() { csrf = (await request('account/bootstrap')).csrf; }
+  async function learningStatus() {
+    const state = await request('account/learner');
+    markAccount();
+    $('learner-link-preview').hidden = true;
+    $('open-linked-learning').hidden = state.state !== 'linked';
+    $('check-learner-link').hidden = state.state === 'linked' || !state.linking_enabled;
+    $('learner-link-status').textContent = state.state === 'linked'
+      ? 'Your learning profile is linked. Sign in on another device to restore this same progress.'
+      : state.linking_enabled ? 'No learning profile is linked yet. Check for your original saved profile in this browser.'
+      : 'Your verified account is ready. Learning-profile linking is awaiting owner activation; your saved progress is unchanged.';
+  }
   async function initialize() {
     try {
       await bootstrap();
       let state;
       try { state = await request('account/me'); } catch (failure) { if (failure.status !== 401) throw failure; }
       show(state?.state === 'ready' ? 'ready' : ['activation', 'recovery'].includes(state?.state) ? 'password' : screen);
+      if (screen === 'ready') await learningStatus();
       status.textContent = redirected && ['invite', 'reset'].includes(screen) ? 'For secure verification, copy the original email link and paste it here. If it was already opened, ask for a fresh invitation or recovery email.' : state ? 'Email verified.' : 'Sign in with your approved, verified email and password. Owner accounts do not need an invitation link.';
     } catch (failure) {
       if (failure.code === 'staging_access_required') { show('gate'); status.textContent = 'Staging access is required.'; }
@@ -64,12 +78,28 @@
   document.querySelectorAll('[data-screen]').forEach((button) => button.addEventListener('click', () => { show(button.dataset.screen); status.textContent = ''; $('account-title').focus(); }));
   function submit(id, work) { $(id).addEventListener('submit', (event) => { event.preventDefault(); void action($(id), work); }); }
   submit('gate-form', async () => { await request('access', { code: $('gate-code').value }); screen = location.pathname === '/auth/recovery' ? 'reset' : 'login'; await initialize(); });
-  submit('login-form', async () => { await request('account/login', { email: $('login-email').value, password: $('login-password').value }); announce(); await bootstrap(); show('ready'); status.textContent = 'Signed in securely.'; });
+  submit('login-form', async () => { await request('account/login', { email: $('login-email').value, password: $('login-password').value }); markAccount(); announce(); await bootstrap(); show('ready'); await learningStatus(); status.textContent = 'Signed in securely.'; });
   submit('link-form', async () => { await request('account/accept', { email: $('link-email').value, link: $('email-link').value }, screen === 'reset' ? 'recovery' : 'invite'); announce(); await bootstrap(); show('password'); status.textContent = 'Email verified. Choose a password to finish.'; });
   submit('recovery-form', async () => { const data = await request('account/recover', { email: $('recovery-email').value }); status.textContent = data.message; });
   submit('password-form', async () => { if ($('new-password').value !== $('confirm-password').value) throw new Error('The passwords must match.'); const data = await request('account/password', { password: $('new-password').value }); announce(); await bootstrap(); show('login'); status.textContent = data.message; });
   $('logout').addEventListener('click', () => void action(null, async () => { await request('account/logout', {}); announce(); await bootstrap(); show('login'); status.textContent = 'Signed out of this browser.'; }));
-  window.addEventListener('pagehide', () => { clearSecrets(); csrf = ''; channel?.close(); });
+  $('check-learner-link').addEventListener('click', () => void action(null, async () => {
+    confirmation = ''; $('learner-link-preview').hidden = true;
+    const data = await request('account/link-preview');
+    if (data.state === 'linked') { await learningStatus(); return; }
+    confirmation = data.confirmation;
+    $('learner-link-summary').textContent = `Study estimate: ${data.summary.estimated_level}. ${data.summary.profile_source === 'default' ? 'Beginner profile' : 'Placement profile'}.`;
+    $('learner-link-preview').hidden = false;
+    status.textContent = 'Review the profile, then explicitly confirm below. Nothing has been linked yet.';
+  }));
+  $('confirm-learner-link').addEventListener('click', () => void action(null, async () => {
+    if (!confirmation) throw new Error('Check your learning profile again before confirming.');
+    // Keep this exact opaque confirmation in memory for an interrupted retry.
+    await request('account/link-learner', {confirm:true, confirmation});
+    confirmation = ''; announce(); await learningStatus();
+    status.textContent = 'Learning profile linked successfully.';
+  }));
+  window.addEventListener('pagehide', () => { clearSecrets(); csrf = ''; confirmation = ''; $('account-ready').hidden = true; channel?.close(); });
   window.addEventListener('pageshow', (event) => { if (event.persisted) location.reload(); });
   void initialize();
 })();

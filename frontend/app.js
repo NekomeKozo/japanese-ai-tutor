@@ -6,6 +6,7 @@ let busy = false;
 let placementLearnerId = null;
 let savedSession = false;
 let pendingChat = null;
+let privateContextEpoch = 0;
 const welcome = $('conversation').firstElementChild.cloneNode(true);
 function appendTutorWelcome() {
   const article = welcome.cloneNode(true); $('conversation').append(article);
@@ -62,13 +63,19 @@ async function api(path, options = {}) {
   return request.then(data => JSON.parse(JSON.stringify(data)));
 }
 async function requestAPI(path, options = {}) {
-  const response = await fetch(path, options);
+  const epoch = privateContextEpoch;
+  const response = await fetch(path, {...options, credentials:'same-origin', cache:'no-store'});
+  if (epoch !== privateContextEpoch) throw new Error('Your account context changed. Open your learning space again.');
   if (response.status === 401 && path !== '/api/access') {
-    window.location.assign('/access');
+    let failure;
+    try { failure = await response.json(); } catch (_) { /* Generic response. */ }
+    if (typeof accountContext !== 'undefined' && (accountContext.linked() || failure?.error?.code === 'learner_access_required')) accountContext.leave();
+    else window.location.assign('/access');
     throw new Error('Sign in to continue.');
   }
   if (response.status === 204) return null;
   const data = await response.json();
+  if (epoch !== privateContextEpoch) throw new Error('Your account context changed. Open your learning space again.');
   if (!response.ok) {
     const error = new Error(data.error?.message || 'The request failed. Please try again.');
     error.code = data.error?.code;
@@ -141,7 +148,7 @@ async function resetSession() {
     savedSession = Boolean(placementLearnerId);
     pendingChat = null;
     applyPractice(null);
-    if (savedSession) remember(`session-${placementLearnerId}`, sessionId);
+    if (savedSession && !accountContext.linked()) remember(`session-${placementLearnerId}`, sessionId);
     $('conversation').replaceChildren(); appendTutorWelcome();
     $('message').value = '';
     $('mode').value = 'chat';

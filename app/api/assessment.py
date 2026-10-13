@@ -5,12 +5,15 @@ from fastapi import APIRouter, Request
 from app.assessment.schemas import AnswerRequest, StartRequest
 from app.errors import TutorError
 from app.safeguards import claim, study_guard
+from app.safeguards import guard_profile_creation
+from starlette.concurrency import run_in_threadpool
 
 router = APIRouter(prefix='/api/assessments', tags=['placement'])
 
 
 @router.post('', status_code=201)
 async def start(body: StartRequest, request: Request):
+    await run_in_threadpool(guard_profile_creation, request)
     result = request.app.state.assessment.start(body)
     claim(request, 'assessment', result['assessment_id'])
     claim(request, 'learner', result['learner_id'])

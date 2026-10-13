@@ -43,7 +43,15 @@
       <button type="submit">Save password</button>
     </form>
     <div id="account-ready" hidden>
-      <p>Your verified account is ready. Connecting existing learning profiles will be available in a later update. Your saved progress has not been moved or reset.</p>
+      <p id="learner-link-status" role="status">Checking your learning profile…</p>
+      <div id="learner-link-preview" hidden>
+        <h2>Existing learning profile detected</h2>
+        <p id="learner-link-summary"></p>
+        <p>This profile contains your saved GoiGrow progress. Confirm only if this is your original learning space. Linking keeps your learning records and makes this account their owner.</p>
+        <button id="confirm-learner-link" type="button">Link this learning profile</button>
+      </div>
+      <button id="check-learner-link" type="button" class="secondary" hidden>Check existing learning profile</button>
+      <a id="open-linked-learning" class="button-link" href="/#home" hidden>Open my learning space</a>
       <button id="logout" type="button" class="secondary">Sign out of this browser</button>
     </div>
     <nav id="account-options" aria-label="Account options" hidden>
@@ -53,7 +61,7 @@
       <button type="button" data-screen="reset" class="secondary">Use recovery link</button>
     </nav>
   </section>
-  <p class="small">Safari and an installed iPhone app can have separate sessions. Sign in independently in each. Account sign-in does not restore or claim a learner profile yet.</p>
+  <p class="small">Safari and an installed iPhone app can have separate sessions. After your profile is linked, sign in independently in each to restore the same saved progress. Signing in alone never claims a profile.</p>
   <a class="button-link" href="/#home">Return to this browser’s existing learning space</a>
   <noscript><p>Enable JavaScript to use secure account sign-in. Your existing learning space remains available.</p></noscript>
 </main></body></html>

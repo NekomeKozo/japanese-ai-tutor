@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     account_invited_ids: SecretStr = SecretStr('')
     # Explicit owner-only exception, default off; never expands the UUID allowlist.
     account_owner_bootstrap_ids: SecretStr = SecretStr('')
+    # Phase 12C rollout is separate from authentication and defaults off.
+    account_learner_linking_enabled: bool = False
     supabase_auth_url: str = ''
     supabase_auth_publishable_key: SecretStr = SecretStr('')
     supabase_auth_timeout_seconds: float = Field(default=5, ge=1, le=10)
@@ -66,6 +68,9 @@ class Settings(BaseSettings):
 
     @model_validator(mode='after')
     def account_auth_configuration(self):
+        if self.account_learner_linking_enabled and not (self.account_auth_enabled and self.staging_access_enabled
+                and self.account_owner_bootstrap_ids.get_secret_value()):
+            raise ValueError('Learner linking requires enabled accounts, staging access and the existing approved owner')
         owner_ids = self.account_owner_bootstrap_ids.get_secret_value()
         if owner_ids:
             try:

@@ -9,4 +9,6 @@
 .account-page [aria-busy="true"] { opacity: .75; }
 .account-page h1 { overflow-wrap: anywhere; }
 .account-page .button-link { display: inline-block; white-space: normal; }
+#account-ready > button, #account-ready > a { margin: .5rem .5rem .5rem 0; }
+#learner-link-preview { padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; margin-block: 1rem; }
 @media (max-width: 480px) { .account-page .placement-card { padding: 1rem; } }

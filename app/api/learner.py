@@ -4,13 +4,14 @@ from uuid import UUID
 from fastapi import APIRouter, Query, Request
 
 from app.learner.schemas import PreferencesPatch
-from app.safeguards import claim
+from app.safeguards import claim, guard_profile_creation
 
 router = APIRouter(prefix='/api/learners', tags=['learner memory'])
 
 
 @router.post('', status_code=201)
 async def create(request: Request):
+    await run_in_threadpool(guard_profile_creation, request)
     result = request.app.state.learners.create()
     claim(request, 'learner', result['learner_id'])
     return result

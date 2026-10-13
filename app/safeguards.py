@@ -78,26 +78,50 @@ def claim(request, kind, resource_id):
         db.execute('INSERT INTO staging_resources VALUES (?,?,?)', (kind, str(resource_id), request.state.staging_identity))
 
 
+def access_context(request, resources=()):
+    from app.learner_access import AccessScope
+    links = getattr(request.app.state, 'account_links', None)
+    principal = links.principal(request) if links and (links.repository.account_links_ready or links.settings.account_learner_linking_enabled) else None
+    accounts = getattr(request.app.state, 'accounts', None)
+    return AccessScope(getattr(request.state, 'staging_identity', None), principal,
+        tuple(resources), bool(links and links.settings.account_learner_linking_enabled),
+        accounts.clock if accounts else time.time)
+
+
 def owned(request, kind, resource_id):
+    from app.learner_access import authorize
     try:
         UUID(str(resource_id))
-    except ValueError:
+    except (ValueError, TypeError):
         raise TutorError('invalid_request', 'A valid identifier is required.', 422) from None
-    with request.app.state.repository.connection() as db:
-        row = db.execute('SELECT owner_id FROM staging_resources WHERE kind=? AND resource_id=?', (kind, str(resource_id))).fetchone()
-    if not row or row[0] != request.state.staging_identity:
-        raise TutorError('not_found', 'This study resource is unavailable in your staging session.', 404)
+    context = access_context(request)
+    repository = request.app.state.repository
+    with repository.connection() as db:
+        authorize(db, kind, str(resource_id), context, links_ready=repository.account_links_ready)
+
+
+def guard_profile_creation(request):
+    links = getattr(request.app.state, 'account_links', None)
+    if not links or not (links.settings.account_learner_linking_enabled or links.repository.account_links_ready):
+        return
+    principal = links.principal(request)
+    if principal:
+        raise TutorError('account_profile_creation_deferred',
+            'Account learning-profile creation and replacement placement are not available in this phase. Link or restore your existing profile.', 409)
 
 
 async def protect_resources(request: Request):
-    if not request.app.state.settings.staging_access_enabled or not request.url.path.startswith('/api/'):
+    from app.learner_access import scope
+    settings, repository = request.app.state.settings, request.app.state.repository
+    if not request.url.path.startswith('/api/') or not (settings.staging_access_enabled or repository.account_links_ready):
+        yield
         return
-    params = request.path_params
+    params, resources = request.path_params, []
     for name, kind in [('learner_id', 'learner'), ('assessment_id', 'assessment')]:
         if name in params:
-            await run_in_threadpool(owned, request, kind, params[name])
+            resources.append((kind, str(params[name])))
     if request.url.path.startswith('/api/sessions/'):
-        await run_in_threadpool(owned, request, 'session', params['session_id'])
+        resources.append(('session', str(params['session_id'])))
     if request.url.path in ('/api/chat', '/api/curriculum/plan'):
         try:
             body = await request.json()
@@ -105,9 +129,21 @@ async def protect_resources(request: Request):
             raise TutorError('invalid_request', 'Send valid study data.', 422) from None
         if isinstance(body, dict):
             if body.get('learner_id'):
-                await run_in_threadpool(owned, request, 'learner', body['learner_id'])
+                resources.append(('learner', body['learner_id']))
             if request.url.path == '/api/chat' and body.get('session_id'):
-                await run_in_threadpool(owned, request, 'session', body['session_id'])
+                resources.append(('session', body['session_id']))
+    if not resources:
+        # Account routes validate their own sessions; profile creation has its
+        # explicit guard. Public catalogs/health need no remote Auth request.
+        yield
+        return
+    for kind, identifier in resources:
+        await run_in_threadpool(owned, request, kind, identifier)
+    token = scope.set(await run_in_threadpool(access_context, request, resources))
+    try:
+        yield
+    finally:
+        scope.reset(token)
 
 
 def check_scope(text, *, study_answer=False):

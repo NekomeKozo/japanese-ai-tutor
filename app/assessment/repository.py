@@ -22,6 +22,7 @@ class AssessmentRepository:
         self.path = Path(path)
         self.database_url = database_url
         self.ready = False
+        self.account_links_ready = False
 
     @contextmanager
     def connection(self, *, initialize=False):
@@ -29,12 +30,22 @@ class AssessmentRepository:
         try:
             if self.database_url:
                 with postgres_connection(self.database_url, initialize=initialize) as db:
+                    from app.learner_access import check_transaction
+                    check_transaction(db, links_ready=self.account_links_ready)
                     yield db
                 return
             connection = sqlite3.connect(str(self.path), timeout=3)
             connection.execute('PRAGMA foreign_keys=ON')
             with connection:
-                yield connection
+                from app.learner_access import check_transaction
+                # Hold SQLite's write lock from authorization through the data
+                # operation, mirroring the PostgreSQL transaction advisory lock.
+                from app.learner_access import scope
+                if scope.get() is not None and scope.get().resources:
+                    connection.execute('BEGIN IMMEDIATE')
+                check_transaction(connection, links_ready=self.account_links_ready)
+                from app.storage import SQLiteConnection
+                yield SQLiteConnection(connection)
         except (sqlite3.Error, psycopg.Error, OSError, ValidationError, ValueError) as exc:
             logger.error('Assessment storage failure: %s', type(exc).__name__)
             raise TutorError('assessment_storage', 'Assessment storage is unavailable. Please retry; ordinary chat is still available.', 503) from exc

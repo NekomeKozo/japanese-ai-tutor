@@ -32,6 +32,7 @@
   <script src="/static/flashcard-catalog.js" defer></script>
   <script src="/static/flashcards.js" defer></script>
   <script src="/static/flashcard-reviews.js" defer></script>
+  <script src="/static/account-context.js" defer></script>
   <script src="/static/shell.js" defer></script>
   <script src="/static/pwa.js" defer></script>
 </head>
@@ -56,6 +57,7 @@
     <p id="pwa-update" class="notice" role="status" hidden>A GoiGrow update is ready. Finish your current activity, then close all GoiGrow tabs and app windows and open it again. Nothing will reload automatically.</p>
     <p id="app-loading" role="status">Opening GoiGrow… After a quiet period, the server may take a moment to wake up. Keep this page open; nothing is being submitted.</p>
     <div id="app-error" role="alert" hidden><p id="app-error-text"></p><button id="app-retry" type="button" class="secondary">Try again</button><a href="#settings">Profile recovery</a></div>
+    <p id="account-learning-status" class="notice" role="status" hidden></p>
     <section id="home-panel" aria-label="Home" hidden>
       <div id="home-loading" role="status">Loading your next step…</div>
       <div id="home-content" hidden>
@@ -65,6 +67,7 @@
       </div>
     </section>
     <section id="placement-panel" aria-label="Placement assessment" hidden>
+      <p id="account-placement-notice" class="notice" hidden>Your existing profile is linked. Replacement placement is unavailable in this phase. Your original placement and learning evidence remain on Progress.</p>
       <div id="placement-intro" class="placement-card">
         <p class="eyebrow">LET’S FIND YOUR STARTING POINT</p><h2>Japanese that fits your life.</h2>
         <div id="onboarding-goal"><p>First, what would you like to use Japanese for?</p><label for="onboarding-goal-select">Your learning goal</label><select id="onboarding-goal-select"><option value="general">General Japanese</option><option value="conversation">Conversation</option><option value="travel">Travel</option><option value="work">Work</option><option value="university">University</option><option value="JLPT_N5">JLPT N5</option><option value="JLPT_N4">JLPT N4</option><option value="JLPT_N3">JLPT N3</option><option value="JLPT_N2">JLPT N2</option><option value="JLPT_N1">JLPT N1</option></select><p class="small">You can change this later in Settings.</p><button id="onboarding-next" type="button">Continue</button></div>
@@ -206,7 +209,7 @@
     </section>
     <section id="settings-panel" aria-label="Settings" hidden>
       <!-- ACCOUNT_SETTINGS -->
-      <section id="pwa-settings" class="placement-card" aria-labelledby="pwa-title"><h2 id="pwa-title">Add GoiGrow to your device</h2><p>Keep GoiGrow close with a home-screen or desktop shortcut. Learning still needs an internet connection.</p><button id="pwa-install" type="button" hidden>Add GoiGrow</button><p>On iPhone, open GoiGrow in Safari, tap Share → Add to Home Screen, then Add. Enable Open as Web App if that option appears. On supported Android and desktop browsers, use the browser’s Install app or Add to Home Screen option.</p><p class="small">Installation is optional. An installed app may have a separate private session. If it starts fresh, your original Safari progress is kept; reopen the original Safari session to access it. A profile ID alone does not transfer progress between access sessions.</p><p id="pwa-status" class="small" role="status"></p></section>
+      <section id="pwa-settings" class="placement-card" aria-labelledby="pwa-title"><h2 id="pwa-title">Add GoiGrow to your device</h2><p>Keep GoiGrow close with a home-screen or desktop shortcut. Learning still needs an internet connection.</p><button id="pwa-install" type="button" hidden>Add GoiGrow</button><p>On iPhone, open GoiGrow in Safari, tap Share → Add to Home Screen, then Add. Enable Open as Web App if that option appears. On supported Android and desktop browsers, use the browser’s Install app or Add to Home Screen option.</p><p class="small">Installation is optional. Safari and an installed app may have separate private sessions. After your profile is linked, sign in independently in each to restore the same progress. If it is not linked yet, keep the original Safari session; a profile ID alone does not transfer ownership.</p><p id="pwa-status" class="small" role="status"></p></section>
         <div class="placement-card"><h2>Make it yours</h2>
           <p id="settings-loading" role="status">Loading preferences…</p><p id="settings-error" role="alert" hidden></p><button id="settings-retry" type="button" class="secondary" hidden>Reload preferences</button><p id="settings-empty" hidden>Create a learner profile to save preferences. <a href="#placement">Get started</a></p><form id="preferences-form" hidden><fieldset><legend>Japanese display</legend>
             <label><input id="pref-romaji" type="checkbox"> Include romaji when helpful</label>
@@ -219,7 +222,7 @@
           </form>
         </div>
 
-      <details class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
+      <details id="legacy-profile-tools" class="placement-card"><summary>Advanced · Profile recovery</summary><p class="small">Saved learning belongs to this browser’s private access session. A profile ID alone does not grant access from another browser.</p><p id="learner-identity" class="small"></p><form id="restore-profile"><label for="learner-id">Saved profile ID</label><input id="learner-id" autocomplete="off" required><button type="submit">Open profile</button></form><p id="recovery-notice" role="status"></p><button id="fresh-profile" type="button" class="secondary">Set up another profile</button><p class="small">This changes the selected profile in this browser. Existing saved profiles are kept.</p><button id="temporary-chat" type="button" class="secondary">Use temporary chat</button></details>
     </section>
     <section id="study-panel" aria-label="Today's Study" hidden>
       <nav class="study-nav" aria-label="Study options"><a href="#study">Daily Study & Review</a><a href="#study/jlpt">JLPT Practice</a><a href="#study/listening">Listening</a><a href="#study/speaking">Speaking Practice</a><a href="#study/flashcards">Flashcards</a></nav>

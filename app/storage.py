@@ -11,6 +11,20 @@ import psycopg
 from psycopg.conninfo import conninfo_to_dict
 
 
+class SQLiteConnection:
+    """Keep an authorization lock through existing service transactions."""
+    def __init__(self, connection):
+        self.raw = connection
+
+    def execute(self, sql, params=()):
+        if sql.strip() == 'BEGIN IMMEDIATE' and self.raw.in_transaction:
+            return self.raw.execute('SELECT 1')
+        return self.raw.execute(sql, params)
+
+    def __getattr__(self, name):
+        return getattr(self.raw, name)
+
+
 class PostgresConnection:
     def __init__(self, connection):
         self.raw = connection

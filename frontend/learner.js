@@ -6,7 +6,7 @@ let profileLoadedFor = null;
 document.addEventListener('learning-updated', () => { profileLoadedFor = null; });
 document.addEventListener('learner-changed', () => { ++profileRequest; profileLoadedFor = null; });
 
-function remember(key, value) { try { if (value === null) localStorage.removeItem(`japanese-tutor-${key}`); else localStorage.setItem(`japanese-tutor-${key}`, value); } catch { /* Backend persistence still works. */ } }
+function remember(key, value) { try { if (accountContext.linked()) value = null; if (value === null) localStorage.removeItem(`japanese-tutor-${key}`); else localStorage.setItem(`japanese-tutor-${key}`, value); } catch { /* Backend persistence still works. */ } }
 function recalled(key) { try { return localStorage.getItem(`japanese-tutor-${key}`); } catch { return null; } }
 function profileError(error) { $('profile-error').textContent = friendlyError(error); $('profile-error').hidden = false; $('profile-retry').hidden = false; $('profile-summary').textContent = 'Your progress couldn’t load. Please try again.'; }
 const jsonOptions = (method, body) => ({method, headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
@@ -18,7 +18,7 @@ async function openSavedSession(id) {
   sessionId = saved.session_id;
   savedSession = true;
   pendingChat = null;
-  remember(`session-${placementLearnerId}`, sessionId);
+  if (!accountContext.linked()) remember(`session-${placementLearnerId}`, sessionId);
   $('conversation').replaceChildren();
   applyPractice(saved.conversation);
   if (saved.conversation) addMessage('tutor', saved.conversation.scenario.opening_line);
@@ -38,7 +38,7 @@ async function activateLearner(id) {
   savedSession = false;
   pendingChat = null;
   $('conversation').replaceChildren(); appendTutorWelcome();
-  remember('learner', placementLearnerId);
+  if (!accountContext.linked()) remember('learner', placementLearnerId);
   $('placement-context').textContent = `${profile.estimated_level} · Saved learner profile · Preferences and recent learning guide the tutor.`;
   $('level').value = profile.preferences.preferred_difficulty || profile.estimated_level.match(/N[1-5]/)?.[0] || 'beginner';
   $('message').value = ''; updateCount();
@@ -52,6 +52,12 @@ async function ensureTutorSession() {
   $('status').textContent = 'Opening your conversation…';
   try {
     if (await restoreActivePractice()) return;
+    if (accountContext.linked()) {
+      const sessions = await api(`/api/learners/${placementLearnerId}/sessions`);
+      if (sessions.length) { await openSavedSession(sessions[0].session_id); return; }
+      $('status').textContent = 'No saved conversation yet. Choose New conversation when you are ready.';
+      return;
+    }
     const savedId = placementLearnerId && recalled(`session-${placementLearnerId}`);
     if (savedId) {
       try { await openSavedSession(savedId); return; }
@@ -77,7 +83,7 @@ async function renderProfile() {
   if (id !== placementLearnerId || sequence !== profileRequest) return;
   $('profile-details').hidden = false;
   $('profile-summary').textContent = `${profile.estimated_level} · ${profile.profile_source === 'default' ? 'No placement assessment yet' : 'Placement confidence ' + Math.round(profile.placement_confidence * 100) + '%'} · Last activity: ${dateLabel(profile.last_activity_at)}`;
-  $('learner-identity').textContent = `Learner ID: ${id}. Keep this ID to reopen your profile on this server.`;
+  $('learner-identity').textContent = accountContext.linked() ? 'Your account restores this profile after sign-in on another device.' : `Learner ID: ${id}. Keep this ID to reopen your profile on this server.`;
   const evidence = $('profile-evidence'); evidence.replaceChildren(node('h2', 'Your skills'));
   const overview = $('progress-overview'); overview.replaceChildren(node('h2', 'A picture built from practice'),node('p', 'Your placement estimate is a starting guide. Knowledge reflects practice of individual topics; confidence describes how much evidence supports it. Strong does not mean learned forever.'));
   overview.append(node('p', `Learning goal: ${readable(profile.preferences.primary_goal)}`));
@@ -114,7 +120,7 @@ async function renderProfile() {
 }
 
 $('restore-profile').addEventListener('submit', async event => {
-  event.preventDefault(); if (busy) return; setBusy(true);
+  event.preventDefault(); if (busy || accountContext.linked()) return; setBusy(true);
   try { await activateLearner($('learner-id').value.trim()); appReady = true; $('app-error').hidden = true; await loadSettings(); $('recovery-notice').textContent = 'Profile restored. Your learning is ready on Home.'; }
   catch (error) { $('recovery-notice').textContent = friendlyError(error); } finally { setBusy(false); }
 });
@@ -139,7 +145,7 @@ $('level').addEventListener('change', async () => {
   catch (error) { showError(error); }
 });
 $('temporary-chat').addEventListener('click', async () => {
-  if (busy) return;
+  if (busy || accountContext.linked()) return;
   placementLearnerId = null; sessionId = null; savedSession = false; remember('learner', null);
   document.dispatchEvent(new Event('learner-changed'));
   $('placement-context').textContent = 'Temporary chat · No learning profile selected.';

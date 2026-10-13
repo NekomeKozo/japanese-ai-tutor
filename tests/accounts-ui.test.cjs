@@ -8,7 +8,7 @@ const html = fs.readFileSync(path.join(root, 'account.html'), 'utf8');
 const source = fs.readFileSync(path.join(root, 'account.js'), 'utf8');
 const tick = async () => { for (let i = 0; i < 5; i++) await new Promise(setImmediate); };
 
-function harness({ state, pathname = '/auth/sign-in', hash = '', bootstrapError } = {}) {
+function harness({ state, pathname = '/auth/sign-in', hash = '', bootstrapError, learner = {state:'unlinked',linking_enabled:false} } = {}) {
   const nodes = new Map(), events = {}, requests = [], notices = [];
   const node = (tag, attrs='') => ({ tag, hidden: /\bhidden\b/.test(attrs), value: '', textContent: '', listeners: {}, disabled:false,
     addEventListener(event, fn) { this.listeners[event] = fn; }, setAttribute(k,v) { this[k]=v; }, removeAttribute(k) { delete this[k]; }, focus() { this.focused=true; } });
@@ -27,6 +27,7 @@ function harness({ state, pathname = '/auth/sign-in', hash = '', bootstrapError 
   fetch:async(url,options)=>{
     requests.push({url,...options}); let result;
     if(url.endsWith('/bootstrap'))result=bootstrapError || {csrf:'session-bound-csrf'};
+    else if(url.endsWith('/learner'))result=learner;
     else if(url.endsWith('/me'))result=state ? {state} : {error:{code:'account_auth_required'},status:401};
     else result=reply ? await reply(url,options) : {state:'ready'};
     return {ok:!result.error,status:result.status||200,json:async()=>result};
@@ -105,4 +106,49 @@ test('page lifecycle clears secrets and refreshes restored or changed account UI
   const h=harness();await tick();h.nodes.get('login-password').value='private';
   h.events.pagehide();assert.equal(h.nodes.get('login-password').value,'');
   h.events.pageshow({persisted:true});h.events.channel();assert.equal(h.notices.filter(n=>n==='reload').length,2);
+});
+
+test('eligible profile is previewed without linking; explicit confirmation sends no IDs',async()=>{
+  const h=harness({state:'ready',learner:{state:'unlinked',linking_enabled:true}});await tick();
+  assert.equal(h.nodes.get('check-learner-link').hidden,false);
+  h.reply(url=>url.endsWith('/link-preview')?{state:'eligible',summary:{estimated_level:'N5',profile_source:'placement_assessment'},confirmation:'opaque-proof'}:{state:'linked'});
+  h.nodes.get('check-learner-link').listeners.click();await tick();
+  assert.equal(h.nodes.get('learner-link-preview').hidden,false);
+  assert.equal(h.requests.some(r=>r.url.endsWith('/link-learner')),false);
+  h.nodes.get('confirm-learner-link').listeners.click();await tick();
+  const req=h.requests.find(r=>r.url.endsWith('/link-learner'));
+  assert.deepEqual(JSON.parse(req.body),{confirm:true,confirmation:'opaque-proof'});
+  assert.equal(req.headers['X-CSRF-Token'],'session-bound-csrf');
+  assert.match(h.nodes.get('account-status').textContent,/linked successfully/);
+});
+
+test('interrupted confirmation retries the same proof and blocks double taps',async()=>{
+  const h=harness({state:'ready',learner:{state:'unlinked',linking_enabled:true}});await tick();
+  h.reply(()=>({state:'eligible',summary:{estimated_level:'N5'},confirmation:'retry-proof'}));
+  h.nodes.get('check-learner-link').listeners.click();await tick();
+  let release;
+  h.reply(()=>new Promise((_,reject)=>{release=()=>reject(new TypeError('Connection interrupted.'));}));
+  h.nodes.get('confirm-learner-link').listeners.click();h.nodes.get('confirm-learner-link').listeners.click();await tick();
+  assert.equal(h.requests.filter(r=>r.url.endsWith('/link-learner')).length,1);
+  release();await tick();assert.equal(h.nodes.get('confirm-learner-link').disabled,false);
+  h.reply(()=>({state:'linked'}));h.nodes.get('confirm-learner-link').listeners.click();await tick();
+  const requests=h.requests.filter(r=>r.url.endsWith('/link-learner'));
+  assert.equal(requests[0].body,requests[1].body);
+});
+
+test('link conflicts do not show success or start a new learner',async()=>{
+  const h=harness({state:'ready',learner:{state:'unlinked',linking_enabled:true}});await tick();
+  h.reply(()=>({error:{code:'link_context_ambiguous',message:'Owner-assisted verification is required.'},status:409}));
+  h.nodes.get('check-learner-link').listeners.click();await tick();
+  assert.equal(h.nodes.get('learner-link-preview').hidden,true);
+  assert.match(h.nodes.get('account-error').textContent,/Owner-assisted/);
+  assert.equal(h.requests.some(r=>r.url==='/api/learners'||r.url.endsWith('/link-learner')),false);
+});
+
+test('ready linked account offers restoration without preview or internal IDs in text',async()=>{
+  const h=harness({state:'ready',learner:{state:'linked',learner_id:'private-identifier',linking_enabled:true}});await tick();
+  assert.equal(h.nodes.get('open-linked-learning').hidden,false);
+  assert.equal(h.nodes.get('check-learner-link').hidden,true);
+  assert.equal([...h.nodes.values()].some(n=>n.textContent.includes('private-identifier')),false);
+  assert.equal(h.requests.some(r=>r.url.endsWith('/link-preview')),false);
 });
