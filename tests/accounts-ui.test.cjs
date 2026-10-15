@@ -122,6 +122,18 @@ test('eligible profile is previewed without linking; explicit confirmation sends
   assert.match(h.nodes.get('account-status').textContent,/linked successfully/);
 });
 
+test('verified existing profile shows a safe description and submits only opaque confirmation',async()=>{
+  const h=harness({state:'ready',learner:{state:'unlinked',linking_enabled:true}});await tick();
+  h.reply(url=>url.endsWith('/link-preview')?{state:'eligible',summary:{estimated_level:'Early N5',profile_source:'placement_assessment',verified_existing:true},confirmation:'private-opaque-checkpoint-proof'}:{state:'linked'});
+  h.nodes.get('check-learner-link').listeners.click();await tick();
+  assert.match(h.nodes.get('learner-link-summary').textContent,/Verified existing learning profile.*Early N5/);
+  assert.doesNotMatch(h.nodes.get('learner-link-summary').textContent,/Candidate|checkpoint|private-opaque/);
+  assert.equal(h.requests.some(r=>r.url.endsWith('/link-learner')),false);
+  h.nodes.get('confirm-learner-link').listeners.click();await tick();
+  const req=h.requests.find(r=>r.url.endsWith('/link-learner'));
+  assert.deepEqual(JSON.parse(req.body),{confirm:true,confirmation:'private-opaque-checkpoint-proof'});
+});
+
 test('interrupted confirmation retries the same proof and blocks double taps',async()=>{
   const h=harness({state:'ready',learner:{state:'unlinked',linking_enabled:true}});await tick();
   h.reply(()=>({state:'eligible',summary:{estimated_level:'N5'},confirmation:'retry-proof'}));

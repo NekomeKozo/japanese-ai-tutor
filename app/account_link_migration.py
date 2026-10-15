@@ -6,7 +6,7 @@ SQLITE_DDL = '''CREATE TABLE IF NOT EXISTS account_learner_links (
     learner_id TEXT UNIQUE NOT NULL REFERENCES learner_state(learner_id) ON DELETE RESTRICT,
     created_at REAL NOT NULL,
     link_version INTEGER NOT NULL CHECK(link_version=1),
-    proof_method TEXT NOT NULL CHECK(proof_method='signed_legacy_owner_v1'),
+    proof_method TEXT NOT NULL CHECK(proof_method IN ('signed_legacy_owner_v1','checkpoint_legacy_owner_v1')),
     legacy_owner_digest TEXT NOT NULL,
     provider_session_digest TEXT NOT NULL,
     confirmation_digest TEXT NOT NULL UNIQUE)'''

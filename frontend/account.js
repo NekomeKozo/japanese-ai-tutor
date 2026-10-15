@@ -88,7 +88,7 @@
     const data = await request('account/link-preview');
     if (data.state === 'linked') { await learningStatus(); return; }
     confirmation = data.confirmation;
-    $('learner-link-summary').textContent = `Study estimate: ${data.summary.estimated_level}. ${data.summary.profile_source === 'default' ? 'Beginner profile' : 'Placement profile'}.`;
+    $('learner-link-summary').textContent = `${data.summary.verified_existing ? 'Verified existing learning profile. ' : ''}Study estimate: ${data.summary.estimated_level}. ${data.summary.profile_source === 'default' ? 'Beginner profile' : 'Placement profile'}.`;
     $('learner-link-preview').hidden = false;
     status.textContent = 'Review the profile, then explicitly confirm below. Nothing has been linked yet.';
   }));

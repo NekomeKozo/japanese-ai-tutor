@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     account_owner_bootstrap_ids: SecretStr = SecretStr('')
     # Phase 12C rollout is separate from authentication and defaults off.
     account_learner_linking_enabled: bool = False
+    # Optional encrypted operator checkpoint, outside the checkout; default absent.
+    account_learner_checkpoint_path: str = ''
     supabase_auth_url: str = ''
     supabase_auth_publishable_key: SecretStr = SecretStr('')
     supabase_auth_timeout_seconds: float = Field(default=5, ge=1, le=10)

@@ -6,6 +6,7 @@ from app.accounts import digest
 from app.auth import AuthenticationError
 from app.errors import TutorError
 from app.account_link_migration import present
+from app.account_link_checkpoint import CandidateCheckpoint, METHOD
 
 CONFIRMATION_SECONDS = 300
 FRESH_AUTH_SECONDS = 600
@@ -60,13 +61,35 @@ class AccountLinks:
                 **({'learner_id': learner} if learner else {}),
                 'linking_enabled': self.settings.account_learner_linking_enabled}
 
+    def candidates(self, db, owner):
+        return db.execute("SELECT l.learner_id,l.estimated_level,l.profile_source FROM learner_state l JOIN staging_resources r ON r.resource_id=l.learner_id AND r.kind='learner' WHERE r.owner_id=? ORDER BY l.learner_id", (owner,)).fetchall()
+
     def eligible(self, db, owner):
-        rows = db.execute("SELECT l.learner_id,l.estimated_level,l.profile_source FROM learner_state l JOIN staging_resources r ON r.resource_id=l.learner_id AND r.kind='learner' WHERE r.owner_id=? ORDER BY l.learner_id", (owner,)).fetchall()
+        rows = self.candidates(db, owner)
         if not rows:
             raise TutorError('link_context_missing', 'Open the original browser with your saved progress. No eligible learning profile was found here.', 409)
         if len(rows) != 1:
             raise TutorError('link_context_ambiguous', 'Several legacy profiles are present. Owner-assisted verification is required; no profile was selected or changed.', 409)
         return rows[0]
+
+    def selected(self, db, account, owner):
+        if self.settings.account_learner_checkpoint_path:
+            candidate, checkpoint = CandidateCheckpoint(self).resolve(db, account, owner)
+            return candidate, checkpoint
+        return self.eligible(db, owner), None
+
+    def checkpoint_session(self, db, nonce, owner):
+        # Repeat provider/session/freshness checks AFTER acquiring the learner
+        # lock. Hold the provider session row through insertion, so revocation
+        # cannot slip between its last existence check and the association.
+        if not self.repository.database_url:
+            raise AuthenticationError()
+        row, _ = self.accounts.resolve(db, nonce, owner)
+        self.linking_allowed(row, owner)
+        if not db.execute('SELECT 1 FROM auth.sessions WHERE id=? AND user_id=? FOR SHARE',
+                (row[3], str(row[2]))).fetchone():
+            raise AuthenticationError()
+        return row
 
     def linking_allowed(self, row, owner):
         if not self.settings.account_learner_linking_enabled or not self.repository.account_links_ready:
@@ -86,13 +109,19 @@ class AccountLinks:
             linked = self.owned(db, str(row[2]))
             if linked:
                 return {'state': 'linked', 'message': 'Your learning profile is already linked.'}
-            learner, level, source = self.eligible(db, owner)
+            if self.settings.account_learner_checkpoint_path and self.repository.database_url:
+                db.execute('SELECT pg_advisory_xact_lock(650065)')
+                row = self.checkpoint_session(db, nonce, owner)
+            (learner, level, source), checkpoint = self.selected(db, str(row[2]), owner)
             if db.execute('SELECT 1 FROM account_learner_links WHERE learner_id=?', (learner,)).fetchone():
                 raise TutorError('link_conflict', 'This learning profile cannot be linked. No ownership was changed.', 409)
             proof = {'kind': 'learner_link_v1', 'account': str(row[2]), 'learner': learner,
                      'owner': self.audit(owner), 'nonce': digest(nonce),
                      'expires': self.accounts.clock() + CONFIRMATION_SECONDS}
-            return {'state': 'eligible', 'summary': {'estimated_level': level, 'profile_source': source},
+            if checkpoint:
+                proof['checkpoint'] = checkpoint
+            return {'state': 'eligible', 'summary': {'estimated_level': level, 'profile_source': source,
+                    'verified_existing': bool(checkpoint)},
                     'confirmation': self.accounts.encrypt(proof)}
 
     def audit(self, value):
@@ -114,19 +143,35 @@ class AccountLinks:
             # legacy-authorized write. Account refresh keeps its existing lock.
             if self.repository.database_url:
                 db.execute('SELECT pg_advisory_xact_lock(650065)')
+            # A configured exception never falls back to normal selection. Load
+            # its exact artifact and recheck all history under the write lock.
+            checkpoint_mode = bool(self.settings.account_learner_checkpoint_path)
+            if checkpoint_mode != ('checkpoint' in proof):
+                raise TutorError('link_context_changed', 'Refresh the verified profile preview. Nothing was changed.', 409)
+            if checkpoint_mode:
+                row = self.checkpoint_session(db, nonce, owner)
+                (learner, _, _), checkpoint = self.selected(db, str(row[2]), owner)
+                if checkpoint != proof['checkpoint'] or learner != proof.get('learner'):
+                    raise TutorError('link_context_changed', 'The verified checkpoint changed. Nothing was linked.', 409)
+                if not isinstance(proof.get('expires'), (int, float)) or proof['expires'] <= self.accounts.clock():
+                    raise TutorError('link_confirmation_expired', 'Refresh the linking page and confirm again. Nothing was changed.', 409)
             linked = self.owned(db, str(row[2]))
             if linked:
                 if linked != proof.get('learner'):
                     raise TutorError('link_conflict', 'Your account already has a different learning profile. No ownership was changed.', 409)
+                if checkpoint_mode and not db.execute('SELECT 1 FROM account_learner_links WHERE account_id=? AND learner_id=? AND proof_method=? AND confirmation_digest=?',
+                        (str(row[2]), learner, METHOD, digest(confirmation))).fetchone():
+                    raise TutorError('link_conflict', 'Ownership changed after the preview. Nothing was linked.', 409)
                 return {'state': 'linked', 'message': 'Your learning profile is already linked.'}
             if not isinstance(proof.get('expires'), (int, float)) or proof['expires'] <= self.accounts.clock():
                 raise TutorError('link_confirmation_expired', 'Refresh the linking page and confirm again. Nothing was changed.', 409)
-            learner, _, _ = self.eligible(db, owner)
+            if not checkpoint_mode:
+                learner, _, _ = self.eligible(db, owner)
             if learner != proof.get('learner'):
                 raise TutorError('link_context_changed', 'The learning context changed. Refresh before linking; nothing was changed.', 409)
             if db.execute('SELECT 1 FROM account_learner_links WHERE learner_id=?', (learner,)).fetchone():
                 raise TutorError('link_conflict', 'This learning profile cannot be linked. No ownership was changed.', 409)
             db.execute('INSERT INTO account_learner_links VALUES (?,?,?,?,?,?,?,?)',
-                (str(row[2]), learner, self.accounts.clock(), 1, 'signed_legacy_owner_v1',
+                (str(row[2]), learner, self.accounts.clock(), 1, METHOD if checkpoint_mode else 'signed_legacy_owner_v1',
                  self.audit(owner), self.audit(row[3]), digest(confirmation)))
         return {'state': 'linked', 'message': 'Learning profile linked successfully.'}
