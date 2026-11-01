@@ -45,7 +45,7 @@ a separate bank edit are required before publication. Keep candidate files priva
 ## Persistence, timing and recovery
 
 Schema 7 adds three JLPT tables and the required new topic identities without replacing
-existing learner data. Startup also fills missing Phase 9 topics in an already-upgraded
+existing learner data. Startup also fills missing authored JLPT topics in an already-upgraded
 schema-7 database, without overwriting existing topic metadata. A learner
 has at most one active JLPT session. Request identifiers make retried starts and
 answers idempotent. Questions, selected order and deadlines are stored on the server.
@@ -59,8 +59,8 @@ finish on the next server interaction; a background worker is not required.
 Mock feedback and learning evidence remain withheld until completion. Abandoned
 mock answers never become performance evidence.
 
-Retain additive tables during rollback. The compatible Phase 8 application checkpoint
-is `09db650`, including schema-7 tolerance and additive topic definitions. Do not
-deploy the original Phase 8 checkpoint directly against migrated data, destructively
-downgrade the schema, or delete learner history. Use normal revert/release operations,
-never force-push.
+Retain additive tables during rollback. Verify that the selected application
+release accepts the current schema and topic definitions; do not deploy an older
+incompatible authorizer or destructively downgrade the database. Preserve sessions,
+answer snapshots and learner history. Use normal reviewed release operations without
+rewriting Git history. See [deployment](deployment.md).

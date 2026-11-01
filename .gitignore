@@ -37,6 +37,19 @@ build/
 # Logs
 *.log
 
+# Local development journals, approvals and execution evidence
+/work/phases/
+/work/evidence/
+# Historical measurement locations may be regenerated; keep images trackable.
+/design/performance/**/*.json
+/design/screenshots/**/responsive-emulated.json
+# Guard against accidentally recreating phase journals at the repository root.
+/PHASE*.md
+/test-results/
+/playwright-report/
+/.coverage
+/htmlcov/
+
 # IDE
 .vscode/
 .idea/

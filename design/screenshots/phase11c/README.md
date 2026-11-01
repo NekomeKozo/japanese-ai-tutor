@@ -1,5 +1,10 @@
-# Phase 11C screenshot evidence
+# Shared component visual references
 
-Mobile files are desktop-browser viewport emulation at 390×844, not physical iPhone captures. Desktop captures are 1440px. Images contain only anonymous/disposable local test data. Audio and transcription were mocked; no real recordings or secrets are included.
+These intentionally tracked reference images use disposable local test data.
+Mobile views are desktop-browser viewport emulation at approximately 390 CSS pixels;
+desktop views use approximately 1440 CSS pixels. They are not physical-device/Safari
+acceptance evidence. Audio and transcription were mocked, without private recordings.
 
-The original owner iPhone screenshots remain in the adjacent `Iphone 13` folder and are not committed. See `../../../PHASE11C_REPORT.md` for the before/after mapping, preserved layout and browser/state differences. JPEG extensions match capture bytes.
+Generated layout measurements and execution narratives remain in ignored local
+development storage. Current behavior is described in [features](../../../docs/features.md),
+with UI source under `frontend/`. The surrounding image assets remain unchanged.

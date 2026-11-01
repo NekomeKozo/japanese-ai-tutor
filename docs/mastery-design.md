@@ -2,8 +2,8 @@
 
 This is a deterministic, provisional estimate of demonstrated knowledge, separate from
 confidence in that estimate. It is neither raw accuracy nor a calibrated probability of
-future recall. It consumes structured Phase 3 events; it never calls a model. The existing
-placement estimate and Phase 3 rolling practice signals keep their original semantics.
+future recall. It consumes structured learning-memory events; it never calls a model. The existing
+placement estimate and learning-memory rolling practice signals keep their original semantics.
 
 ## Evidence and identity
 
@@ -152,7 +152,7 @@ success can recover; old success does not disappear after one error.
 
 ## Persistence, migration and recomputation
 
-SQLite schema v4 adds `mastery_evidence`, `topic_mastery`, and `mastery_history`, with
+The shared SQLite/PostgreSQL schema contains `mastery_evidence`, `topic_mastery`, and `mastery_history`, with
 foreign keys to existing learner/topic/event identities. Dimensions live in state JSON,
 avoiding a parallel learner catalog. Evidence identity is `(event_id,topic_id,dimension)`.
 Original event, old practice signals, normalized evidence, new state and history are
@@ -171,9 +171,10 @@ seeds additional canonical items and backfills eligible historical events, witho
 their payloads or assuming missing production/reading facts. Broad legacy groups may
 produce no item evidence. Existing profiles, conversations, preferences, assessment
 results and study plans are untouched. Older plans parse with focus_dimension=null.
-The developer reset supports v4 and clears derived rows before their original event rows.
+Any supported local reset must clear derived rows before source events and respect
+the maintenance tool's actual schema guards; see [development](development.md).
 
-The local maintenance CLI in README replays normalized evidence. It does not invent new
+The local maintenance CLI listed in [development](development.md) replays normalized evidence. It does not invent new
 metadata or regrade answers. If a future normalizer changes, explicitly migrate the
 normalized evidence as well; merely changing the scoring version cannot recover missing
 historical dimensions. Tunables are in `mastery/policy.py`.
@@ -195,13 +196,13 @@ Fixed vocabulary/kanji focused tasks use local content; grammar uses the existin
 provider and validates an open semantic exercise for production/application focus.
 No additional mastery model call, provider change, or expanded context budget is required.
 
-## Limitations to review before Phase 6
+## Limitations
 
-The catalog has 57 supported topics at release. It is not a comprehensive course or a
-teacher-reviewed/calibrated assessment. Repeated fixed prompts saturate deliberately;
-more varied authored items are needed to measure dimensions broadly. Context hashes
-only approximate independence. Reading confidence pools tested contexts within on/kun
-dimensions; it does not claim coverage of every reading. Age does not decay confidence
-or mastery. There are no review dates, intervals, scheduling, FSRS, SM-2, pronunciation,
-listening, handwriting, or advanced conversation mastery in this phase. Review thresholds,
-priors, uncertainty and dimensions with real learner data before designing Phase 6.
+Supported mastery topics are defined in `app/mastery/catalog.py`; this is not a
+comprehensive or independently calibrated course. Repeated fixed prompts saturate
+deliberately. Context hashes only approximate independence. Reading confidence pools
+tested on/kun contexts without claiming all readings are known. Age alone does not
+decay knowledge/confidence. The mastery subsystem does not own due dates; FSRS
+scheduling is documented in [review design](review-design.md). Audio progress and
+text-based speaking feedback do not establish handwriting or pronunciation mastery.
+Thresholds, priors, dimensions and uncertainty still require real-world calibration.

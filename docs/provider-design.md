@@ -1,62 +1,52 @@
-# Provider integration (Phase 4.5)
+# Tutoring provider boundary
 
-Learning services → existing `LLMProvider.generate` protocol → selected REST adapter.
-`create_app` creates one shared provider and injects it into tutor, assessment evaluation,
-and curriculum content/evaluation. Learner memory only consumes validated application data.
-There is no second LLM service, per-prompt method family, fallback router or UI change.
+Learning services use `LLMProvider.generate(instructions, messages, schema=None)`.
+The application factory constructs the selected adapter on a shared HTTPX client
+and injects it into tutor, assessment evaluation and generated activity services.
+Provider envelopes remain inside `app/llm`; learning logic receives text/JSON and
+validates its own Pydantic schemas before saving evidence or replies.
 
-`generate(instructions, messages, schema=None)` accepts application-owned messages and
-returns a string. With a schema, adapters request JSON and check JSON syntax. The caller
-still validates its own Pydantic schema, length limits and learning-specific rules before
-saving data. Without a schema the same method returns plain text. Business logic never
-sees provider envelopes, SDK objects, thought parts or provider-specific role names.
+## Adapters and selection
 
-Gemini maps assistant turns to `model`, instructions to `systemInstruction`, and JSON
-schema to `generationConfig.responseJsonSchema` with the JSON MIME type. It uses the
-official `v1beta/models/{model}:generateContent` REST endpoint, sends its key only in the
-`x-goog-api-key` header, and discards thought parts. Completed text requires `STOP`;
-truncation and safety blocks are errors. The default is Gemini 3.1 Flash-Lite, verified
-live through the running tutor. Explicit Gemini 2.5 Flash configurations retain their
-legacy thinking-budget setting, but it is no longer the default or example model.
-Other explicitly chosen models receive no thinking override and may need a larger
-configured output budget.
+Gemini uses the generateContent REST API with backend-only header credentials,
+system instructions and structured JSON output settings. Thought parts are discarded;
+incomplete, blocked and malformed responses become safe application failures.
+OpenAI uses Responses with structured output and `store=false`. Groq implements
+the same transport-independent interface. Provider/model availability depends on the
+operator's account; defaults are defined in `app/llm/common.py`, and explicit settings
+are preserved rather than overwritten by deployment documentation.
 
-OpenAI retains Responses, strict JSON schema, unchanged role/instruction mapping and
-`store=false`; plain text uses the same endpoint. Its default remains `gpt-4.1-mini`.
-No API key, database, dependency, or curriculum change is needed to switch adapters.
+`LLM_PROVIDER` selects Gemini, Groq or OpenAI. Only the configured provider's key
+is required unless fallback is deliberately enabled. Unknown providers, missing keys
+and unsafe model names produce safe configuration errors; deterministic study can
+remain available without working live inference. Changes to settings require restart
+or deployment of the actual configured process, not a separate frontend setting.
 
-The factory selects only the configured provider, normalizing case/outer whitespace.
-Unknown providers, unsafe model IDs and missing selected keys produce safe setup messages.
-The server and deterministic learning features still start without a configured provider.
-Health checks configuration presence only, not live connectivity, quota or model access.
-Provider failures use existing `TutorError` categories: configuration, missing key, auth,
-rate limit, timeout, unavailable, failure, incomplete, refusal, or invalid model response.
-Gemini may report invalid keys as HTTP 400; this uses the safe generic failure category.
-Logs include adapter/model names, HTTP status, allowlisted provider error categories/reasons
-and API route templates, never raw vendor messages, exception text, credentials,
-headers, request bodies, generated text or prompt contents. Startup logs show the working
-directory and application-relative environment-file path. Health reports the loaded
-provider/model and key-presence boolean. Do not enable HTTP wire-debug
-logging when using real learner data.
+## Bounded fallback
 
-Transport calls do not retry or switch provider. Existing caller-controlled lesson
-schema repair remains as before. Tutor history and learner/lesson context limits are
-unchanged; switching adapters only changes the wire envelope. No new learner data is sent.
+`FailoverProvider` supports Gemini primary and Groq fallback when configured by
+`LLM_FAILOVER_ENABLED` and `LLM_FALLBACK_PROVIDER`. It makes one primary attempt and
+at most one fallback within the caller's deadline. Timeout, unavailability, rate-limit
+or explicitly classified retryable provider failures can trigger fallback; schema,
+refusal and other nonretryable failures must not produce an uncontrolled retry loop.
+The request-scoped guard also bounds caller-driven schema repair. A failed fallback
+returns a generic unavailable error. No learning service implements its own provider router.
 
-To add a provider, implement the same protocol in `app/llm`, add a secret setting, register
-the adapter/key field in `PROVIDERS`, update the setup message/examples, and add mocked
-transport contract tests. Keep SDK/API formats entirely inside that adapter. Future fallback
-could implement the existing protocol without changing learning services; none is enabled.
+## Validation, context and diagnostics
 
-Offline tests reuse `tests.conftest.MockProvider` and HTTPX `MockTransport`; the test fixture
-blocks HTTPX's real sync/async transports. No real-provider quality or account-access claim
-is made by those tests. Separate live verification with the locally configured key is
-documented in `PHASE4_5_RUNTIME_REPORT.md`; it is not part of the automated test suite.
+Adapters check transport envelopes and JSON syntax; application schemas still validate
+teaching fields, lengths, observations, scores, topic identities and activity contracts.
+Untrusted retrieved reference data is separate from system instructions. Profile/history
+and lesson context remain bounded. No model can choose persistence or authorization.
 
-Official references checked for this implementation:
+Logs use fixed provider names, route templates, latency and allowlisted error categories;
+they do not include keys, headers, request/response bodies, prompt text or vendor error
+messages. `/api/health` describes loaded configuration and key presence, not live model
+access, quota or output quality. `/health` is the minimal zero-inference liveness endpoint.
 
-- [Gemini generateContent REST reference](https://ai.google.dev/api/generate-content)
-- [Gemini structured outputs](https://ai.google.dev/gemini-api/docs/generate-content/structured-output)
-- [Gemini thinking controls](https://ai.google.dev/gemini-api/docs/generate-content/thinking)
-- [Gemini 2.5 Flash capabilities](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash)
-- [OpenAI structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+To add an adapter, implement the same protocol, register its setting/key field in
+`PROVIDERS`, and add mocked transport contract tests. Do not expose SDK-specific types
+to learning modules or introduce another token store. Tests use HTTPX MockTransport
+and synthetic teaching responses; real-provider checks require intentional authorization
+and private configuration. Speech transcription is a separate explicit Groq audio call,
+not the tutoring provider fallback mechanism.

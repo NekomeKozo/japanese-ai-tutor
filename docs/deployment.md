@@ -1,245 +1,129 @@
-# Phase 6.5 private staging
+# Deployment
 
-Status: runtime commit `3c1c8e4` is deployed and GitHub CI passed all 419 tests.
-Public health, private access, Gemini tutor responses, placement, learner memory,
-curriculum, mastery, reviews, and persistence across deployment are verified.
-The owner confirmed the `/health` dashboard setting and successful sign-in, page
-display, and navigation on an actual phone. Phase 6.5 private-alpha acceptance is
-complete; the live narrow browser layout was also checked. This is not a production release.
+## Current topology
 
-## Architecture
+Canonical production origin: **https://goigrow.onrender.com**.
+The primary service is `goigrow`, a Free Python web service in the existing
+GoiGrow / Production Render environment. Its application configuration remains
+private `staging`. One FastAPI process serves frontend and API; the existing
+Supabase project supplies PostgreSQL and Auth.
 
-Browser → HTTPS Render Web Service → FastAPI frontend + API → Supabase PostgreSQL.
-Gemini is the primary inference provider; Groq is an optional bounded fallback.
-OpenAI and offline fake providers remain available. No Railway, separate static
-site, Docker runtime, browser database client, RAG, or reference upload is needed.
+Temporary rollback note: `goigrow-legacy` remains at
+https://japanese-ai-tutor.onrender.com. Keep it and its approved callback/recovery
+entries until retirement is separately approved and original-profile access is
+verified. Cookies/storage do not migrate automatically between these hostnames.
+Do not create another service/database as a routine deployment step.
 
-Existing service: https://japanese-ai-tutor.onrender.com
-Health after deployment: https://japanese-ai-tutor.onrender.com/health
-The deployed service now returns `200 {"status":"ok"}` at `/health`.
+## Render configuration
 
-## Manual setup before pushing this checkpoint
+Maintain the existing Git-provider connection, production `main` branch, Singapore
+region, Free plan, single instance and single worker. Current commands are:
 
-Open https://dashboard.render.com and select the existing **japanese-ai-tutor**
-Web Service connected to `NekomeKozo/japanese-ai-tutor`. Do not create another service.
-Open **Environment → Edit / Add Environment Variable**. Enter these values there:
+```sh
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
 
-| Variable | Value | Secret? |
-|---|---|---|
-| `ENVIRONMENT` | `staging` | No |
-| `FRONTEND_URL` | `https://japanese-ai-tutor.onrender.com` | No |
-| `LLM_PROVIDER` | `gemini` | No |
-| `LLM_MODEL` | `gemini-3.1-flash-lite` (preserve a different already-working selection) | No |
-| `GEMINI_API_KEY` | Your existing Gemini key | Yes |
-| `DATABASE_URL` | Supabase PostgreSQL **session pooler URI** with the database password | Yes |
-| `STAGING_ACCESS_ENABLED` | `true` | No |
-| `STAGING_ACCESS_CODE` | A unique random access code, at least 16 characters | Yes |
-| `STAGING_SESSION_SECRET` | A different random signing secret, at least 32 characters | Yes |
-| `STAGING_SESSION_HOURS` | `168` | No |
-| `SCOPE_ENFORCEMENT_ENABLED` | `true` | No |
-| `AI_RATE_LIMIT_PER_HOUR` | `40` | No |
-| `AI_GLOBAL_RATE_LIMIT_PER_HOUR` | `200` | No |
-| `LLM_MAX_OUTPUT_TOKENS` | `1800` | No |
-| `LLM_TIMEOUT_SECONDS` | `45` | No |
-| `LLM_FAILOVER_ENABLED` | `true` after both Groq settings below exist; otherwise `false` temporarily | No |
-| `LLM_FALLBACK_PROVIDER` | `groq` | No |
-| `GROQ_API_KEY` | Your Groq key, entered privately | Yes |
-| `GROQ_MODEL` | `openai/gpt-oss-20b`, or another Groq model supporting JSON Schema output | No |
+Health check path is `/health`; automatic deployment is On Commit. These are
+descriptions of the reviewed service, not instructions to change it during a doc edit.
+CI separately checks the locked dependency stack. A change to lock-file installation,
+CI-gated deploys or access logging should be a reviewed infrastructure change.
+There are no linked environment groups or private checkpoint files required for the
+normal running deployment. If groups are later used, verify linkage and precedence
+before moving services; direct service variables override group values.
 
-Create a Groq key at https://console.groq.com/keys if needed; never paste it into
-chat. Check model access in that account. The model is configurable, not embedded
-in learning code. See [Groq structured outputs](https://console.groq.com/docs/structured-outputs).
+## Required configuration
 
-For the database value, open https://supabase.com/dashboard → existing project →
-**Connect → Session pooler → URI**. Substitute the database password privately
-and URL-encode reserved password characters. Do not use the project HTTP URL,
-anon key, service-role API key, or a browser SDK. The pooler supports IPv4 hosts;
-direct connections may require IPv6. Remote connections require TLS in the adapter.
-Do not add `tutor_private` to Supabase's exposed API schemas or grant it to anon /
-authenticated roles. No application tables are created in `public`.
-See [Supabase connection options](https://supabase.com/docs/guides/database/connecting-to-postgres).
+Keep values in the existing authorized secret mechanism. The table gives names
+and safe purposes only; `.env.example` supplies local defaults, not production secrets.
 
-Use Render's **Save only** option if available while preparing these settings.
-Report only “settings saved”, whether Groq is ready, and any non-secret error code.
-Never share keys, the full database URL, database password, access code, signing
-secret, or screenshots containing their values. Keep the signing secret stable
-across deployments so browser ownership remains usable.
+| Variables | Purpose |
+|---|---|
+| `ENVIRONMENT`, `FRONTEND_URL` | Application mode and exact public HTTPS origin used by mutation checks |
+| `DATABASE_URL` | Backend-only connection to the existing Supabase PostgreSQL database; remote TLS required |
+| `STAGING_ACCESS_ENABLED`, `STAGING_ACCESS_CODE`, `STAGING_SESSION_SECRET`, `STAGING_SESSION_HOURS` | Private entry gate, signed legacy browser ownership and authorization lifetime |
+| `SCOPE_ENFORCEMENT_ENABLED` | Japanese-learning request scope enforcement |
+| `ACCOUNT_AUTH_ENABLED` | Independent account feature control; do not change implicitly |
+| `SUPABASE_AUTH_URL`, `SUPABASE_AUTH_PUBLISHABLE_KEY`, `SUPABASE_AUTH_TIMEOUT_SECONDS` | Trusted Auth project, supported non-admin key and bounded provider verification |
+| `ACCOUNT_INVITED_IDS` | Exact canonical account UUID allowlist; values remain private |
+| `ACCOUNT_OWNER_BOOTSTRAP_IDS` | Optional single approved owner already in the allowlist; no invitation-timestamp requirement for that identity |
+| `ACCOUNT_SESSION_ENCRYPTION_KEYS` | Ordered private encryption key ring for server-side provider tokens; retain backup/rotation compatibility |
+| `ACCOUNT_LEARNER_LINKING_ENABLED` | Separate linking activation control; currently disabled |
+| `ACCOUNT_LEARNER_CHECKPOINT_PATH` | Optional private operator proof configuration; normal deployment leaves it unset |
+| `LLM_PROVIDER`, `LLM_MODEL`, `LLM_TIMEOUT_SECONDS`, `LLM_MAX_OUTPUT_TOKENS` | Selected tutoring adapter/model and generation limits |
+| `GEMINI_API_KEY`, `GROQ_API_KEY`, `OPENAI_API_KEY` | Credentials only for deliberately configured providers |
+| `GROQ_MODEL`, `LLM_FAILOVER_ENABLED`, `LLM_FALLBACK_PROVIDER` | Bounded Gemini-to-Groq failover when configured |
+| `AI_RATE_LIMIT_PER_HOUR`, `AI_GLOBAL_RATE_LIMIT_PER_HOUR` | Application inference limits; include process-local state |
+| `STT_ENABLED`, `STT_TIMEOUT_SECONDS`, `STT_RATE_LIMIT_PER_HOUR`, `STT_GLOBAL_RATE_LIMIT_PER_HOUR`, `STT_GLOBAL_RATE_LIMIT_PER_DAY` | Explicit Japanese transcription availability and bounded usage |
+| `KNOWLEDGE_ENABLED`, `KNOWLEDGE_DB_PATH`, `KNOWLEDGE_TOP_K`, `KNOWLEDGE_CONTEXT_LIMIT`, `KNOWLEDGE_MIN_SCORE` | Optional existing private derived-index retrieval |
 
-## Build, startup, health, and automatic deployment
+Settings validation requires secure origins, a PostgreSQL connection and the existing
+staging/scope protections in staging mode. Account activation additionally requires
+valid provider configuration, encryption keys and account allowlists. It must fail
+closed rather than silently fall back to a new SQLite store. Preserve signing/encryption
+keys across service changes; changing them can affect access to existing contexts/sessions.
 
-In the existing Render service's **Settings → Build & Deploy**:
+The server resolves `.env` beside the application; process environment takes precedence.
+After configuration changes, use an actual deploy that incorporates the saved values.
+A Render restart reuses the running deploy's environment values, so it is not a substitute
+for deploying a pending configuration change. Verify the exact deploy becomes Live.
 
-- Branch: `main`; repository root is the application root.
-- Build command: `pip install -r requirements-lock.txt` (reproducible dependencies).
-- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log`.
-- Runtime: Python. `.python-version` selects Python 3.12; remove an incompatible
-  `PYTHON_VERSION` override or explicitly use the desired supported patch version.
-- Auto-Deploy: **After CI Checks Pass**, once the included **Tests** workflow has
-  run successfully. This avoids deploying a failed test commit. No deploy hook
-  secret or duplicate GitHub deployment action is needed.
-- Keep **Free** compute and one instance. No keep-alive pings or scheduled inference.
+## Supabase Auth URLs and policy
 
-The workflow runs the complete offline suite, real PostgreSQL integration tests
-using an ephemeral local CI service, a source/history audit, and JavaScript syntax
-checks. The frontend is plain static files: there is no npm build step.
+Default Site URL is the base origin **https://goigrow.onrender.com**.
+The explicit production Redirect URLs are:
 
-After the code is pushed and `/health` returns `{"status":"ok"}`, manually open
-**Settings → Health Checks → Health Check Path**, change `/` to `/health`, and save.
-This dashboard action is deliberately left to the owner. Report “health path set”.
-`/health` is public, contains no configuration, and never calls a model or database.
-`/ready` requires staging access and checks a database connection. Startup must finish
-its migrations successfully before staging serves traffic.
+- https://goigrow.onrender.com/auth/callback
+- https://goigrow.onrender.com/auth/recovery
 
-The frontend continues to call relative `/api/...` URLs. No CORS middleware or
-wildcard credential origins are added. Mutating browser requests are restricted
-to `FRONTEND_URL`; this avoids reliance on proxy scheme headers for origin checks.
-Render terminates HTTPS. No secrets are built into JavaScript.
-See [Render deploys](https://render.com/docs/deploys) and
-[Python versions](https://render.com/docs/python-version).
+Retain the approved temporary legacy-host callback/recovery entries for rollback
+and the existing exact localhost development entries. Do not broaden to wildcard
+redirects or arbitrary `next` URLs. Current local callbacks use
+http://localhost:8012/auth/callback and http://localhost:8012/auth/recovery.
 
-## Database behavior and migrations
+Public provider signup remains disabled, email confirmation required and approved
+email/password sign-in enforced. Do not change users, passwords, allowlists, provider
+settings or SMTP as part of hostname maintenance. Default provider mail restrictions
+must be checked before inviting external testers; do not assume general public email
+delivery, paid billing or a completed one-click invitation/recovery experience.
 
-Local development leaves `DATABASE_URL` empty and retains the existing SQLite file.
-Staging requires a PostgreSQL URI and never falls back to SQLite. Local SQLite
-files are untouched; their existing learner data is not automatically uploaded.
-The fresh cloud database starts with the built-in question bank and empty learners.
+## Storage, upgrades and backups
 
-`app/storage.py` centralizes PostgreSQL syntax and connection handling. The existing
-v1–v5 migrations run in order, using a private `schema_version` table instead of
-SQLite `PRAGMA user_version`. Parameters remain bound. SQLite `REAL` becomes
-PostgreSQL `DOUBLE PRECISION` to preserve score precision. Conflict handling and
-table introspection are adapted only for application-owned SQL.
+Use the same existing PostgreSQL database, never a replacement empty learner store.
+The private schema and ownership boundaries are described in [architecture](architecture.md).
+An IPv4-compatible Supabase pooler may be needed by the hosting network; preserve
+the verified connection and check hostname/SSL/URI encoding privately. Never print
+the connection string, pass it in public command examples or weaken TLS to fix access.
 
-PostgreSQL schema creation, migrations, seeding, and version changes commit in one
-transaction. A failed migration rolls back; later startup can retry. Startup never
-drops or resets learner tables. A separate additive `staging_resources` table
-records browser ownership of learners, assessments and chat sessions.
+Learning migrations are additive and transactional; the current schema version is 8.
+Auth/session and association schema changes have their own reviewed boundaries.
+Before a migration, back up and verify the intended database and inspect role grants,
+dependencies, compatibility and rollback. Rehearse on a disposable database. Preserve
+learner/history fingerprints and IDs; never reset, seed a replacement or fabricate Auth
+state to solve a startup issue. Keep session-encryption-key backups separately private.
 
-Short transactions use a PostgreSQL advisory transaction lock to preserve the
-existing SQLite serialization assumptions. Connections close after each transaction;
-Supabase's session pooler supplies pooling. Connections are re-established on later
-requests, with bounded connect/statement/lock timeouts. Failed writes are not silently
-retried. This simple serialization is appropriate for a small private alpha, not
-large concurrent traffic. Keep one application worker for existing in-memory locks.
+Optional knowledge import is explicit, separate from startup, and uses only derived
+records. Do not upload raw reference documents to Render. [Knowledge operations](knowledge.md).
 
-## Access, ownership, and quota limitations
+## Verification and rollback
 
-The access code is checked server-side with constant-time comparison. The cookie
-contains a signed random identity and expiration, never the access code. In staging
-it is `Secure`, `HttpOnly`, and `SameSite=Strict`. Authorization lasts seven days by
-default; the signed identity cookie remains for up to a year so re-entering the
-access code can preserve ownership. Rotating the signing key invalidates ownership
-cookies; do this deliberately. Rotating the access code alone does not revoke
-already-issued sessions before their expiry.
+After an authorized deploy, verify:
 
-This is browser-based private-alpha access, not user accounts. Different browsers
-get different identities, even with the same access code. Sharing a learner UUID
-does not grant access. Clearing cookies or changing the signing secret loses the
-browser's ability to access its existing learners; records remain in the database.
-There is no account recovery or cross-device progress synchronization yet. Do not
-claim older unowned learners by supplying an ID. Existing local learners remain
-available locally with staging access disabled.
+1. Expected service, branch and commit are Live; startup completes.
+2. `/health` is healthy and fast without inference. Protected `/ready` checks storage.
+3. Staging entry remains enforced and cookie-free protected APIs are denied.
+4. The approved owner account path works and linking remains in its intended state.
+5. Same database/project, unchanged history and expected association-table state.
+6. Exact origins/redirects, provider limits, environment keys and group linkage survive.
 
-AI-capable routes allow 40 attempts per browser identity per hour, with a global
-200/hour cap. Placement answers and activity submissions count conservatively even
-when graded deterministically or replayed. Invalid bodies and ownership failures
-are rejected earlier. Login has per-client and global limits. Limits are in memory
-and reset on restart; they are not a distributed quota system. LLM retries remain
-bounded, and health, login, ordinary reads, mastery, and SRS do not generate AI calls.
+Do not create learners or exercise linking merely to test infrastructure. A process
+liveness response does not prove database availability, owner identity or model quota.
+Private free services can spin down, and a paused database must be resumed in the
+existing project instead of replaced. Diagnose redacted exception categories and
+configuration presence without copying full logs or secrets into public reports.
 
-Bodies are capped at 32 KiB; study text keeps its existing 4,000-character limit.
-Provider output tokens remain server-controlled. Deterministic scope rules reject
-obvious unrelated tasks and common injection/extraction attempts before inference.
-Short English answers are allowed for an actual server-held exercise. Ambiguous
-standalone requests ask the learner to frame the question as Japanese study.
-These conservative rules and existing teacher/evaluator instructions are useful
-defenses, not a proof against every adversarial paraphrase. They may need tuning;
-no paid classifier or secret/file/tool access is given to the model.
-
-## Provider failover
-
-Gemini success never calls Groq. Eligible rate/quota failures, connection errors,
-timeouts and temporary 5xx failures may trigger one Groq attempt. Authentication,
-model configuration, invalid output, input validation, local limits, database errors,
-scope rejection and safety refusals do not trigger fallback.
-
-The primary gets half the existing total inference deadline; fallback uses the
-remaining budget, with a small margin. Outer tutor/evaluator timeouts remain in
-force. Both failures return safe errors. The existing evaluator can record unavailable
-evidence without scoring it as a learner mistake; study grading failures remain
-retryable without committing progress. Schema validation and idempotency remain
-in the application, after inference. Existing lesson schema-repair retries remain
-bounded at two generations with failover disabled. With failover enabled, the
-router additionally limits the entire HTTP request to one primary and one fallback
-attempt, including schema-repair paths; it never recursively alternates providers.
-
-Logs contain safe failure categories, selected provider/model, environment/database
-type and fallback reason. They omit raw vendor responses, connection strings,
-authorization headers, prompts and conversation contents. Uvicorn access logs are
-disabled by the documented start command to avoid recording learner URLs.
-
-## Privacy and source packaging
-
-`.env`, private reference directories, local databases and their sidecar files stay
-ignored. An explicit exception includes only the application-authored placement
-bank `app/assessment/data/questions.json`; it is not a private reference resource.
-FastAPI serves only `frontend/` as static content. `.dockerignore` is a restrictive
-allowlist for any future Docker use; no Docker image is built in this phase.
-
-Run `python scripts/audit_deployment.py` before committing or pushing. It checks
-working source and available history without printing secret matches. It is a
-heuristic audit, not a guarantee against every possible secret format. CI runs it
-too. No reference files are read, ingested, copied, committed, or uploaded.
-
-## Verification and acceptance checklist
-
-Local: `python -m pytest -q`. To include PostgreSQL, set `TEST_POSTGRES_URL` privately
-to an isolated loopback PostgreSQL administrator connection. Tests create and remove
-only randomly named `tutor_test_*` databases; remote hosts are refused. Never point
-this variable at Supabase. CI supplies its own disposable database service.
-
-After deployment, use a disposable staging learner to verify:
-
-1. HTTPS health, access page, wrong-code rejection, successful login and safe headers.
-2. Gemini tutor question: “Explain は and が to an N5 learner.” Check structured reply.
-3. Start/finish placement; reload profile, preferences, saved chat and history.
-4. Create a study plan; complete an activity; confirm mastery and review scheduling.
-5. Retry the same submission; verify no duplicate progress.
-6. Restart the Render service, reopen the browser and confirm PostgreSQL progress.
-7. Open a second browser identity; confirm the first learner's IDs return 404.
-8. Check phone access, narrow layout, private-file 404s, and browser assets/network
-   for absence of secrets. The owner confirmed the real phone check on September 28, 2026;
-   future physical-device regression checks also require the owner.
-9. Confirm Groq configuration without exhausting Gemini quota. Automated failover
-   tests inject transient failures; do not add a public “force fallback” endpoint.
-
-## Recovery, cost, and rollout
-
-Render logs are under the service's **Logs** menu; **Events** shows deploy status.
-On failure identify configuration, build, database/migration, provider or origin
-errors using safe categories. Never paste full logs containing secrets into chat.
-
-Keep the Phase 6 checkpoint `6eb6014`. It can run locally with the existing local
-SQLite data. It cannot safely replace the cloud app because it lacks PostgreSQL
-and staging access. For cloud rollback choose the latest verified **Phase 6.5**
-commit in Render, keep database and signing secrets unchanged, and disable automatic
-deploy temporarily if necessary. If no safe cloud version exists, suspend access
-while repairing. Never auto-downgrade schemas, reset learner data, or force-push.
-
-Expected infrastructure cost is $0 within the already selected free-tier limits.
-No paid resources are created by this code. Gemini/Groq usage depends on account
-quota and billing settings; do not enable paid billing or buy additional capacity
-automatically. Render sleeps after inactivity and has an ephemeral filesystem;
-no keep-alive traffic is introduced. Supabase free projects may pause when inactive.
-See [Render free limits](https://render.com/docs/free).
-
-Supabase recommends regular private exports for free-tier databases; paid plans
-provide managed daily backup access. Before important staging tests or upgrades,
-export the `tutor_private` schema and its data with `pg_dump`/Supabase CLI to a private
-location outside Git, using credentials from a protected environment. Verify a
-restore into a separate disposable database before relying on a backup. Never
-restore over the live database casually. No production-grade backup guarantee is
-claimed. See [Supabase backups](https://supabase.com/docs/guides/platform/backups).
-
-Phase 7 should begin only after the live checklist passes. UI overhaul, production
-accounts, cross-device identity recovery, and RAG remain separate work.
+Retain a compatible known-good service/build during cutover. Rollback does not undo
+database or provider writes. Do not drop additive tables, rewrite history or restore
+an old staging-only authorizer over linked data. Keep the original browser context
+available until profile restoration is explicitly verified. Retirement, activation,
+destructive repair and provider/billing changes require separate authorization.

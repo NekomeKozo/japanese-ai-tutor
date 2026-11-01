@@ -1,4 +1,4 @@
-# Phase 2 decisions and scoring
+# Placement assessment design
 
 ## Boundaries
 
@@ -105,36 +105,30 @@ average at least 0.80 suggests strength; at most 0.45 suggests review. Topic lab
 descriptive and are not mastery records. Recommendations are generated in code and use
 skills with at least two observations; one lucky item cannot drive a recommended study area.
 
-## Storage and compatibility
+## Storage, ownership and integration
 
-SQLite uses the Python standard library; no ORM or new package is needed. Migration 1
-(`PRAGMA user_version=1`) adds four tables: `assessment_questions`, `assessments`,
-`assessment_answers`, and `learner_profiles`. There was no Phase 1 database to migrate.
-No existing data is deleted. Unknown newer schema versions fail closed for assessment
-while ordinary chat remains available.
+Placement uses the shared repository/storage adapter: local SQLite or the existing
+private PostgreSQL database. `assessment_questions` stores versioned bank definitions;
+`assessments` stores the versioned active state; `assessment_answers` retains question,
+answer and evaluation evidence; `learner_profiles` preserves the completed snapshot.
+Unknown schema versions and staging initialization failures must fail closed.
 
-An assessment JSON snapshot contains versioned state, current private question snapshot,
-answer history and final profile when complete. Answer rows separately preserve question
-metadata, learner answer and evaluation. Skill estimates are recomputed from saved evidence
-while active and included in the persisted final profile. Profile and result share a single
-versioned model rather than separate redundant tables. Question definitions are stored with
-a bank version; bump `BANK_VERSION` and the state default when changing a released bank.
-Active assessments from another bank version cannot silently resume with mixed item versions.
+An assessment snapshot contains its current private question, answer history and final
+profile when complete. Skill estimates are recomputed from saved evidence while active.
+Bump the bank/state version for incompatible released-bank changes; do not silently
+resume an active assessment with mixed versions.
 
-One transaction updates state, inserts the answer and, on completion, creates the profile.
-Optimistic version checks prevent stale writers. A process-local busy set avoids concurrent
-evaluation of the same assessment, and `(assessment_id, question_id)` and
-`(assessment_id, submission_id)` are unique. Replaying the same submission returns current
-state without rescoring. Reusing an ID for different content returns 409.
+One transaction updates state, inserts the answer and initializes the completed learner
+profile. Optimistic versions, process-local busy coordination and unique assessment/
+question/submission keys prevent stale or repeated scoring. Reusing a submission ID
+with different content is a conflict. Completion and learner-memory initialization
+share the existing transaction and must not double-count placement evidence.
 
-Active assessments expire after 24 idle hours by default; completed results persist without
-that expiry. Expired records remain in SQLite (no automatic deletion policy yet). Only the
-resume identifier is saved in browser localStorage. There are no accounts; each new
-assessment creates a fresh anonymous learner/profile ID. IDs are local bearer identifiers,
-not authentication. Keep the application bound to loopback.
+Active assessments expire after the configured idle period; completed results remain
+persistent. Browser resume IDs are hints, never bearer authorization. The server checks
+staging/account ownership for assessment and learner access. See [security](security.md).
 
-Phase 1 chat still uses bounded in-memory sessions and the original tutor/provider services.
-`learner_id` is an optional chat field. When present, the server loads the saved profile and
-adds a concise trusted summary to the tutor instructions. Browser-supplied skill scores are
-never accepted. No placement result is required for ordinary chat. This is initial-context
-integration only: no continuous profile updates, activity memory or curriculum scheduling.
+Saved tutor sessions load a compact trusted profile summary; browser-provided scores
+are not accepted. Placement is not required for an unassessed learner's ordinary chat.
+Continuous practice, mastery and curriculum are separate consumers of validated evidence:
+[memory](learning-memory.md), [mastery](mastery-design.md), [curriculum](curriculum-design.md).

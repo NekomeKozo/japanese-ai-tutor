@@ -1,4 +1,4 @@
-# Phase 4 curriculum design
+# Curriculum design
 
 ## Integration and authority
 
@@ -10,9 +10,9 @@ UUIDs and creation timestamps differ only when a genuinely new plan is saved.
 
 The provider cannot select topics or change the plan. `ContentService` asks the existing
 `LLMProvider.generate` for one already selected activity and validates a `Lesson` schema.
-The UI renders the resulting teaching material through the Phase 1 `TutorResponse`
-renderer. Answers use the existing Phase 2 `AnswerEvaluator`. Completed performance uses
-the Phase 3 `process_event` engine. There is no second tutor/provider/progress subsystem.
+The UI renders the resulting teaching material through the shared tutor `TutorResponse`
+renderer. Answers use the existing placement `AnswerEvaluator`. Completed performance uses
+the learning-memory `process_event` engine. There is no second tutor/provider/progress subsystem.
 
 The modules deliberately consolidate related pure functions in `planner.py` instead of
 creating a file per small function. `policy.py` holds tunable policy/goal weights;
@@ -21,11 +21,10 @@ content, validation, generation, persistence and upgrade boundaries.
 
 ## Catalog and prerequisites
 
-The 63-topic catalog contains 26 grammar topics, 13 vocabulary units, 12 kanji units,
-five reading units, five sentence-writing activities and two script foundations. Seven
-broader tags bridge existing placement memory directly into review activities and are
-not offered as new material. All keys use the Phase 3 canonical topic namespace; the
-combined learning catalog now contains 78 bounded entries. Catalog graph validation
+The authored curriculum catalog defines grammar, vocabulary, kanji, reading, sentence
+writing and script foundations. Broader placement tags bridge existing memory into
+review activities rather than new material. Topic keys use the shared canonical
+namespace; inspect `app/curriculum/catalog.py` for the maintained entries. Catalog graph validation
 rejects missing prerequisite IDs, cycles and invalid fixed answer choices.
 
 Prerequisite classification:
@@ -87,7 +86,8 @@ Strong recent performance reduces review. New-material requests reduce the ratio
 review requests target 1. Other requests clamp to .25–.85. The strategy name is quick,
 review-heavy, progression, goal-focused or balanced according to length and evidence.
 Long absence uses the last substantive learning event, so opening a chat window does
-not erase the gap. No spaced-repetition due dates or retention model is introduced.
+not erase the gap. Due dates and recall scheduling come from the shared review service;
+see [review design](review-design.md) for the due-queue composition policy.
 
 Eligible topic exposure determines review versus new material. The planner selects
 candidates toward the target ratio, then allocates minutes toward it. Actual review/new
@@ -104,7 +104,7 @@ If eligibility yields nothing, a safe introductory foundation is used, with an h
 note. A sentence-writing focus may first receive basic grammar when prerequisites are
 missing. This is a foundation fallback, not an advanced-topic bypass.
 
-## Database v3 and lifecycle
+## Persistence and lifecycle
 
 Startup's existing transaction advances v1 → v2 → v3 as needed. Schema v3 inserts
 controlled topic entries and adds two tables; old tables/rows are preserved:
@@ -155,8 +155,9 @@ one activity, not complete mastery of its topic/unit.
 Performance events retain source `curriculum`, the selected canonical topic, skill,
 application-selected difficulty, score and session ID. Metadata includes activity ID,
 activity type, purpose, grading method and normalized error provenance. Original prompts,
-API keys and provider internals are not stored. Learning state is updated by the Phase 3
-engine with its existing conservative rules; this phase does not introduce mastery scores.
+API keys and provider internals are not stored. Learning state is updated by the learning-memory
+engine with its conservative rules. Mastery and review scheduling consume eligible
+evidence in the same transaction, under their own policies.
 
 ## Token and data limits
 
@@ -168,28 +169,23 @@ Static generation instructions and response schema add overhead; the cap is not 
 tokenizer count. Raw lesson output is limited to 14,000 characters, with smaller field
 bounds; the existing configured provider output/timeout limits still apply.
 
-Ordinary Phase 3 chat keeps its original small observation-tag vocabulary and existing
+Ordinary learning-memory chat keeps its original small observation-tag vocabulary and existing
 history/context caps. Learner profile state retrieval is bounded to 200 topic rows to
 cover the expanded controlled catalog; compact tutor selection limits remain unchanged.
 Study distribution is aggregated by SQL; only counts/minutes and the latest substantive
 learning timestamp are returned, not an event-history dump.
 
-## Validation, limitations and next phase
+## Validation and limitations
 
-Offline tests cover cold start, Phase 2-only and mature memory, synthetic learners A–D,
-weakness/recency/repetition/goal weights, prerequisites, uneven skills, time/variety,
-schema v2 preservation/rollback, idempotent resume and results, ownership, atomic failure,
-provider/schema failure, cancellation and concurrency. Browser tests exercise fixed and
-mock-generated lessons. See `PHASE4_VERIFICATION.md` for the completed run.
+Tests exercise planning, prerequisites, cold/unassessed and mature profiles, weak
+skills, recent performance, time/variety budgets, resume/idempotency, ownership,
+transaction rollback and provider failures. The bounded catalog has sparse advanced
+coverage, approximate time allocation and uncalibrated ranking heuristics. A lesson
+schema cannot establish Japanese teaching quality or exclude every accidental hint.
+Raw activity answers are not retained by the study service; result/reference data and
+submission fingerprints support replay. These rules do not describe placement or saved
+tutor-transcript retention, which have their own contracts.
 
-The prototype has one scored question per activity, a small catalog with sparse upper
-levels, English fixed-template instructions, approximate time allocation, and uncalibrated
-heuristics. The application checks labels/contracts but cannot prove model content quality
-or prevent all accidental solution hints. No real-provider call was made without a key.
-Raw learner answers to study activities are not retained; the saved result/reference and
-hashed submission identity are sufficient for this phase's replay and performance history.
-
-Phase 5 can derive richer vocabulary/grammar/kanji mastery from these topic-identified
-events and evidence provenance. It should improve calibration/content coverage before
-claiming mastery. No Phase 5 scoring, spaced repetition, flashcards, daily schedule,
-voice, conversation scenarios or advanced analytics is implemented here.
+Mastery dimension selection and FSRS due queues extend the planner through the
+shared interfaces; they are not competing curriculum or learner systems. See
+[mastery](mastery-design.md), [reviews](review-design.md) and [architecture](architecture.md).

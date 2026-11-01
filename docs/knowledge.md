@@ -2,7 +2,7 @@
 
 Knowledge retrieval is optional and disabled by default. It adds evidence to existing
 tutor chat; it does not select lessons, change learner scores, schedule reviews, or
-generate placement questions. The Phase 7 UI is unchanged. No new HTTP API is added.
+generate placement questions. The tutor teaching contract is unchanged. No new HTTP API is added.
 
 ## Local build
 
@@ -22,7 +22,7 @@ Search prints opaque source IDs, physical PDF page numbers and scores. The optio
 `--preview` flag prints at most 100 characters per result for local developer review;
 do not paste these previews into public issues or logs.
 
-Supported inputs: text-based PDF using pypdf 6.18.1, UTF-8 TXT and Markdown.
+Supported inputs: text-based PDF using the pinned pypdf dependency in `requirements-knowledge.txt`, UTF-8 TXT and Markdown.
 Encrypted PDFs are skipped, even if an empty password might unlock them. Image-only
 pages are recorded as skipped/OCR-needed; OCR is deliberately absent. Files over
 150 MiB, documents over 3,000 pages and oversized individual pages are bounded/skipped.
@@ -103,14 +103,14 @@ Bulk inserts avoid a network round trip per posting. Per-source transactions may
 contend with application transactions; perform imports during a quiet period.
 
 Tables: `knowledge_meta`, `knowledge_sources`, `knowledge_chunks`, `knowledge_postings`.
-The knowledge schema version is independent of learner v1–v5. Tables live in the existing
+The knowledge schema version is independent of the learning schema. Tables live in the existing
 private `tutor_private` PostgreSQL schema, with PUBLIC privileges revoked; no browser
 database access or Supabase client is added. Do not expose that schema through Supabase's
 Data API or grant it to anon/authenticated roles. No pgvector extension is required.
 
 Owner-controlled activation after successful import:
 
-1. Open https://dashboard.render.com/ and select `japanese-ai-tutor`.
+1. Open https://dashboard.render.com/ and select the existing `goigrow` service.
 2. Open **Environment**, add `KNOWLEDGE_ENABLED` with value `true` (not secret).
 3. Save/redeploy, then test the existing tutor with a reference-covered grammar question.
 4. Look for the safe log `Knowledge retrieval status=available results=... latency_ms=...`.
@@ -140,8 +140,9 @@ synthetic benchmark checks expected topics and no-match behavior. Running
 synthetic expected categories are not a valid corpus relevance score. Keep real-source
 evaluation metadata under ignored `knowledge_base/` and inspect bounded examples locally.
 
-Rollback: set `KNOWLEDGE_ENABLED=false` through the owner-controlled Render settings,
-or revert the Phase 7.5 code commits normally to checkpoint `974d3ca`. Leave private
-knowledge tables in place; prior application code ignores them. Never reset the database
-or delete learner data. Semantic embeddings, OCR and optional candidate-question authoring
-are deferred. Phase 8 has not begun.
+Rollback: disable optional knowledge retrieval through the authorized service
+configuration workflow and deploy the saved configuration. Leave private knowledge
+tables intact; do not delete learner records or downgrade the database. Use a compatible
+application release if reverting code. Lexical retrieval does not provide semantic
+embeddings or OCR. Optional candidate authoring remains a separate development-only,
+editorially reviewed operation; see [JLPT operations](jlpt.md).

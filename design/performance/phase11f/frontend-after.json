@@ -1,5 +1,0 @@
-{
-  "environment": "Node VM, real frontend scripts, mocked fetch and DOM",
-  "overlapping_identical_get_requests": 1,
-  "free_practice_50_cycles_network_requests": 0
-}

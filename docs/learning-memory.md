@@ -1,45 +1,34 @@
-# Phase 3 learning memory design
+# Learning memory
 
-This describes the Phase 3 foundation. Phase 4 retains these services and adds schema
-v3, curriculum topics and source `curriculum`; see [curriculum-design.md](curriculum-design.md).
-The current controlled catalog has 78 entries and state retrieval permits 200 topics.
-The compact tutor context and original chat observation-catalog limits remain unchanged.
+The profile service provides bounded current state for tutor personalization,
+curriculum and progress. It shares the repository's SQLite/PostgreSQL boundary;
+see [architecture](architecture.md) for current storage and identity contracts.
 
 ## State and history
 
-The existing assessment repository remains the single SQLite connection boundary.
-Schema v2 is additive. `learner_profiles.profile_json` remains the immutable Phase 2
-placement snapshot. `learner_state` holds current identity, level, preferences and dates;
-`skill_state` holds the placement baseline, current estimate and bounded recent scores.
-This keeps tutor retrieval independent of lifetime history size.
+`learner_profiles.profile_json` is the immutable placement snapshot. `learner_state`
+holds current identity, level, preferences and dates; `skill_state` holds placement
+baselines, current estimates and bounded recent scores. Tutor retrieval does not
+need to load the learner's lifetime transcript or event history.
 
-`learning_topics` is a fixed 36-entry catalog (including ten generic categories).
-`learner_topics` holds encounters, correct/incorrect totals, rolling performance and dates.
-Vocabulary words carry readings/meanings; kanji reading and meaning have distinct topic
-keys. `mistake_state` aggregates canonical error keys rather than free-text sentences.
-`learning_events` is append-only during normal use and retains source and normalized
-evidence. `tutor_sessions` owns session lifetime/version; `conversation_turns` stores
-each user/reply exchange exactly once. `skill_history` records only changed estimates.
+`learning_topics` is the application-owned canonical catalog. `learner_topics` records
+encounters, correctness, rolling performance and dates. `mistake_state` aggregates
+recognized error keys rather than free-text sentences. `learning_events` preserves
+evidence provenance and is append-only during normal use. `tutor_sessions` owns
+session lifetime/version; `conversation_turns` stores each exchange once;
+`skill_history` records meaningful changed estimates. No parallel learner store exists.
 
-Nine new tables are added to the existing four. No second database, external service,
-provider SDK, vector store or dependency is introduced. Current state can be queried
-without loading transcripts/events. Events preserve evidence provenance for future
-adaptation. The developer reset is the deliberate exception to append-only history.
+## Initialization and compatibility
 
-## Migration and initialization
+The current learning schema is version 8. Additive migrations and backfill use the
+shared all-or-nothing initialization boundary. Completed placement initializes learner
+memory without scoring placement twice. Original questions, answers and snapshots
+remain unchanged. Imported event timestamps do not establish original study time.
+New placement completion and its initial memory commit together.
 
-Startup accepts versions 0, 1 and 2; unknown future versions are refused. Version 0 first
-creates Phase 2 schema v1. A `BEGIN IMMEDIATE` transaction creates v2 tables and catalog,
-backfills completed placements, and advances `user_version`. If anything fails, v1 data
-and schema version remain intact. Profile insertion and Phase 3 initialization for a new
-assessment completion also share a transaction. Backfill is idempotent and does not
-score placement twice. Existing questions, answers, snapshots and initial profiles are
-unchanged. Migration-created event timestamps represent import time, not original study
-time. Original assessment timestamps remain in the preserved snapshots.
-
-Unassessed learners receive Beginner as a starting instruction, null ability/overall
-scores, zero confidence and no invented strengths. Retaking placement retains Phase 2's
-new-learner behavior; merging existing identities is not implemented.
+Unassessed learners have null scores, zero confidence and no invented strengths.
+Starting another assessment does not merge identities. Account sign-in does not
+initialize or replace a learner; ownership and linking remain separate server checks.
 
 ## Evidence boundary
 
@@ -49,7 +38,7 @@ with at most eight observations. Each has type (`performance`, `concept_explaine
 error tags. Performance requires a score in [0,1]; exposure requires null. Unknown fields,
 invalid types/ranges and malformed observations are discarded individually; a valid
 teaching response still commits. Malformed teaching JSON never changes stored state.
-The original Phase 1 response contract remains unchanged for clients and transcripts.
+The public teaching-response contract remains unchanged for clients and transcripts.
 
 The application normalizes aliases and deduplicates canonical topics within one reply.
 Unknown topics become `other_<skill>` exposures with no score or mistake impact. Only
@@ -114,18 +103,19 @@ pairs. Assistant history keeps bounded explanation/message text and practice/cor
 context; observations never reappear in conversation history. The new user message is
 separately limited to 4,000 characters. Static teaching/schema/catalog instructions are
 additional overhead. These caps conservatively limit size, not exact model token counts.
-There is no summarizer call or semantic retrieval.
+There is no summarizer call in the profile builder. Optional lexical reference retrieval
+is separate from profile/history selection; see [knowledge](knowledge.md).
 
 Saved preferences directly drive instruction language, correction style, readings and
 romaji. Difficulty preference overrides the estimated starting level. Goals are compact
-context only. My learning exposes state and recent activity, not advanced analytics.
+context only. Progress exposes saved state and activity without treating them as calibrated proficiency.
 Closed sessions can be viewed; a new session is needed to send further messages.
 
-## Future boundary
+## Integration boundaries
 
-Phase 4 can read the profile service's `skills`, `weak_topics`, `recent_topics`, recent
-performance and preferences to plan curriculum. This phase does not choose lessons,
-schedule reviews, promote levels, implement spaced repetition or calculate final mastery.
-Authentication, retention policy, identity merging, larger reviewed catalogs and empirical
-calibration remain future work. Catalog growth should ship through a new schema/data
-migration rather than accepting arbitrary LLM-created rows.
+Curriculum consumes compact skill, weak/recent-topic, performance and preference
+state. Mastery and reviews consume normalized evidence through their own deterministic
+policies. Memory does not choose provider account identity or grant learner ownership.
+Catalog growth must use reviewed application definitions/migrations, not arbitrary
+model-created rows. Retention, identity merging and empirical calibration require
+their own design; they are not implied by storing events.
